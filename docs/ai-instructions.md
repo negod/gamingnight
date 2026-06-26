@@ -45,7 +45,17 @@ When changing these instructions, update this file first and keep the root-level
 7. Add frontend API functions under `frontend/src/features/<feature>/api`.
 8. Add focused UI components under `frontend/src/features/<feature>/components`.
 9. Add route pages under `frontend/src/pages`.
-10. Add or update docs when architecture or setup changes.
+10. Always update documentation for the feature before finishing.
+
+## Documentation Requirements
+
+- Every new feature, changed feature, API change, data model change, setup change, or deployment change must include documentation updates in the same work.
+- Update `README.md` when user-facing behavior, setup, environment variables, scripts, or deployment steps change.
+- Update `docs/architecture.md` when layers, dependencies, module boundaries, domain concepts, or feature flows change.
+- Update `docs/testing.md` when test strategy, commands, fixtures, or coverage expectations change.
+- Update `docs/deployment.md` when runtime configuration, hosting, database, build, or release behavior changes.
+- Update `docs/ai-instructions.md` when conventions, architecture rules, feature workflow, or assistant expectations change.
+- Do not treat a feature as complete until the relevant documentation reflects the implemented behavior.
 
 ## Writing Tests First
 

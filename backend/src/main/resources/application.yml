@@ -5,8 +5,8 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gaming-night}
     username: ${SPRING_DATASOURCE_USERNAME:gaming-night}
     password: ${SPRING_DATASOURCE_PASSWORD:gaming-night}
-  flyway:
-    enabled: true
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
   jpa:
     hibernate:
       ddl-auto: validate
