@@ -1,8 +1,10 @@
-# Clean Architecture Web Starter
+# Gaming Night
 
-A production-ready starter monorepo for a small REST application using React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, PostgreSQL, Spring Data JPA, Hibernate, and Flyway.
+Gaming Night is a web application for keeping track of scores during game nights. The goal is to make it easy to add games, create scoreboards, record players and rounds, and see who is winning over time.
 
-The starter implements an `Item` feature end to end:
+The app is intentionally built with a production-ready structure from the start: React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, PostgreSQL, Spring Data JPA, Hibernate, and Flyway.
+
+Current implementation status:
 
 - Create item
 - List items
@@ -10,6 +12,16 @@ The starter implements an `Item` feature end to end:
 - Update item
 - Delete item
 - Health endpoint
+
+The current `Item` feature is a starter vertical slice used to prove the architecture, testing setup, database access, REST API, and frontend flow. The domain will evolve toward Gaming Night features such as:
+
+- Add and manage games
+- Create scoreboards
+- Add players or teams
+- Track scores per game session
+- View standings and score history
+
+More product details will be added as the app design becomes clearer.
 
 ## Final File Structure
 
@@ -50,7 +62,7 @@ The starter implements an `Item` feature end to end:
 
 ## Architecture Overview
 
-The backend follows Clean Architecture:
+Gaming Night follows Clean Architecture on the backend:
 
 - `domain`: framework-free business model and repository ports.
 - `application`: use cases, DTOs, and DTO mappers.
@@ -63,7 +75,7 @@ The frontend keeps API access outside UI components:
 
 - `app`: routing and application shell.
 - `pages`: route-level screens.
-- `features/items`: item-specific API wrappers, hooks, and components.
+- `features/items`: current starter feature API wrappers, hooks, and components. Future game-night features should live under their own feature folders.
 - `shared`: reusable API client, components, and types.
 
 ## Prerequisites
