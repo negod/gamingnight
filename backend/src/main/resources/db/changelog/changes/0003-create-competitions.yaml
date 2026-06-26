@@ -1,0 +1,99 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0003-create-competitions
+      author: backede
+      changes:
+        - createTable:
+            tableName: competitions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: single_match
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: competition_game_ids
+            columns:
+              - column:
+                  name: competition_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: game_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: position
+                  type: integer
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: competition_game_ids
+            columnNames: competition_id, position
+            constraintName: pk_competition_game_ids
+        - addForeignKeyConstraint:
+            constraintName: fk_competition_game_ids_competition
+            baseTableName: competition_game_ids
+            baseColumnNames: competition_id
+            referencedTableName: competitions
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createTable:
+            tableName: competition_team_ids
+            columns:
+              - column:
+                  name: competition_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: team_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: competition_team_ids
+            columnNames: competition_id, team_id
+            constraintName: pk_competition_team_ids
+        - addForeignKeyConstraint:
+            constraintName: fk_competition_team_ids_competition
+            baseTableName: competition_team_ids
+            baseColumnNames: competition_id
+            referencedTableName: competitions
+            referencedColumnNames: id
+            onDelete: CASCADE

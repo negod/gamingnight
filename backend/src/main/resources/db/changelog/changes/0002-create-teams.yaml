@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0002-create-teams
+      author: backede
+      changes:
+        - createTable:
+            tableName: teams
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: team_player_ids
+            columns:
+              - column:
+                  name: team_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: player_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: team_player_ids
+            columnNames: team_id, player_id
+            constraintName: pk_team_player_ids
+        - addForeignKeyConstraint:
+            constraintName: fk_team_player_ids_team
+            baseTableName: team_player_ids
+            baseColumnNames: team_id
+            referencedTableName: teams
+            referencedColumnNames: id
+            onDelete: CASCADE

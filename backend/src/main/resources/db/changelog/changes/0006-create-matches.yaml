@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0006-create-matches
+      author: backede
+      changes:
+        - createTable:
+            tableName: matches
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: competition_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: game_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: home_team_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: away_team_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false

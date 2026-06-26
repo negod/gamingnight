@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0007-create-player-results
+      author: backede
+      changes:
+        - createTable:
+            tableName: player_results
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: match_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: player_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: team_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: value
+                  type: double precision
+                  constraints:
+                    nullable: false
