@@ -46,11 +46,66 @@ Use a JDBC URL:
 jdbc:postgresql://HOST:PORT/DATABASE?sslmode=require
 ```
 
-Set username and password from the provider dashboard. Flyway applies schema migrations automatically on backend startup.
+Set username and password from the provider dashboard. Liquibase applies schema migrations automatically on backend startup.
+
+## Liquibase Migration Workflow
+
+Schema changes are managed with Liquibase YAML changelogs.
+
+### File layout
+
+```text
+backend/src/main/resources/db/changelog/
+├── db.changelog-master.yaml        # ordered include list
+└── changes/
+    ├── 0001-create-items.yaml
+    ├── 0002-create-players.yaml
+    └── ...                         # one file per migration
+```
+
+### Adding a new migration
+
+1. Create a file in `changes/` with the next sequential prefix and a descriptive name:
+
+   ```
+   changes/0008-add-avatar-to-players.yaml
+   ```
+
+2. Write the changeset using Liquibase YAML syntax. Always include `id` (matching the filename prefix and description), `author`, and the relevant `changes` block:
+
+   ```yaml
+   databaseChangeLog:
+     - changeSet:
+         id: 0008-add-avatar-to-players
+         author: backede
+         changes:
+           - addColumn:
+               tableName: players
+               columns:
+                 - column:
+                     name: avatar_url
+                     type: varchar(500)
+   ```
+
+3. Append an `include` entry to `db.changelog-master.yaml`:
+
+   ```yaml
+   - include:
+       file: db/changelog/changes/0008-add-avatar-to-players.yaml
+   ```
+
+4. Restart the application (or run tests). Liquibase applies only unapplied changesets by comparing against its `DATABASECHANGELOG` table.
+
+### Rules
+
+- Never edit a changeset that has already been applied to any environment. Add a new changeset instead.
+- Use descriptive IDs that match the filename.
+- Test each migration locally with `docker compose up -d postgres` before pushing.
+- Use `rollback` blocks for destructive changes if rollback support is needed.
 
 ## Production Notes
 
-- Keep `ddl-auto=validate`; schema changes should be Flyway migrations.
+- Keep `ddl-auto=validate`; schema changes must be Liquibase changelogs.
 - Set CORS to the exact frontend origin.
 - Do not commit real `.env` files.
 - Prefer provider-managed connection pooling for production traffic.

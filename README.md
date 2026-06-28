@@ -2,7 +2,7 @@
 
 Gaming Night is a web application for keeping track of scores during game nights. The goal is to make it easy to add games, create scoreboards, record players and rounds, and see who is winning over time.
 
-The app is intentionally built with a production-ready structure from the start: React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, PostgreSQL, Spring Data JPA, Hibernate, and Flyway.
+The app is intentionally built with a production-ready structure from the start: React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, PostgreSQL, Spring Data JPA, Hibernate, and Liquibase.
 
 Current implementation status:
 
@@ -151,7 +151,9 @@ Local PostgreSQL is provided by `docker-compose.yml`.
 docker compose up -d postgres
 ```
 
-Flyway runs automatically when the Spring Boot application starts and applies migrations from `backend/src/main/resources/db/migration`.
+Liquibase runs automatically when the Spring Boot application starts and applies all changelogs from `backend/src/main/resources/db/changelog/db.changelog-master.yaml`.
+
+To add a schema change, create a new file under `backend/src/main/resources/db/changelog/changes/` and include it in `db.changelog-master.yaml`. See `docs/deployment.md` for the full Liquibase workflow.
 
 ## Cloudflare Pages Deployment
 

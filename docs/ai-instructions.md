@@ -78,6 +78,15 @@ When changing these instructions, update this file first and keep the root-level
 - Configuration: `infrastructure/config`.
 - Shared framework-free exceptions: `shared/exception`.
 
+## Database Migrations (Liquibase)
+
+- All schema changes are YAML changesets under `backend/src/main/resources/db/changelog/changes/`.
+- Name each file with a zero-padded sequential prefix and a short description, e.g. `0008-add-avatar-to-players.yaml`.
+- Register every new file in `db.changelog-master.yaml` by appending an `include` entry.
+- The changeset `id` must match the filename (prefix + description, no `.yaml`).
+- Never edit a changeset that has already been applied to any environment; add a new one instead.
+- Use Testcontainers in persistence tests to verify the schema after applying changelogs.
+
 ## What Must Not Be Done
 
 - Do not add JPA annotations to domain models.
@@ -85,7 +94,7 @@ When changing these instructions, update this file first and keep the root-level
 - Do not expose database entities through REST.
 - Do not call `fetch` directly inside reusable UI components.
 - Do not skip tests for validation and not-found behavior.
-- Do not use Hibernate `ddl-auto=update` for production schema changes.
+- Do not use Hibernate `ddl-auto=update` or `ddl-auto=create` for schema changes; use Liquibase changesets.
 
 ## Avoiding Clean Architecture Breakage
 
