@@ -219,6 +219,8 @@ Run frontend tests:
 npm run test:frontend
 ```
 
+For CI/CD pipeline with GitHub Actions (automated testing on push/pull request), see [docs/github-actions.md](docs/github-actions.md).
+
 Build backend:
 
 ```bash

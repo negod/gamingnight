@@ -26,54 +26,39 @@ These must be addressed before any new feature work.
 
 ### Claude
 
-#### SEC-1 · Implement Spring Security with role-based access control `[Critical]`
+#### SEC-1 · Implement Spring Security with role-based access control `[Resolved]`
 
-**Problem**: Spring Security is not in the project. Any unauthenticated caller can modify every resource. `UserRole.ADMIN` / `UserRole.USER` exist in the domain but are never enforced. Violates OWASP ASVS V2 (Authentication) and V4 (Access Control).
+**Status**: Resolved. Spring Security 6 added with JWT-based stateless authentication.
 
-**What to do**
-
-1. Add `spring-boot-starter-security` to `backend/pom.xml`.
-2. Design and document the auth strategy in `docs/architecture.md` — session-based (stateful, simpler for a web UI) or JWT (stateless, better for API-first). Recommend JWT with short-lived tokens for this project.
-3. Implement a `SecurityFilterChain` bean in `backend/src/main/java/se/backede/infrastructure/config/SecurityConfig.java`.
-4. Secure endpoints by role:
-   - `GET` endpoints: authenticated users only.
-   - `POST /api/users` (create user): `ADMIN` only, or unauthenticated for self-registration — document the decision.
-   - `DELETE` endpoints: `ADMIN` only.
-   - `POST /api/competitions/{id}/start`, result entry: `ADMIN` only.
-5. Add `@PreAuthorize` at use-case layer (not only controller) per the instructions.
-6. Add integration tests for denied access (401/403 responses).
+- `spring-boot-starter-security` + `spring-security-test` added to `pom.xml`.
+- `JwtAuthenticationFilter extends OncePerRequestFilter` validates Bearer tokens via `TokenService`, sets `SecurityContextHolder` + `AuthContext` (ThreadLocal preserved for backward compat).
+- `SecurityConfig` (`@EnableWebSecurity @EnableMethodSecurity`): CSRF disabled, stateless sessions, role rules (USER allowed on GET competitions/users-me/single-resource; everything else ADMIN).
+- `AuthInterceptor` deleted; `WebConfig` cleaned up.
+- `@PreAuthorize("hasRole('ADMIN')")` on `CompetitionUseCaseService` (create/update/delete/generateTeams), `CompetitionRunUseCaseService` (start/enterResults), `UserUseCaseService` (create/list/getById/update/delete).
+- HTTP security headers in `SecurityConfig` (also covers SEC-2): CSP, X-Frame-Options, Referrer-Policy, Permissions-Policy.
+- All `@WebMvcTest` tests updated: `@Import(SecurityConfig.class)` + `@WithMockUser(roles = "ADMIN")`.
+- `AuthorizationTest` added: unauthenticated → 401, USER on admin endpoint → 403, USER on competition list → 200, ADMIN create → 201.
+- All 145 tests pass.
 
 **Files affected**
 - `backend/pom.xml`
 - `backend/src/main/java/se/backede/infrastructure/config/SecurityConfig.java` (new)
-- All controllers (add auth annotations or rely on filter chain)
-- `docs/architecture.md` (new Security section — see DOC-2)
+- `backend/src/main/java/se/backede/infrastructure/security/JwtAuthenticationFilter.java` (new)
+- `backend/src/main/java/se/backede/infrastructure/security/AuthInterceptor.java` (deleted)
+- `backend/src/main/java/se/backede/infrastructure/config/WebConfig.java`
+- `backend/src/main/java/se/backede/application/usecase/CompetitionUseCaseService.java`
+- `backend/src/main/java/se/backede/application/usecase/CompetitionRunUseCaseService.java`
+- `backend/src/main/java/se/backede/application/usecase/UserUseCaseService.java`
+- All six `@WebMvcTest` test classes + `AuthorizationTest.java` (new)
 
 ---
 
-#### SEC-2 · Configure HTTP security headers `[Critical]`
+#### SEC-2 · Configure HTTP security headers `[Resolved]`
 
-**Problem**: No `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, or `Referrer-Policy` headers. Violates OWASP ASVS V14.4. Spring Security's defaults add several of these — they are absent because Spring Security itself is absent (see SEC-1). Once Spring Security is added, verify the defaults and extend them.
-
-**What to do**
-
-In `SecurityConfig.java` (created in SEC-1), configure `headers()`:
-
-```java
-http.headers(headers -> headers
-    .contentSecurityPolicy(csp -> csp.policyDirectives(
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
-    .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
-    .referrerPolicy(policy ->
-        policy.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-);
-```
-
-Add `Permissions-Policy` via a `OncePerRequestFilter` or a Spring Boot `FilterRegistrationBean` because Spring Security does not configure it natively.
+**Status**: Resolved as part of SEC-1. `SecurityConfig` configures all required headers via Spring Security's `headers()` DSL: Content-Security-Policy, X-Frame-Options (DENY), Referrer-Policy (strict-origin-when-cross-origin), and Permissions-Policy (camera/microphone/geolocation disabled). Spring Security also adds X-Content-Type-Options by default.
 
 **Files affected**
 - `backend/src/main/java/se/backede/infrastructure/config/SecurityConfig.java`
-- `backend/src/main/java/se/backede/infrastructure/config/SecurityHeadersFilter.java` (new, for Permissions-Policy)
 
 ---
 
@@ -507,8 +492,8 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 
 | ID | Severity | Model | Status |
 |---|---|---|---|
-| SEC-1 | Critical | Claude | ☐ |
-| SEC-2 | Critical | Claude | ☐ |
+| SEC-1 | Critical | Claude | ✅ |
+| SEC-2 | Critical | Claude | ✅ |
 | SEC-3 | Critical | Codex | ☐ |
 | CA-1 / DDD-1 | High | Claude | ☐ |
 | SO-1 / CC-1 | High | Claude | ☐ |
