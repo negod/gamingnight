@@ -71,15 +71,19 @@ Required backend configuration:
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/gaming-night
 SPRING_DATASOURCE_USERNAME=gaming-night
 SPRING_DATASOURCE_PASSWORD=gaming-night
+APP_AUTH_TOKEN_SECRET=dev-only-change-me
 CORS_ALLOWED_ORIGINS=http://localhost:5173
 PORT=8080
 ```
+
+**Important**: `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` must always be explicitly supplied. The application will fail to start if these environment variables are not set, as there are no default values configured.
 
 These values can come from exported shell variables, IDE run configuration, container configuration, or hosting-provider secrets. Spring Boot does not automatically load `backend/.env` unless the local tooling explicitly sources it.
 
 Important backend settings from `application.yml`:
 
 ```text
+app.auth.token-secret=${APP_AUTH_TOKEN_SECRET:dev-only-change-me}
 spring.jpa.hibernate.ddl-auto=validate
 spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
 spring.jpa.open-in-view=false
@@ -153,10 +157,13 @@ Use `sslmode=require` unless the provider recommends a different SSL setting.
 Fresh databases are seeded by Liquibase with:
 
 - 12 players
+- 2 users: `admin` / `admin` and `user` / `user`
 - 2 predefined teams
 - 2 games
 - 1 setup-state competition
 - 288 generated-team name candidates
+
+Change seeded development passwords before exposing a non-local environment. Use a strong `APP_AUTH_TOKEN_SECRET`; rotating this value invalidates existing login tokens.
 
 ## Liquibase Migration Workflow
 
@@ -175,7 +182,9 @@ backend/src/main/resources/db/changelog/
     |-- 0006-create-matches.yaml
     |-- 0007-create-player-results.yaml
     |-- 0008-seed-test-data.yaml
-    `-- 0009-create-team-names.yaml
+    |-- 0009-create-team-names.yaml
+    |-- 0010-create-users.yaml
+    `-- 0011-add-user-passwords.yaml
 ```
 
 Add a migration:
@@ -193,7 +202,7 @@ Example:
 ```yaml
 databaseChangeLog:
   - changeSet:
-      id: 0010-add-avatar-to-players
+      id: 0012-add-avatar-to-players
       author: backede
       changes:
         - addColumn:
@@ -244,6 +253,7 @@ Environment variables:
 SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:PORT/DATABASE?sslmode=require
 SPRING_DATASOURCE_USERNAME=USER
 SPRING_DATASOURCE_PASSWORD=PASSWORD
+APP_AUTH_TOKEN_SECRET=long-random-production-secret
 CORS_ALLOWED_ORIGINS=https://your-frontend-domain
 PORT=8080
 ```
@@ -255,6 +265,7 @@ Render provides `PORT` automatically for many services. The application reads it
 - PostgreSQL is reachable from the backend.
 - `SPRING_DATASOURCE_URL` uses the provider's production database.
 - `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` are set as secrets.
+- `APP_AUTH_TOKEN_SECRET` is set to a strong private value and is not the development default.
 - `CORS_ALLOWED_ORIGINS` is the exact frontend origin, not `*`.
 - Frontend `VITE_API_BASE_URL` points to the deployed backend `/api`.
 - Liquibase runs successfully during backend startup.

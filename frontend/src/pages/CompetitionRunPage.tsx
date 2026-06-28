@@ -27,12 +27,15 @@ import { TotalTeamLeaderboard } from '../features/competition-run/components/Tot
 import { TotalPlayerLeaderboard } from '../features/competition-run/components/TotalPlayerLeaderboard';
 import { ErrorMessage } from '../shared/components/ErrorMessage';
 import { LoadingMessage } from '../shared/components/LoadingMessage';
+import { useAuth } from '../shared/auth/AuthContext';
 
 type Tab = 'matches' | 'game-leaderboard' | 'total-leaderboard';
 
 export function CompetitionRunPage() {
   const { id } = useParams<{ id: string }>();
   const competitionId = id!;
+  const { user } = useAuth();
+  const admin = user?.role === 'ADMIN';
 
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [games, setGames] = useState<Game[]>([]);
@@ -131,7 +134,7 @@ export function CompetitionRunPage() {
         <p className="mt-1 text-sm text-slate-600">{competition.date}</p>
       </div>
 
-      {!competition.started && (
+      {!competition.started && admin && (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
           <p className="mb-4 text-slate-600">
             Ready to start? This will generate all match-ups and cannot be undone.
@@ -194,7 +197,7 @@ export function CompetitionRunPage() {
                     onCancel={() => setEditingMatch(null)}
                   />
                 ) : (
-                  <MatchCard key={match.id} match={match} onEdit={setEditingMatch} />
+                  <MatchCard key={match.id} match={match} onEdit={admin ? setEditingMatch : undefined} />
                 ),
               )}
             </div>

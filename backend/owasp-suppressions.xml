@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- OWASP Dependency-Check Suppression File -->
+<!-- This file is used to suppress false positive findings from the OWASP dependency-check scan. -->
+<!-- Add suppression entries as needed when resolving false positives. -->
+
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- Example suppression entry (uncomment and modify as needed): -->
+    <!--
+    <suppress>
+        <packageUrl regex="true">.*</packageUrl>
+        <cve>CVE-1234-5678</cve>
+        <reason>False positive - not applicable to this project</reason>
+    </suppress>
+    -->
+</suppressions>

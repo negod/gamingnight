@@ -58,6 +58,10 @@ New tests added for Area A:
 - `PlayerForm.test.tsx`: verifies player form submission and required-name validation.
 - `PlayerList.test.tsx`: verifies empty state, edit links, and delete action.
 
+Tests for user administration:
+- `UserForm.test.tsx`: verifies username, password, role, player selection, and validation.
+- `UserList.test.tsx`: verifies empty state, role/player rendering, edit links, and delete action.
+
 Tests for Area D:
 - `CompetitionForm.test.tsx`: verifies setup form submission, game order, and team selection.
 - `CompetitionList.test.tsx`: verifies empty state, setup/started status, edit visibility, and delete action.
@@ -107,6 +111,16 @@ Keep tests readable. Test behavior, not implementation details.
 | `/api/players` returns correct status codes for CRUD, validation, and not-found cases | `PlayerControllerTest` |
 | Player UI supports validation, edit links, delete action, and empty state | `PlayerForm.test.tsx`, `PlayerList.test.tsx` |
 
+### User Administration
+
+| Scenario | Test |
+|---|---|
+| Usernames are trimmed and validated, roles are required, and users must link to players | `UserTest` |
+| Users can be created with hashed passwords, listed newest-first, updated, and deleted | `UserUseCaseServiceTest` |
+| User creation/update validates player existence, unique username, and one user per player | `UserUseCaseServiceTest` |
+| `/api/users` returns correct status codes for CRUD, validation, and not-found cases | `UserControllerTest` |
+| User UI supports username, password, role, player selection, edit links, delete action, and empty state | `UserForm.test.tsx`, `UserList.test.tsx` |
+
 ### Game Management (Area B)
 
 | Scenario | Test |
@@ -137,6 +151,7 @@ Current gap: team domain validation and `/api/teams` controller behavior should 
 | Generated teams use unused seeded team names, and manual teams reject duplicate names | `CompetitionUseCaseServiceTest`, `TeamUseCaseServiceTest` |
 | Started competitions cannot be edited or regenerated | `CompetitionUseCaseServiceTest`, `CompetitionControllerTest` |
 | `/api/competitions` returns correct status codes for CRUD, validation, not-found, and generate-teams cases | `CompetitionControllerTest` |
+| User-scoped competition reads use authenticated context before returning competition data | `CompetitionControllerTest`, `CompetitionRunControllerTest`, `LeaderboardControllerTest` |
 | Competition setup UI supports game ordering, team selection, status display, delete action, and generate-team wizard | `CompetitionForm.test.tsx`, `CompetitionList.test.tsx`, `GenerateTeamsWizard.test.tsx` |
 
 ### Competition Run (Area E)

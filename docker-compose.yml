@@ -1,3 +1,7 @@
+# Note: The application requires SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME,
+# and SPRING_DATASOURCE_PASSWORD environment variables to be set when running.
+# These must be explicitly supplied - there are no default values.
+
 services:
   postgres:
     image: postgres:16-alpine

@@ -5,6 +5,8 @@ This project is designed to be easy to continue with Codex, Claude, Mistral, and
 ## Table of Contents
 
 - [Default Assistant Entrypoints](#default-assistant-entrypoints)
+- [Engineering Principles](#engineering-principles)
+- [Security](#security)
 - [Architecture Rules](#architecture-rules)
 - [Naming Conventions](#naming-conventions)
 - [Adding a New Feature](#adding-a-new-feature)
@@ -24,6 +26,36 @@ The canonical instructions are in this file. Root-level assistant entrypoints mu
 - `MISTRAL.md` for Mistral-compatible agents.
 
 **Important**: When changing these instructions, update this file first and keep the root-level entrypoints as short delegates to avoid duplicated rules drifting apart.
+
+## Engineering Principles
+
+Every decision — architecture, feature design, implementation, and code review — must be guided by:
+
+- **Clean Architecture** — dependencies point inward; domain is framework-free; infrastructure implements ports.
+- **Clean Code** — readable, minimal, intention-revealing code with no unnecessary complexity.
+- **SOLID** — single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion.
+- **Domain-Driven Design (DDD)** — model the domain explicitly; use ubiquitous language; protect invariants inside domain objects.
+- **Test-Driven Development** — write the test first; let failing tests drive implementation; refactor under green.
+
+## Security
+
+Security is a first-class concern. It must be considered in every architectural decision, feature design, implementation, and code review. Security is never treated as an afterthought.
+
+The project follows:
+
+- **Secure by Design** — threat model early; eliminate vulnerability classes at the design level, not through patches.
+- **OWASP SAMM** — software assurance maturity model guides process and governance around security practices.
+- **OWASP ASVS** — application security verification standard defines the baseline requirements for every feature.
+
+Concrete expectations:
+
+- Validate and sanitise all input at system boundaries (controllers, external API responses). Never trust caller-supplied data inside the domain.
+- Never log or expose sensitive data (credentials, PII, tokens) in responses, logs, or error messages.
+- Use parameterised queries or ORM abstractions; never concatenate user input into SQL or HQL.
+- Enforce authentication and authorisation at the use-case layer, not only at the controller.
+- Apply the principle of least privilege to roles, database accounts, and service permissions.
+- Keep dependencies up to date; flag known CVEs before shipping.
+- Document the threat model and security decisions for any non-trivial feature in `docs/architecture.md`.
 
 ## Architecture Rules
 
@@ -92,6 +124,8 @@ The canonical instructions are in this file. Root-level assistant entrypoints mu
 - Shared framework-free exceptions: `shared/exception`.
 
 ## Database Migrations (Liquibase)
+
+> **Note on existing changesets**: Due to historical deletions, the numbering has gaps and duplicates at 0002 and 0003. These cannot be renamed as they are already applied. All new changesets must use strictly sequential numbers starting from the highest existing prefix + 1 (currently `0012`).
 
 - All schema changes are YAML changesets under `backend/src/main/resources/db/changelog/changes/`.
 - Name each file with a zero-padded sequential prefix and a short description, e.g. `0008-add-avatar-to-players.yaml`.

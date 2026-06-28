@@ -69,10 +69,33 @@ public class CompetitionUseCaseService {
                 .toList();
     }
 
+    public List<CompetitionResponse> listForPlayer(UUID playerId) {
+        return competitionRepository.findAll().stream()
+                .filter(competition -> playerHasTeamInCompetition(playerId, competition))
+                .sorted(Comparator.comparing(Competition::date).reversed())
+                .map(CompetitionDtoMapper::toResponse)
+                .toList();
+    }
+
     public CompetitionResponse getById(UUID id) {
         return competitionRepository.findById(id)
                 .map(CompetitionDtoMapper::toResponse)
                 .orElseThrow(() -> competitionNotFound(id));
+    }
+
+    public CompetitionResponse getByIdForPlayer(UUID id, UUID playerId) {
+        var competition = competitionRepository.findById(id)
+                .orElseThrow(() -> competitionNotFound(id));
+        if (!playerHasTeamInCompetition(playerId, competition)) {
+            throw competitionNotFound(id);
+        }
+        return CompetitionDtoMapper.toResponse(competition);
+    }
+
+    public boolean playerCanAccessCompetition(UUID competitionId, UUID playerId) {
+        return competitionRepository.findById(competitionId)
+                .map(competition -> playerHasTeamInCompetition(playerId, competition))
+                .orElse(false);
     }
 
     public CompetitionResponse update(UUID id, UpdateCompetitionRequest request) {
@@ -147,6 +170,16 @@ public class CompetitionUseCaseService {
                 .map(teamName -> teamName.name())
                 .filter(name -> !usedNames.contains(normalizeName(name)))
                 .toList();
+    }
+
+    private boolean playerHasTeamInCompetition(UUID playerId, Competition competition) {
+        for (UUID teamId : competition.teamIds()) {
+            var team = teamRepository.findById(teamId);
+            if (team.isPresent() && team.get().playerIds().contains(playerId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String normalizeName(String name) {

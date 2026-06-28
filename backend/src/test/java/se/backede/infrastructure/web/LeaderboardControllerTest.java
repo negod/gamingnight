@@ -1,13 +1,19 @@
 package se.backede.infrastructure.web;
 
+import se.backede.application.dto.AuthenticatedUser;
 import se.backede.application.dto.GamePlayerLeaderboardResponse;
 import se.backede.application.dto.GamePlayerLeaderboardRow;
 import se.backede.application.dto.GameTeamLeaderboardResponse;
 import se.backede.application.dto.GameTeamLeaderboardRow;
 import se.backede.application.dto.TotalPlayerLeaderboardRow;
 import se.backede.application.dto.TotalTeamLeaderboardRow;
+import se.backede.application.usecase.CompetitionUseCaseService;
 import se.backede.application.usecase.LeaderboardUseCaseService;
+import se.backede.domain.model.UserRole;
+import se.backede.infrastructure.security.AuthContext;
 import se.backede.shared.exception.ResourceNotFoundException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -30,6 +36,19 @@ class LeaderboardControllerTest {
 
     @MockBean
     private LeaderboardUseCaseService service;
+
+    @MockBean
+    private CompetitionUseCaseService competitionUseCaseService;
+
+    @BeforeEach
+    void authenticateAdmin() {
+        AuthContext.set(new AuthenticatedUser(UUID.randomUUID(), "admin", UserRole.ADMIN, UUID.randomUUID()));
+    }
+
+    @AfterEach
+    void clearAuthContext() {
+        AuthContext.clear();
+    }
 
     @Test
     void gameTeamLeaderboardReturnsRankedRows() throws Exception {

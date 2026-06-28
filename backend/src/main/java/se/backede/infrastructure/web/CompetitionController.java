@@ -5,6 +5,7 @@ import se.backede.application.dto.CreateCompetitionRequest;
 import se.backede.application.dto.GenerateTeamsRequest;
 import se.backede.application.dto.UpdateCompetitionRequest;
 import se.backede.application.usecase.CompetitionUseCaseService;
+import se.backede.infrastructure.security.AuthContext;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,12 +38,14 @@ public class CompetitionController {
 
     @GetMapping
     List<CompetitionResponse> list() {
-        return competitionUseCaseService.list();
+        var user = AuthContext.requireUser();
+        return user.admin() ? competitionUseCaseService.list() : competitionUseCaseService.listForPlayer(user.playerId());
     }
 
     @GetMapping("/{id}")
     CompetitionResponse getById(@PathVariable UUID id) {
-        return competitionUseCaseService.getById(id);
+        var user = AuthContext.requireUser();
+        return user.admin() ? competitionUseCaseService.getById(id) : competitionUseCaseService.getByIdForPlayer(id, user.playerId());
     }
 
     @PutMapping("/{id}")

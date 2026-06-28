@@ -1,14 +1,20 @@
 package se.backede.infrastructure.web;
 
+import se.backede.application.dto.AuthenticatedUser;
 import se.backede.application.dto.CompetitionResponse;
 import se.backede.application.dto.EnterResultsRequest;
 import se.backede.application.dto.MatchResponse;
 import se.backede.application.dto.PlayerResultInput;
 import se.backede.application.dto.PlayerResultResponse;
+import se.backede.application.usecase.CompetitionUseCaseService;
 import se.backede.application.usecase.CompetitionRunUseCaseService;
+import se.backede.domain.model.UserRole;
+import se.backede.infrastructure.security.AuthContext;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -41,6 +47,19 @@ class CompetitionRunControllerTest {
 
     @MockBean
     private CompetitionRunUseCaseService service;
+
+    @MockBean
+    private CompetitionUseCaseService competitionUseCaseService;
+
+    @BeforeEach
+    void authenticateAdmin() {
+        AuthContext.set(new AuthenticatedUser(UUID.randomUUID(), "admin", UserRole.ADMIN, UUID.randomUUID()));
+    }
+
+    @AfterEach
+    void clearAuthContext() {
+        AuthContext.clear();
+    }
 
     @Test
     void startReturnsStartedCompetition() throws Exception {

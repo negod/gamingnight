@@ -8,6 +8,7 @@ This document describes the architecture, layer boundaries, domain concepts, fea
 - [Dependency Rules](#dependency-rules)
 - [Domain Models](#domain-models)
 - [Feature Flows](#feature-flows)
+- [Authentication And Authorization](#authentication-and-authorization)
 - [REST API](#rest-api)
 - [Frontend Layers](#frontend-layers)
 
@@ -41,6 +42,8 @@ The infrastructure layer contains adapters that implement the ports defined in t
 | Model | Description |
 |---|---|
 | `Player` | A registered participant |
+| `User` | A system user with a username, role, and required player link |
+| `UserRole` | Role enum with `ADMIN` and `USER` |
 | `Game` | A game with `GameType` (SCORE_BASED / TIME_BASED) and `CalculationMethod` (SUM / AVERAGE) |
 | `Team` | A named group of players. Team names are unique across the application |
 | `TeamName` | A seeded catalog entry used as the source for random generated team names |
@@ -53,6 +56,10 @@ The infrastructure layer contains adapters that implement the ports defined in t
 ### Player Management
 
 Administrators manage participants through `/api/players` and the `/players` frontend section. Players can be created, listed, edited, and deleted before they are assigned to teams.
+
+### User Administration
+
+Administrators manage system users through `/api/users` and the `/users` frontend section. A user has a unique username, password, one role (`ADMIN` or `USER`), and must be tied to an existing player. A player can only be tied to one user.
 
 ### Game Management
 
@@ -88,7 +95,26 @@ Auto-generated teams are created from selected players through `POST /api/compet
 
 The column header (`Total Score`, `Average Score`, `Total Time`, `Average Time`) is computed from the game's type and calculation method and returned alongside the leaderboard rows.
 
+## Authentication And Authorization
+
+Users log in through `POST /api/auth/login`. The backend verifies the password hash, returns a signed bearer token, and the frontend stores that token for subsequent API calls.
+
+Role behavior:
+
+- `ADMIN` users can access every backend endpoint and every frontend section.
+- `USER` users can access `GET /api/users/me`, competition read endpoints, leaderboards, match reads, and supporting detail reads for games, teams, and players.
+- Competition reads for `USER` accounts are filtered to competitions where the user's linked player belongs to one of the competition teams.
+- Mutating setup and result-entry actions are admin-only.
+
+The frontend mirrors these rules in navigation: admins see all tabs, while regular users see only `Competitions` and `My user`.
+
 ## REST API
+
+### Authentication
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/auth/login` | Log in and receive a bearer token |
 
 ### Players
 
@@ -99,6 +125,17 @@ The column header (`Total Score`, `Average Score`, `Total Time`, `Average Time`)
 | GET | `/api/players/{id}` | Get player |
 | PUT | `/api/players/{id}` | Update player |
 | DELETE | `/api/players/{id}` | Delete player |
+
+### Users
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/users` | Create user tied to a player |
+| GET | `/api/users` | List users |
+| GET | `/api/users/me` | Get the authenticated user's profile |
+| GET | `/api/users/{id}` | Get user |
+| PUT | `/api/users/{id}` | Update username, password, role, or player link |
+| DELETE | `/api/users/{id}` | Delete user |
 
 ### Games
 
@@ -125,8 +162,8 @@ The column header (`Total Score`, `Average Score`, `Total Time`, `Average Time`)
 | Method | Path | Description |
 |---|---|---|
 | POST | `/api/competitions` | Create competition with ordered games and teams |
-| GET | `/api/competitions` | List competitions |
-| GET | `/api/competitions/{id}` | Get competition |
+| GET | `/api/competitions` | List competitions; regular users only receive competitions for their linked player |
+| GET | `/api/competitions/{id}` | Get competition; regular users must be part of the competition as a player |
 | PUT | `/api/competitions/{id}` | Update setup before start |
 | DELETE | `/api/competitions/{id}` | Delete competition |
 | POST | `/api/competitions/{id}/generate-teams` | Auto-generate teams from selected players |
@@ -170,6 +207,17 @@ UI components do not call `fetch` directly.
 | `pages/PlayersPage` | List page with delete confirmation |
 | `pages/CreatePlayerPage` | Create form wired to POST /api/players |
 | `pages/EditPlayerPage` | Edit form wired to PUT /api/players/{id} |
+
+### Users Feature (`features/users`)
+
+| File | Role |
+|---|---|
+| `api/usersApi.ts` | listUsers, getUser, getCurrentUser, createUser, updateUser, deleteUser |
+| `components/UserList` | Table of users with role, player link, edit, and delete actions |
+| `components/UserForm` | Form for username, password, role, and player assignment |
+| `pages/UsersPage` | List page with delete confirmation |
+| `pages/CreateUserPage` | Create form wired to POST /api/users |
+| `pages/EditUserPage` | Edit form wired to PUT /api/users/{id} |
 
 ### Games Feature (`features/games`)
 

@@ -4,6 +4,9 @@ import se.backede.application.dto.CompetitionResponse;
 import se.backede.application.dto.EnterResultsRequest;
 import se.backede.application.dto.MatchResponse;
 import se.backede.application.usecase.CompetitionRunUseCaseService;
+import se.backede.application.usecase.CompetitionUseCaseService;
+import se.backede.infrastructure.security.AuthContext;
+import se.backede.shared.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,9 +25,12 @@ import java.util.UUID;
 public class CompetitionRunController {
 
     private final CompetitionRunUseCaseService service;
+    private final CompetitionUseCaseService competitionUseCaseService;
 
-    public CompetitionRunController(CompetitionRunUseCaseService service) {
+    public CompetitionRunController(CompetitionRunUseCaseService service,
+                                    CompetitionUseCaseService competitionUseCaseService) {
         this.service = service;
+        this.competitionUseCaseService = competitionUseCaseService;
     }
 
     @PostMapping("/{id}/start")
@@ -34,6 +40,7 @@ public class CompetitionRunController {
 
     @GetMapping("/{competitionId}/games/{gameId}/matches")
     List<MatchResponse> getMatches(@PathVariable UUID competitionId, @PathVariable UUID gameId) {
+        authorizeCompetitionAccess(competitionId);
         return service.getMatches(competitionId, gameId);
     }
 
@@ -43,5 +50,12 @@ public class CompetitionRunController {
             @PathVariable UUID matchId,
             @Valid @RequestBody EnterResultsRequest request) {
         return service.enterResults(competitionId, matchId, request);
+    }
+
+    private void authorizeCompetitionAccess(UUID competitionId) {
+        var user = AuthContext.requireUser();
+        if (!user.admin() && !competitionUseCaseService.playerCanAccessCompetition(competitionId, user.playerId())) {
+            throw new ResourceNotFoundException("Competition not found: " + competitionId);
+        }
     }
 }

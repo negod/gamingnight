@@ -20,6 +20,9 @@ The stack is React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, Post
 ## Features
 
 - Manage players.
+- Log in with role-based access control.
+- Administer system users with `ADMIN` or `USER` roles.
+- Tie each system user to exactly one player.
 - Manage games with score-based or time-based ranking and sum or average calculations.
 - Manage teams with globally unique team names.
 - Create competitions with ordered games and assigned teams.
@@ -161,15 +164,18 @@ backend/src/main/resources/db/changelog/changes/
 Fresh databases are automatically populated with development seed data:
 
 - 12 players
+- 2 users: `admin` / `admin` and `user` / `user`
 - 2 predefined teams
 - 2 games
 - 1 setup-state competition
 - 288 seeded team names for generated teams
 
+After starting the backend and frontend, open `http://localhost:5173` and log in. Admin users can see every section. Regular users can see their own user page and competitions where their linked player belongs to a competition team.
+
 To add a database change:
 
 1. Add a new YAML changeset under `backend/src/main/resources/db/changelog/changes/`.
-2. Use the next zero-padded prefix and a descriptive filename, for example `0010-add-avatar-to-players.yaml`.
+2. Use the next zero-padded prefix and a descriptive filename, for example `0012-add-avatar-to-players.yaml`.
 3. Set the changeset `id` to the filename without `.yaml`.
 4. Append the file to `db.changelog-master.yaml`.
 5. Start the backend against local PostgreSQL and confirm Liquibase applies the change.
@@ -184,9 +190,12 @@ Backend defaults are defined in `backend/src/main/resources/application.yml` and
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/gaming-night
 SPRING_DATASOURCE_USERNAME=gaming-night
 SPRING_DATASOURCE_PASSWORD=gaming-night
+APP_AUTH_TOKEN_SECRET=dev-only-change-me
 CORS_ALLOWED_ORIGINS=http://localhost:5173
 PORT=8080
 ```
+
+Set `APP_AUTH_TOKEN_SECRET` to a strong private value outside local development. Existing login tokens become invalid when this value changes.
 
 `backend/.env.example` documents the expected variables, but Spring Boot does not automatically load `backend/.env` without extra shell or IDE setup.
 

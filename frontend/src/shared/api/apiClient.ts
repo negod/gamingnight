@@ -9,11 +9,26 @@ export class ApiError extends Error {
 }
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
+const tokenStorageKey = 'gaming-night-token';
+
+export function getAuthToken(): string | null {
+  return localStorage.getItem(tokenStorageKey);
+}
+
+export function setAuthToken(token: string): void {
+  localStorage.setItem(tokenStorageKey, token);
+}
+
+export function clearAuthToken(): void {
+  localStorage.removeItem(tokenStorageKey);
+}
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = getAuthToken();
   const response = await fetch(`${apiBaseUrl}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
     ...options,

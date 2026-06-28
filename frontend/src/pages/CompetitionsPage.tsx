@@ -6,8 +6,11 @@ import { CompetitionList } from '../features/competitions/components/Competition
 import { useAsync } from '../shared/hooks/useAsync';
 import { ErrorMessage } from '../shared/components/ErrorMessage';
 import { LoadingMessage } from '../shared/components/LoadingMessage';
+import { useAuth } from '../shared/auth/AuthContext';
 
 export function CompetitionsPage() {
+  const { user } = useAuth();
+  const admin = user?.role === 'ADMIN';
   const [version, setVersion] = useState(0);
   const { data, error, loading } = useAsync(listCompetitions, [version]);
 
@@ -24,18 +27,20 @@ export function CompetitionsPage() {
           <h1 className="text-2xl font-semibold text-slate-950">Competitions</h1>
           <p className="mt-1 text-sm text-slate-600">Create and manage competitions.</p>
         </div>
-        <Link
-          to="/competitions/new"
-          className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
-        >
-          <Plus aria-hidden="true" className="h-4 w-4" />
-          New competition
-        </Link>
+        {admin ? (
+          <Link
+            to="/competitions/new"
+            className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+          >
+            <Plus aria-hidden="true" className="h-4 w-4" />
+            New competition
+          </Link>
+        ) : null}
       </div>
 
       {loading ? <LoadingMessage /> : null}
       {error ? <ErrorMessage message={error} /> : null}
-      {data ? <CompetitionList competitions={data} onDelete={handleDelete} /> : null}
+      {data ? <CompetitionList competitions={data} onDelete={handleDelete} canManage={admin} /> : null}
     </section>
   );
 }

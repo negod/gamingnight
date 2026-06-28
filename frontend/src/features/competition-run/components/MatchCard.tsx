@@ -3,7 +3,7 @@ import type { Match } from '../../../shared/types/match';
 
 type MatchCardProps = {
   match: Match;
-  onEdit: (match: Match) => void;
+  onEdit?: (match: Match) => void;
 };
 
 export function MatchCard({ match, onEdit }: MatchCardProps) {
@@ -26,14 +26,16 @@ export function MatchCard({ match, onEdit }: MatchCardProps) {
               Pending
             </span>
           )}
-          <button
-            type="button"
-            onClick={() => onEdit(match)}
-            className="rounded-md border border-slate-300 p-1.5 text-slate-600 hover:bg-slate-100"
-            aria-label={`Enter results for ${match.homeTeamName} vs ${match.awayTeamName}`}
-          >
-            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
+          {onEdit ? (
+            <button
+              type="button"
+              onClick={() => onEdit(match)}
+              className="rounded-md border border-slate-300 p-1.5 text-slate-600 hover:bg-slate-100"
+              aria-label={`Enter results for ${match.homeTeamName} vs ${match.awayTeamName}`}
+            >
+              <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
       </div>
 

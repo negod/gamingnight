@@ -11,7 +11,9 @@
       "Bash(git -C /mnt/c/Programmering/Projekt/gamingnight diff --name-only HEAD)",
       "Bash(git *)",
       "Bash(node *)",
-      "Bash(python3 -m json.tool)"
+      "Bash(python3 -m json.tool)",
+      "Bash(xargs ls)",
+      "Bash(grep \"\\\\.java$\")"
     ]
   }
 }

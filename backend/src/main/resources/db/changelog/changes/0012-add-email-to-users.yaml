@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0012-add-email-to-users
+      author: backede
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  type: varchar(320)
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: CREATE UNIQUE INDEX ux_users_email_lower ON users (lower(email)) WHERE email IS NOT NULL;

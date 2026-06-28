@@ -5,9 +5,10 @@ import type { Competition } from '../../../shared/types/competition';
 type CompetitionListProps = {
   competitions: Competition[];
   onDelete: (id: string) => void;
+  canManage?: boolean;
 };
 
-export function CompetitionList({ competitions, onDelete }: CompetitionListProps) {
+export function CompetitionList({ competitions, onDelete, canManage = true }: CompetitionListProps) {
   if (competitions.length === 0) {
     return <p className="text-sm text-slate-500">No competitions yet.</p>;
   }
@@ -50,7 +51,7 @@ export function CompetitionList({ competitions, onDelete }: CompetitionListProps
               </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
-                  {!competition.started && (
+                  {canManage && !competition.started && (
                     <Link
                       to={`/competitions/${competition.id}/edit`}
                       className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
@@ -64,15 +65,17 @@ export function CompetitionList({ competitions, onDelete }: CompetitionListProps
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50"
                   >
                     <Play aria-hidden="true" className="h-3.5 w-3.5" />
-                    {competition.started ? 'View' : 'Run'}
+                    {competition.started || !canManage ? 'View' : 'Run'}
                   </Link>
-                  <button
-                    onClick={() => onDelete(competition.id)}
-                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
-                    Delete
-                  </button>
+                  {canManage ? (
+                    <button
+                      onClick={() => onDelete(competition.id)}
+                      className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </td>
             </tr>
