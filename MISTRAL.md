@@ -4,15 +4,71 @@ This project uses Mistral Vibe for AI-assisted development. Follow the canonical
 
 ## My Capabilities & Tools
 
-As Mistral Vibe, I have access to the following tools that complement the project workflow:
+As Mistral Vibe, I have access to the following tools and skills that enable me to work effectively on this project:
 
-- **Code Analysis**: `read`, `grep` for examining existing code patterns
-- **Code Modification**: `edit`, `write_file` for implementing changes
-- **File Management**: `bash` for system operations and build commands
-- **Testing**: Can execute `mvn test`, `npm test` to verify changes
-- **Documentation**: Full ability to read and update all project documentation
-- **Git Operations**: Can check status, view history, and create commits
-- **Project Navigation**: Full access to explore the entire codebase
+### 📁 Code Analysis & Navigation
+- **`read`**: Read files with line numbers for precise code examination
+- **`grep`**: Search across the entire codebase using regex patterns
+- **File system access**: Full navigation through project directories
+- **Cross-file analysis**: Ability to trace dependencies and understand code flow
+
+### ✏️ Code Modification & Creation
+- **`edit`**: Precise string replacement with exact matching
+- **`write_file`**: Create new files with proper content
+- **Bulk operations**: Can handle multiple file changes in sequence
+- **Atomic changes**: Ensure changes are applied correctly and safely
+
+### 🧪 Testing & Validation
+- **Test execution**: Can run `mvn test`, `npm test` to verify changes
+- **Build verification**: Can execute `mvn clean package`, `npm run build`
+- **Code validation**: Check compilation and runtime behavior
+- **Test-driven development**: Follow TDD workflow as specified in ai-instructions.md
+
+### 📝 Documentation & Communication
+- **Full documentation access**: Read and update all markdown files
+- **Structured writing**: Create clear, well-organized documentation
+- **Cross-referencing**: Maintain links between related documentation
+- **Table of contents**: Create and maintain navigation structures
+
+### 🔧 System & Development Tools
+- **`bash`**: Execute shell commands with proper timeouts
+- **Git operations**: Status, history, commits, diffs
+- **Docker operations**: Container management for local development
+- **Environment setup**: Configure and verify development environment
+
+### 🏗️ Project-Specific Skills
+- **Clean Architecture**: Understand and maintain layer separation (domain -> application -> infrastructure)
+- **Spring Boot**: Java backend development with Spring ecosystem
+- **React/TypeScript**: Frontend development with modern frameworks
+- **JPA/Hibernate**: Database operations and entity mapping
+- **Liquibase**: Database migration management
+- **Testcontainers**: Integration testing with real databases
+- **REST API Design**: Proper endpoint design and HTTP semantics
+
+### 🔍 Quality Assurance
+- **Code review**: Identify patterns, anti-patterns, and improvements
+- **Security awareness**: Apply OWASP principles and secure coding practices
+- **Performance consideration**: Evaluate efficiency and scalability
+- **Error handling**: Proper exception management and user feedback
+
+### 📊 Workflow Management
+- **Task decomposition**: Break down complex tasks into manageable steps
+- **Progress tracking**: Maintain awareness of task completion status
+- **Dependency management**: Handle interdependent changes properly
+- **Risk assessment**: Identify potential issues before they occur
+
+### 🎯 Required Tools for Optimal Performance
+- **Code search**: `grep` with regex for finding patterns
+- **File reading**: `read` with line numbers for precise analysis  
+- **File editing**: `edit` with exact string matching for safe changes
+- **System commands**: `bash` for build tools and git operations
+- **Documentation tools**: Full markdown editing and formatting
+
+### ⚡ Performance Requirements
+- **Large file handling**: Can process files up to 2000 lines efficiently
+- **Multi-file operations**: Can work across multiple files simultaneously
+- **Memory management**: Efficient context handling for complex tasks
+- **Timeout awareness**: Proper command timeout management for long-running operations
 
 ## My Preferred Workflow for Gaming Night
 
@@ -128,5 +184,76 @@ Remember: **Documentation updates are part of every feature implementation**
 - Maintain the table of contents structure in all major docs
 
 ---
+
+## Project Context I Need Access To
+
+### Repository Structure
+- Full access to `/backend/` - Spring Boot Java application
+- Full access to `/frontend/` - React TypeScript application  
+- Full access to `/docs/` - Project documentation
+- Full access to root configuration files (README.md, docker-compose.yml, etc.)
+
+### Build & Development Tools
+- Maven (`mvn`) for backend builds and testing
+- Node.js/npm for frontend development
+- Docker and Docker Compose for local services
+- Java 21 runtime
+- PostgreSQL database
+
+### Codebase Knowledge
+- Domain models and business rules
+- Clean Architecture layer boundaries
+- REST API endpoints and contracts
+- Database schema and migrations
+- Testing strategies and patterns
+- Frontend component structure
+
+### External Dependencies
+- Spring Boot ecosystem (Spring Data JPA, Spring Web, etc.)
+- React ecosystem (Vite, TypeScript, Tailwind CSS)
+- Testing frameworks (JUnit 5, AssertJ, Mockito, Testcontainers, Vitest)
+- Database tools (Liquibase, PostgreSQL)
+
+---
+
+
+**Always defer to [`docs/ai-instructions.md`](docs/ai-instructions.md) for authoritative project rules and conventions.**
+
+## What I Need From You
+
+To work most effectively, please provide:
+
+### Clear Instructions
+- **Specific tasks**: "Add validation to Player entity" rather than "Improve the code"
+- **Acceptance criteria**: "The API should return 400 for invalid input" 
+- **Scope boundaries**: "Only modify the backend, don't touch frontend"
+- **Priority context**: "This is a critical security fix needed for production"
+
+### Context & Background
+- **User stories** or use case references
+- **Technical constraints** or requirements
+- **Design decisions** that have already been made
+- **Existing patterns** I should follow
+
+### Feedback Loop
+- **One task at a time**: As you've directed - let me complete one task before giving the next
+- **Progress confirmation**: Let me know when I'm on the right track
+- **Course correction**: Tell me if I'm heading in the wrong direction
+- **Completion verification**: Confirm when tasks are properly finished
+
+### Decision Making
+- **Architectural choices**: Please specify when you want me to make design decisions vs. follow existing patterns
+- **Trade-offs**: Indicate when cost vs. complexity vs. timeline considerations matter
+- **Risk tolerance**: Let me know the acceptable level of risk for changes
+
+## Success Metrics
+
+I consider a task complete when:
+- ✅ Code changes are implemented and tested
+- ✅ Documentation is updated (if applicable)
+- ✅ All tests pass
+- ✅ The change follows project conventions
+- ✅ Cross-references and links work correctly
+- ✅ The solution is minimal and focused
 
 **Always defer to [`docs/ai-instructions.md`](docs/ai-instructions.md) for authoritative project rules and conventions.**

@@ -13,6 +13,7 @@ import se.backede.domain.repository.PlayerRepositoryPort;
 import se.backede.domain.repository.TeamRepositoryPort;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -44,6 +45,7 @@ public class CompetitionRunUseCaseService {
         this.clock = clock;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public CompetitionResponse start(UUID competitionId) {
         var competition = competitionRepository.findById(competitionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Competition not found: " + competitionId));
@@ -93,6 +95,7 @@ public class CompetitionRunUseCaseService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public MatchResponse enterResults(UUID competitionId, UUID matchId, EnterResultsRequest request) {
         var match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found: " + matchId));

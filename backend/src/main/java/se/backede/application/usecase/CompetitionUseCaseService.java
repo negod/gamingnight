@@ -14,6 +14,7 @@ import se.backede.domain.repository.TeamNameRepositoryPort;
 import se.backede.domain.repository.TeamRepositoryPort;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,7 @@ public class CompetitionUseCaseService {
         this.clock = clock;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public CompetitionResponse create(CreateCompetitionRequest request) {
         validateGamesExist(request.gameIds());
         validateTeamsExist(request.teamIds());
@@ -98,6 +100,7 @@ public class CompetitionUseCaseService {
                 .orElse(false);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public CompetitionResponse update(UUID id, UpdateCompetitionRequest request) {
         var competition = competitionRepository.findById(id).orElseThrow(() -> competitionNotFound(id));
         if (competition.started()) {
@@ -112,6 +115,7 @@ public class CompetitionUseCaseService {
         return CompetitionDtoMapper.toResponse(competitionRepository.save(updated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(UUID id) {
         if (!competitionRepository.existsById(id)) {
             throw competitionNotFound(id);
@@ -119,6 +123,7 @@ public class CompetitionUseCaseService {
         competitionRepository.deleteById(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public CompetitionResponse generateTeams(UUID competitionId, GenerateTeamsRequest request) {
         var competition = competitionRepository.findById(competitionId)

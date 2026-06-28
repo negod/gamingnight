@@ -324,13 +324,27 @@ cd frontend && npx vitest run src/features/games/components/GameForm.test.tsx sr
 
 ---
 
-#### TDD-5 · Write `TeamForm.test.tsx` and `TeamList.test.tsx` `[Medium]`
+#### TDD-5 · Write `TeamForm.test.tsx` and `TeamList.test.tsx` `[Resolved]`
 
-**Problem**: No component tests for the teams feature.
+**Status**: Resolved by adding:
 
-**What to do**
+- `frontend/src/features/teams/components/TeamForm.test.tsx`
+- `frontend/src/features/teams/components/TeamList.test.tsx`
 
-Create both files in `frontend/src/features/teams/components/` following the pattern of `CompetitionForm.test.tsx` and `CompetitionList.test.tsx`.
+Coverage added:
+
+- `TeamForm` submits team name and selected player IDs.
+- `TeamForm` shows a validation error for missing name.
+- `TeamForm` renders the empty player state.
+- `TeamList` renders the empty state.
+- `TeamList` renders team name, player count, and edit link.
+- `TeamList` calls the delete handler with the selected team id.
+
+Verification:
+
+```bash
+cd frontend && npx vitest run src/features/teams/components/TeamForm.test.tsx src/features/teams/components/TeamList.test.tsx
+```
 
 ---
 
@@ -506,7 +520,7 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | TDD-2 | Medium | Codex | ☐ |
 | TDD-3 | Medium | Codex | ☐ |
 | TDD-4 | Medium | Codex | ☑ |
-| TDD-5 | Medium | Codex | ☐ |
+| TDD-5 | Medium | Codex | ☑ |
 | TDD-6 | Medium | Codex | ☐ (do after CA-2/FE-1) |
 | SEC-4 | Medium | Mistral | ✅ |
 | SEC-5 | Medium | Mistral | ✅ |
@@ -515,4 +529,4 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | LIQ-1 | Low | Mistral | ✅ |
 | LIQ-2 | Low | Mistral | ☐ |
 | CC-2 | Low | Mistral | ✅ |
-| CC-3 | Low | Mistral | ☐ |
+| CC-3 | Low | Mistral | ✅ |

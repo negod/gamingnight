@@ -10,6 +10,7 @@ import se.backede.domain.repository.PlayerRepositoryPort;
 import se.backede.domain.repository.UserRepositoryPort;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -36,6 +37,7 @@ public class UserUseCaseService {
         this.clock = clock;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse create(CreateUserRequest request) {
         validateUsernameAvailable(request.username());
         validateEmailAvailable(request.email());
@@ -45,6 +47,7 @@ public class UserUseCaseService {
         return UserDtoMapper.toResponse(userRepository.save(user), player);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> list() {
         return userRepository.findAll().stream()
                 .sorted(Comparator.comparing(User::createdAt).reversed())
@@ -52,12 +55,14 @@ public class UserUseCaseService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse getById(UUID id) {
         return userRepository.findById(id)
                 .map(this::toResponse)
                 .orElseThrow(() -> userNotFound(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse update(UUID id, UpdateUserRequest request) {
         var user = userRepository.findById(id).orElseThrow(() -> userNotFound(id));
         validateUsernameAvailableForUpdate(request.username(), id);
@@ -75,6 +80,7 @@ public class UserUseCaseService {
         return getById(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(UUID id) {
         if (!userRepository.existsById(id)) {
             throw userNotFound(id);

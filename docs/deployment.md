@@ -76,7 +76,9 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173
 PORT=8080
 ```
 
-**Important**: `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` must always be explicitly supplied. The application will fail to start if these environment variables are not set, as there are no default values configured.
+For local development, `npm run dev:backend` activates the `local` profile and uses `backend/src/main/resources/application-local.yml` to connect to the Docker Compose PostgreSQL database.
+
+**Important**: Outside the `local` profile, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD` must always be explicitly supplied. The application will fail to start if these environment variables are not set, as there are no default values configured.
 
 These values can come from exported shell variables, IDE run configuration, container configuration, or hosting-provider secrets. Spring Boot does not automatically load `backend/.env` unless the local tooling explicitly sources it.
 

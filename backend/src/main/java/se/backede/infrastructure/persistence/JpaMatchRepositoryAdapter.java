@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-@Transactional
 public class JpaMatchRepositoryAdapter implements MatchRepositoryPort {
 
     private final SpringDataMatchRepository repository;
@@ -22,6 +21,7 @@ public class JpaMatchRepositoryAdapter implements MatchRepositoryPort {
     }
 
     @Override
+    @Transactional
     public Match save(Match match) {
         var existing = repository.findById(match.id());
         if (existing.isPresent()) {

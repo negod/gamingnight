@@ -34,21 +34,25 @@ public class JpaPlayerRepositoryAdapter implements PlayerRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Player> findAll() {
         return repository.findAll().stream().map(mapper::toDomain).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Player> findById(UUID id) {
         return repository.findById(id).map(mapper::toDomain);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
         return repository.existsById(id);
     }
 
     @Override
+    @Transactional
     public void deleteById(UUID id) {
         repository.deleteById(id);
     }

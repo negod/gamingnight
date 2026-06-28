@@ -77,7 +77,7 @@ cp frontend/.env.example frontend/.env
 docker compose up -d postgres
 ```
 
-The backend defaults in `application.yml` already point to the PostgreSQL container defined in `docker-compose.yml`. Copy `backend/.env.example` only if your shell, IDE, or hosting workflow loads environment files explicitly.
+The root `dev:backend` script starts Spring Boot with the `local` profile, which reads local database settings from `backend/src/main/resources/application-local.yml`. Copy `backend/.env.example` only if your shell, IDE, or hosting workflow loads environment files explicitly.
 
 ## Run Locally
 
@@ -184,7 +184,7 @@ Do not edit a changeset that has already been applied to any shared or productio
 
 ## Environment Variables
 
-Backend defaults are defined in `backend/src/main/resources/application.yml` and can be overridden by real environment variables:
+Production backend values are required by `backend/src/main/resources/application.yml` and must be supplied as real environment variables:
 
 ```text
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/gaming-night
@@ -197,7 +197,7 @@ PORT=8080
 
 Set `APP_AUTH_TOKEN_SECRET` to a strong private value outside local development. Existing login tokens become invalid when this value changes.
 
-`backend/.env.example` documents the expected variables, but Spring Boot does not automatically load `backend/.env` without extra shell or IDE setup.
+Local development uses `backend/src/main/resources/application-local.yml` through `npm run dev:backend`. `backend/.env.example` documents the expected variables for shells, IDEs, or hosts that load environment files explicitly.
 
 Frontend defaults are defined in `frontend/.env.example`:
 

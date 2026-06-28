@@ -1,23 +1,17 @@
 package se.backede.infrastructure.config;
 
-import se.backede.infrastructure.security.AuthInterceptor;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     private final String[] allowedOrigins;
-    private final AuthInterceptor authInterceptor;
 
-    public WebConfig(@Value("${app.cors.allowed-origins:http://localhost:5173}") String allowedOrigins,
-                     ObjectProvider<AuthInterceptor> authInterceptor) {
+    public WebConfig(@Value("${app.cors.allowed-origins:http://localhost:5173}") String allowedOrigins) {
         this.allowedOrigins = allowedOrigins.split(",");
-        this.authInterceptor = authInterceptor.getIfAvailable();
     }
 
     @Override
@@ -27,12 +21,5 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization");
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        if (authInterceptor != null) {
-            registry.addInterceptor(authInterceptor).addPathPatterns("/api/**");
-        }
     }
 }

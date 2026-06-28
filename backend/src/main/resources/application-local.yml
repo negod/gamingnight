@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gaming-night
+    username: gaming-night
+    password: gaming-night
+
+app:
+  auth:
+    token-secret: dev-only-change-me
