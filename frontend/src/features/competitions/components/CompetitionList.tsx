@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Pencil, Trash2, Trophy } from 'lucide-react';
+import { Pencil, Play, Trash2, Trophy } from 'lucide-react';
 import type { Competition } from '../../../shared/types/competition';
 
 type CompetitionListProps = {
@@ -59,6 +59,13 @@ export function CompetitionList({ competitions, onDelete }: CompetitionListProps
                       Edit
                     </Link>
                   )}
+                  <Link
+                    to={`/competitions/${competition.id}/run`}
+                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50"
+                  >
+                    <Play aria-hidden="true" className="h-3.5 w-3.5" />
+                    {competition.started ? 'View' : 'Run'}
+                  </Link>
                   <button
                     onClick={() => onDelete(competition.id)}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"

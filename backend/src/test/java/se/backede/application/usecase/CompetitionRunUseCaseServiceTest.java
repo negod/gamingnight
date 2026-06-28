@@ -6,8 +6,10 @@ import se.backede.domain.model.Competition;
 import se.backede.domain.model.Match;
 import se.backede.domain.model.PlayerResult;
 import se.backede.domain.model.Team;
+import se.backede.domain.model.Player;
 import se.backede.domain.repository.CompetitionRepositoryPort;
 import se.backede.domain.repository.MatchRepositoryPort;
+import se.backede.domain.repository.PlayerRepositoryPort;
 import se.backede.domain.repository.TeamRepositoryPort;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
@@ -38,6 +40,7 @@ class CompetitionRunUseCaseServiceTest {
     private CompetitionRepositoryPort competitionRepo;
     private MatchRepositoryPort matchRepo;
     private TeamRepositoryPort teamRepo;
+    private PlayerRepositoryPort playerRepo;
     private CompetitionRunUseCaseService service;
 
     @BeforeEach
@@ -45,7 +48,8 @@ class CompetitionRunUseCaseServiceTest {
         competitionRepo = mock(CompetitionRepositoryPort.class);
         matchRepo = mock(MatchRepositoryPort.class);
         teamRepo = mock(TeamRepositoryPort.class);
-        service = new CompetitionRunUseCaseService(competitionRepo, matchRepo, teamRepo,
+        playerRepo = mock(PlayerRepositoryPort.class);
+        service = new CompetitionRunUseCaseService(competitionRepo, matchRepo, teamRepo, playerRepo,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -144,12 +148,14 @@ class CompetitionRunUseCaseServiceTest {
         when(matchRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(teamRepo.findById(homeTeamId)).thenReturn(Optional.of(team(homeTeamId, "Home")));
         when(teamRepo.findById(awayTeamId)).thenReturn(Optional.of(team(awayTeamId, "Away")));
+        when(playerRepo.findById(playerId)).thenReturn(Optional.of(player(playerId, "Alice")));
 
         var response = service.enterResults(competitionId, match.id(), request);
 
         assertThat(response.completed()).isTrue();
         assertThat(response.results()).hasSize(1);
         assertThat(response.results().get(0).value()).isEqualTo(150.0);
+        assertThat(response.results().get(0).playerName()).isEqualTo("Alice");
         assertThat(response.homeTeamName()).isEqualTo("Home");
     }
 
@@ -175,5 +181,9 @@ class CompetitionRunUseCaseServiceTest {
 
     private static Team team(UUID id, String name) {
         return Team.rehydrate(id, name, List.of(), NOW, NOW);
+    }
+
+    private static Player player(UUID id, String name) {
+        return Player.rehydrate(id, name, NOW, NOW);
     }
 }

@@ -36,7 +36,12 @@ export function MatchResultForm({ match, onSave, onCancel }: MatchResultFormProp
                              ...awayTeam.playerIds.map((id: string) => ({ id, team: awayTeam }))];
 
         const players = await Promise.all(
-          allPlayerIds.map(({ id }) => getPlayer(id).catch((): Player => ({ id, name: id }))),
+          allPlayerIds.map(({ id }) => getPlayer(id).catch((): Player => ({
+            id,
+            name: id,
+            createdAt: '',
+            updatedAt: '',
+          }))),
         );
 
         if (!active) return;
@@ -64,7 +69,7 @@ export function MatchResultForm({ match, onSave, onCancel }: MatchResultFormProp
     return () => {
       active = false;
     };
-  }, [match.id]);
+  }, [match.awayTeamId, match.homeTeamId, match.id, match.results]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,6 +79,8 @@ export function MatchResultForm({ match, onSave, onCancel }: MatchResultFormProp
       const results: PlayerResult[] = rows.map((r) => ({
         playerId: r.playerId,
         teamId: r.teamId,
+        playerName: r.playerName,
+        teamName: r.teamName,
         value: parseFloat(r.value) || 0,
       }));
       await onSave(results);

@@ -41,7 +41,10 @@ export function MatchCard({ match, onEdit }: MatchCardProps) {
         <ul className="mt-3 space-y-1 border-t border-slate-100 pt-3">
           {match.results.map((r, i) => (
             <li key={i} className="flex justify-between text-sm text-slate-600">
-              <span>{r.teamId}</span>
+              <span>
+                <span className="font-medium text-slate-800">{r.playerName}</span>
+                <span className="ml-1 text-slate-400">({r.teamName})</span>
+              </span>
               <span className="font-mono">{r.value}</span>
             </li>
           ))}

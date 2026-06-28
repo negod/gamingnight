@@ -8,6 +8,9 @@ import se.backede.application.mapper.CompetitionDtoMapper;
 import se.backede.domain.model.Competition;
 import se.backede.domain.model.Team;
 import se.backede.domain.repository.CompetitionRepositoryPort;
+import se.backede.domain.repository.GameRepositoryPort;
+import se.backede.domain.repository.PlayerRepositoryPort;
+import se.backede.domain.repository.TeamNameRepositoryPort;
 import se.backede.domain.repository.TeamRepositoryPort;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
@@ -19,33 +22,38 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
 public class CompetitionUseCaseService {
 
-    private static final List<String> TEAM_NAMES = List.of(
-            "Thunder Hawks", "Iron Wolves", "Crimson Bears", "Storm Eagles",
-            "Shadow Lions", "Frost Giants", "Blaze Foxes", "Dark Knights",
-            "Solar Falcons", "Night Owls", "Wild Cards", "Steel Cobras",
-            "Golden Rams", "Rapid Vipers", "Silent Jaguars", "Power Surge",
-            "Cosmic Riders", "Neon Tigers", "Phantom Wolves", "Ice Dragons"
-    );
-
     private final CompetitionRepositoryPort competitionRepository;
+    private final GameRepositoryPort gameRepository;
     private final TeamRepositoryPort teamRepository;
+    private final TeamNameRepositoryPort teamNameRepository;
+    private final PlayerRepositoryPort playerRepository;
     private final Clock clock;
 
     public CompetitionUseCaseService(CompetitionRepositoryPort competitionRepository,
+                                     GameRepositoryPort gameRepository,
                                      TeamRepositoryPort teamRepository,
+                                     TeamNameRepositoryPort teamNameRepository,
+                                     PlayerRepositoryPort playerRepository,
                                      Clock clock) {
         this.competitionRepository = competitionRepository;
+        this.gameRepository = gameRepository;
         this.teamRepository = teamRepository;
+        this.teamNameRepository = teamNameRepository;
+        this.playerRepository = playerRepository;
         this.clock = clock;
     }
 
     public CompetitionResponse create(CreateCompetitionRequest request) {
+        validateGamesExist(request.gameIds());
+        validateTeamsExist(request.teamIds());
         var competition = Competition.create(request.name(), request.date(), request.singleMatch(), now());
         var withGamesAndTeams = competition.update(
                 competition.name(), competition.date(), competition.singleMatch(),
@@ -72,6 +80,8 @@ public class CompetitionUseCaseService {
         if (competition.started()) {
             throw new DomainValidationException("Cannot edit a started competition");
         }
+        validateGamesExist(request.gameIds());
+        validateTeamsExist(request.teamIds());
         var updated = competition.update(
                 request.name(), request.date(), request.singleMatch(),
                 request.gameIds(), request.teamIds(), now()
@@ -93,6 +103,7 @@ public class CompetitionUseCaseService {
         if (competition.started()) {
             throw new DomainValidationException("Cannot modify a started competition");
         }
+        validatePlayersExist(request.playerIds());
 
         List<UUID> shuffledPlayers = new ArrayList<>(request.playerIds());
         Collections.shuffle(shuffledPlayers);
@@ -110,15 +121,16 @@ public class CompetitionUseCaseService {
             buckets.get(i - leftoverStart).add(shuffledPlayers.get(i));
         }
 
-        List<String> namePool = new ArrayList<>(TEAM_NAMES);
+        List<String> namePool = new ArrayList<>(unusedTeamNames());
+        if (namePool.size() < buckets.size()) {
+            throw new DomainValidationException("Not enough unused team names available");
+        }
         Collections.shuffle(namePool);
 
         Instant now = now();
         List<UUID> newTeamIds = new ArrayList<>();
         for (int i = 0; i < buckets.size(); i++) {
-            String baseName = namePool.get(i % namePool.size());
-            String teamName = i < namePool.size() ? baseName : baseName + " " + (i / namePool.size() + 1);
-            var team = Team.create(teamName, buckets.get(i), now);
+            var team = Team.create(namePool.get(i), buckets.get(i), now);
             newTeamIds.add(teamRepository.save(team).id());
         }
 
@@ -126,8 +138,47 @@ public class CompetitionUseCaseService {
         return CompetitionDtoMapper.toResponse(competitionRepository.save(updated));
     }
 
+    private List<String> unusedTeamNames() {
+        var usedNames = new HashSet<String>();
+        for (Team team : teamRepository.findAll()) {
+            usedNames.add(normalizeName(team.name()));
+        }
+        return teamNameRepository.findAll().stream()
+                .map(teamName -> teamName.name())
+                .filter(name -> !usedNames.contains(normalizeName(name)))
+                .toList();
+    }
+
+    private static String normalizeName(String name) {
+        return name.trim().toLowerCase(Locale.ROOT);
+    }
+
     private Instant now() {
         return Instant.now(clock);
+    }
+
+    private void validateGamesExist(List<UUID> gameIds) {
+        for (UUID gameId : gameIds) {
+            if (!gameRepository.existsById(gameId)) {
+                throw new ResourceNotFoundException("Game not found: " + gameId);
+            }
+        }
+    }
+
+    private void validateTeamsExist(List<UUID> teamIds) {
+        for (UUID teamId : teamIds) {
+            if (!teamRepository.existsById(teamId)) {
+                throw new ResourceNotFoundException("Team not found: " + teamId);
+            }
+        }
+    }
+
+    private void validatePlayersExist(List<UUID> playerIds) {
+        for (UUID playerId : playerIds) {
+            if (!playerRepository.existsById(playerId)) {
+                throw new ResourceNotFoundException("Player not found: " + playerId);
+            }
+        }
     }
 
     private static ResourceNotFoundException competitionNotFound(UUID id) {

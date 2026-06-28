@@ -1,6 +1,6 @@
 import { apiRequest } from '../../../shared/api/apiClient';
 import type { Team, TeamFormValues } from '../../../shared/types/team';
-import type { Player } from '../../../shared/types/player';
+export { listPlayers } from '../../players/api/playersApi';
 
 export function listTeams(): Promise<Team[]> {
   return apiRequest<Team[]>('/teams');
@@ -26,8 +26,4 @@ export function updateTeam(id: string, values: TeamFormValues): Promise<Team> {
 
 export function deleteTeam(id: string): Promise<void> {
   return apiRequest<void>(`/teams/${id}`, { method: 'DELETE' });
-}
-
-export function listPlayers(): Promise<Player[]> {
-  return apiRequest<Player[]>('/players');
 }

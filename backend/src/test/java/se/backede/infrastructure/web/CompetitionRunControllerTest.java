@@ -101,7 +101,7 @@ class CompetitionRunControllerTest {
         var request = new EnterResultsRequest(List.of(new PlayerResultInput(playerId, teamId, 150.0)));
         var response = new MatchResponse(matchId, competitionId, UUID.randomUUID(),
                 teamId, "Home", UUID.randomUUID(), "Away",
-                true, List.of(new PlayerResultResponse(playerId, teamId, 150.0)), now, now);
+                true, List.of(new PlayerResultResponse(playerId, teamId, "Alice", "Home", 150.0)), now, now);
 
         when(service.enterResults(eq(competitionId), eq(matchId), any())).thenReturn(response);
 

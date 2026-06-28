@@ -1,12 +1,14 @@
 import { Link, Navigate, NavLink, Route, Routes } from 'react-router-dom';
-import { ClipboardList, Trophy, Users } from 'lucide-react';
-import { CreateItemPage } from '../pages/CreateItemPage';
-import { EditItemPage } from '../pages/EditItemPage';
-import { ItemDetailPage } from '../pages/ItemDetailPage';
-import { ItemsPage } from '../pages/ItemsPage';
+import { ClipboardList, Gamepad2, Trophy, UserRound, Users } from 'lucide-react';
+import { GamesPage } from '../pages/GamesPage';
+import { CreateGamePage } from '../pages/CreateGamePage';
+import { EditGamePage } from '../pages/EditGamePage';
 import { TeamsPage } from '../pages/TeamsPage';
 import { CreateTeamPage } from '../pages/CreateTeamPage';
 import { EditTeamPage } from '../pages/EditTeamPage';
+import { PlayersPage } from '../pages/PlayersPage';
+import { CreatePlayerPage } from '../pages/CreatePlayerPage';
+import { EditPlayerPage } from '../pages/EditPlayerPage';
 import { CompetitionsPage } from '../pages/CompetitionsPage';
 import { CreateCompetitionPage } from '../pages/CreateCompetitionPage';
 import { EditCompetitionPage } from '../pages/EditCompetitionPage';
@@ -32,13 +34,17 @@ export function App() {
               <Trophy aria-hidden="true" className="h-4 w-4" />
               Competitions
             </NavLink>
+            <NavLink to="/games" className={navLinkClass}>
+              <Gamepad2 aria-hidden="true" className="h-4 w-4" />
+              Games
+            </NavLink>
             <NavLink to="/teams" className={navLinkClass}>
               <Users aria-hidden="true" className="h-4 w-4" />
               Teams
             </NavLink>
-            <NavLink to="/items" className={navLinkClass}>
-              <ClipboardList aria-hidden="true" className="h-4 w-4" />
-              Items
+            <NavLink to="/players" className={navLinkClass}>
+              <UserRound aria-hidden="true" className="h-4 w-4" />
+              Players
             </NavLink>
           </nav>
           <HealthStatus />
@@ -52,13 +58,15 @@ export function App() {
           <Route path="/competitions/new" element={<CreateCompetitionPage />} />
           <Route path="/competitions/:id/edit" element={<EditCompetitionPage />} />
           <Route path="/competitions/:id/run" element={<CompetitionRunPage />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/new" element={<CreateGamePage />} />
+          <Route path="/games/:id/edit" element={<EditGamePage />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/teams/new" element={<CreateTeamPage />} />
           <Route path="/teams/:id/edit" element={<EditTeamPage />} />
-          <Route path="/items" element={<ItemsPage />} />
-          <Route path="/items/new" element={<CreateItemPage />} />
-          <Route path="/items/:id" element={<ItemDetailPage />} />
-          <Route path="/items/:id/edit" element={<EditItemPage />} />
+          <Route path="/players" element={<PlayersPage />} />
+          <Route path="/players/new" element={<CreatePlayerPage />} />
+          <Route path="/players/:id/edit" element={<EditPlayerPage />} />
         </Routes>
       </main>
     </div>

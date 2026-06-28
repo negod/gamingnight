@@ -1,82 +1,58 @@
 # Gaming Night
 
-Gaming Night is a web application for keeping track of scores during game nights. The goal is to make it easy to add games, create scoreboards, record players and rounds, and see who is winning over time.
+Gaming Night is a web application for planning and running game-night competitions. It manages players, teams, games, competitions, generated matches, result entry, and leaderboards.
 
-The app is intentionally built with a production-ready structure from the start: React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, PostgreSQL, Spring Data JPA, Hibernate, and Liquibase.
+The stack is React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, PostgreSQL, Spring Data JPA, Hibernate, and Liquibase.
 
-Current implementation status:
+## Contents
 
-- Create item
-- List items
-- Get item by id
-- Update item
-- Delete item
-- Health endpoint
+- [Features](#features)
+- [Repository Layout](#repository-layout)
+- [Prerequisites](#prerequisites)
+- [First-Time Setup](#first-time-setup)
+- [Run Locally](#run-locally)
+- [Database And Liquibase](#database-and-liquibase)
+- [Environment Variables](#environment-variables)
+- [Tests And Builds](#tests-and-builds)
+- [Documentation](#documentation)
+- [Deployment](#deployment)
 
-The current `Item` feature is a starter vertical slice used to prove the architecture, testing setup, database access, REST API, and frontend flow. The domain will evolve toward Gaming Night features such as:
+## Features
 
-- Add and manage games
-- Create scoreboards
-- Add players or teams
-- Track scores per game session
-- View standings and score history
+- Manage players.
+- Manage games with score-based or time-based ranking and sum or average calculations.
+- Manage teams with globally unique team names.
+- Create competitions with ordered games and assigned teams.
+- Generate teams from selected players using seeded, non-repeating team names.
+- Start competitions and generate round-robin matches.
+- Enter match results per player.
+- View per-game and total leaderboards for teams and players.
+- Check backend health through Spring Boot Actuator.
 
-More product details will be added as the app design becomes clearer.
-
-## Final File Structure
+## Repository Layout
 
 ```text
 .
-├── backend
-│   ├── pom.xml
-│   ├── .env.example
-│   └── src
-│       ├── main
-│       │   ├── java/se/backede
-│       │   │   ├── domain
-│       │   │   ├── application
-│       │   │   ├── infrastructure
-│       │   │   └── shared
-│       │   └── resources
-│       └── test/java/se/backede
-├── frontend
-│   ├── package.json
-│   ├── .env.example
-│   └── src
-│       ├── app
-│       ├── pages
-│       ├── features/items
-│       └── shared
-├── docs
-│   ├── ai-instructions.md
-│   ├── architecture.md
-│   ├── deployment.md
-│   └── testing.md
-├── AGENTS.md
-├── CLAUDE.md
-├── MISTRAL.md
-├── docker-compose.yml
-├── package.json
-└── README.md
+|-- backend/                   # Spring Boot API
+|   |-- src/main/java/se/backede/
+|   |   |-- domain/            # Domain models and repository ports
+|   |   |-- application/       # Use cases, DTOs, and mappers
+|   |   |-- infrastructure/    # Web controllers, JPA adapters, config
+|   |   `-- shared/            # Framework-free shared code
+|   `-- src/main/resources/
+|       |-- application.yml
+|       `-- db/changelog/      # Liquibase changelogs
+|-- frontend/                  # React/Vite frontend
+|   `-- src/
+|       |-- app/               # Routing and app shell
+|       |-- pages/             # Route screens
+|       |-- features/          # Feature APIs and components
+|       `-- shared/            # Shared API client, types, components
+|-- docs/                      # Technical documentation
+|-- docker-compose.yml         # Local PostgreSQL service
+|-- package.json               # Root convenience scripts
+`-- README.md
 ```
-
-## Architecture Overview
-
-Gaming Night follows Clean Architecture on the backend:
-
-- `domain`: framework-free business model and repository ports.
-- `application`: use cases, DTOs, and DTO mappers.
-- `infrastructure`: Spring web controllers, persistence entities, repositories, configuration, and adapters.
-- `shared`: framework-free exceptions and cross-cutting primitives.
-
-Dependencies point inward. Controllers call use cases. Use cases depend on domain ports. Infrastructure implements those ports. Domain code has no Spring, JPA, database, or web dependency.
-
-The frontend keeps API access outside UI components:
-
-- `app`: routing and application shell.
-- `pages`: route-level screens.
-- `features/items`: current starter feature API wrappers, hooks, and components. Future game-night features should live under their own feature folders.
-- `shared`: reusable API client, components, and types.
 
 ## Prerequisites
 
@@ -84,50 +60,125 @@ The frontend keeps API access outside UI components:
 - Maven 3.9+
 - Node.js 20+
 - npm 10+
-- Docker and Docker Compose for local PostgreSQL
+- Docker with Docker Compose
 
-## Local Setup
+Docker is used for local PostgreSQL and for Testcontainers-backed persistence tests. The backend and frontend run directly on the host during local development.
+
+## First-Time Setup
+
+From the repository root:
 
 ```bash
 npm install --prefix frontend
-docker compose up -d postgres
-cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
+docker compose up -d postgres
 ```
 
-## Running Backend
+The backend defaults in `application.yml` already point to the PostgreSQL container defined in `docker-compose.yml`. Copy `backend/.env.example` only if your shell, IDE, or hosting workflow loads environment files explicitly.
+
+## Run Locally
+
+Start each process in its own terminal.
+
+### 1. PostgreSQL
+
+```bash
+npm run dev:db
+```
+
+This starts the `postgres` service from `docker-compose.yml` on port `5432`.
+
+Useful Docker commands:
+
+```bash
+docker compose ps
+docker compose logs -f postgres
+docker compose down
+```
+
+### 2. Spring Boot Backend
+
+```bash
+npm run dev:backend
+```
+
+Equivalent command:
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-Backend API: `http://localhost:8080/api`
+The backend runs at `http://localhost:8080`.
 
-## Running Frontend
+Key URLs:
+
+- API base URL: `http://localhost:8080/api`
+- Health endpoint: `http://localhost:8080/actuator/health`
+
+Liquibase runs automatically during backend startup before Hibernate validates the schema.
+
+### 3. Frontend
+
+```bash
+npm run dev:frontend
+```
+
+Equivalent command:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Frontend app: `http://localhost:5173`
+The frontend runs at `http://localhost:5173` and calls the backend through `VITE_API_BASE_URL`.
 
-## Running Tests
+## Database And Liquibase
 
-```bash
-cd backend
-mvn test
+Local PostgreSQL is provided by `docker-compose.yml`:
 
-cd ../frontend
-npm test
+```text
+Database: gaming-night
+Username: gaming-night
+Password: gaming-night
+Port: 5432
 ```
 
-Repository adapter tests use Testcontainers and require Docker.
+The backend uses:
+
+```text
+spring.jpa.hibernate.ddl-auto=validate
+spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
+```
+
+Liquibase applies changesets from:
+
+```text
+backend/src/main/resources/db/changelog/db.changelog-master.yaml
+backend/src/main/resources/db/changelog/changes/
+```
+
+Fresh databases are automatically populated with development seed data:
+
+- 12 players
+- 2 predefined teams
+- 2 games
+- 1 setup-state competition
+- 288 seeded team names for generated teams
+
+To add a database change:
+
+1. Add a new YAML changeset under `backend/src/main/resources/db/changelog/changes/`.
+2. Use the next zero-padded prefix and a descriptive filename, for example `0010-add-avatar-to-players.yaml`.
+3. Set the changeset `id` to the filename without `.yaml`.
+4. Append the file to `db.changelog-master.yaml`.
+5. Start the backend against local PostgreSQL and confirm Liquibase applies the change.
+
+Do not edit a changeset that has already been applied to any shared or production database.
 
 ## Environment Variables
 
-Backend:
+Backend defaults are defined in `backend/src/main/resources/application.yml` and can be overridden by real environment variables:
 
 ```text
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/gaming-night
@@ -137,52 +188,57 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173
 PORT=8080
 ```
 
-Frontend:
+`backend/.env.example` documents the expected variables, but Spring Boot does not automatically load `backend/.env` without extra shell or IDE setup.
+
+Frontend defaults are defined in `frontend/.env.example`:
 
 ```text
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
-## Database Setup
+## Tests And Builds
 
-Local PostgreSQL is provided by `docker-compose.yml`.
+Run backend tests:
 
 ```bash
-docker compose up -d postgres
+npm run test:backend
 ```
 
-Liquibase runs automatically when the Spring Boot application starts and applies all changelogs from `backend/src/main/resources/db/changelog/db.changelog-master.yaml`.
+Run frontend tests:
 
-To add a schema change, create a new file under `backend/src/main/resources/db/changelog/changes/` and include it in `db.changelog-master.yaml`. See `docs/deployment.md` for the full Liquibase workflow.
-
-## Cloudflare Pages Deployment
-
-Set the frontend project root to `frontend`.
-
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Environment variable: `VITE_API_BASE_URL=https://your-render-service.onrender.com/api`
-
-## Render Deployment
-
-Create a Render Web Service from the repository.
-
-- Root directory: `backend`
-- Runtime: Java
-- Build command: `mvn clean package`
-- Start command: `java -jar target/gaming-night-0.0.1-SNAPSHOT.jar`
-- Environment variables: set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, and `CORS_ALLOWED_ORIGINS`.
-
-## Supabase or Neon PostgreSQL
-
-Use the provider's pooled or direct PostgreSQL connection details and map them to Spring environment variables.
-
-For JDBC URLs, use this format:
-
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:PORT/DATABASE?sslmode=require
-SPRING_DATASOURCE_USERNAME=USER
-SPRING_DATASOURCE_PASSWORD=PASSWORD
+```bash
+npm run test:frontend
 ```
 
-Use `sslmode=require` unless your provider recommends a different SSL setting.
+Build backend:
+
+```bash
+npm run build:backend
+```
+
+Build frontend:
+
+```bash
+npm run build:frontend
+```
+
+Backend persistence tests use Testcontainers and require Docker. They are skipped automatically when Docker is unavailable.
+
+## Documentation
+
+- [docs/README.md](docs/README.md): Documentation index
+- [docs/architecture.md](docs/architecture.md): Layers, domain concepts, feature flows, and API map
+- [docs/testing.md](docs/testing.md): Test strategy and commands
+- [docs/deployment.md](docs/deployment.md): Deployment, runtime configuration, and migration workflow
+- [docs/ai-instructions.md](docs/ai-instructions.md): Coding assistant rules for this repository
+
+## Deployment
+
+See [docs/deployment.md](docs/deployment.md) for production setup.
+
+Short version:
+
+- Deploy the frontend as static assets from `frontend`, built with `npm run build`.
+- Deploy the backend from `backend`, built with `mvn clean package`, started with `java -jar target/gaming-night-0.0.1-SNAPSHOT.jar`.
+- Provide a PostgreSQL database and set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, and `CORS_ALLOWED_ORIGINS`.
+- Keep Hibernate set to `ddl-auto=validate`; Liquibase owns schema changes.

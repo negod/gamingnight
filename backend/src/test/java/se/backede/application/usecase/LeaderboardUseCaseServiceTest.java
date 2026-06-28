@@ -164,6 +164,86 @@ class LeaderboardUseCaseServiceTest {
         assertThat(response.rows()).allMatch(r -> r.rank() == 1);
     }
 
+    @Test
+    void gamePlayerLeaderboardRanksHighestFirstForScoreBased() {
+        var competitionId = UUID.randomUUID();
+        var gameId = UUID.randomUUID();
+        var teamA = UUID.randomUUID();
+        var teamB = UUID.randomUUID();
+        var game = scoredGame(gameId, CalculationMethod.SUM);
+        var playerA = UUID.randomUUID();
+        var playerB = UUID.randomUUID();
+
+        var match = matchWithResults(competitionId, gameId, teamA, teamB,
+                List.of(new PlayerResult(playerA, teamA, 80.0), new PlayerResult(playerB, teamB, 120.0)));
+
+        when(gameRepo.findById(gameId)).thenReturn(Optional.of(game));
+        when(matchRepo.findByCompetitionIdAndGameId(competitionId, gameId)).thenReturn(List.of(match));
+        when(playerRepo.findById(playerA)).thenReturn(Optional.of(player(playerA, "Alice")));
+        when(playerRepo.findById(playerB)).thenReturn(Optional.of(player(playerB, "Bob")));
+
+        var response = service.getGamePlayerLeaderboard(competitionId, gameId);
+
+        assertThat(response.columnHeader()).isEqualTo("Total Score");
+        assertThat(response.rows()).hasSize(2);
+        assertThat(response.rows().get(0).playerName()).isEqualTo("Bob");
+        assertThat(response.rows().get(0).rank()).isEqualTo(1);
+        assertThat(response.rows().get(1).playerName()).isEqualTo("Alice");
+        assertThat(response.rows().get(1).rank()).isEqualTo(2);
+    }
+
+    @Test
+    void gamePlayerLeaderboardRanksLowestFirstForTimeBased() {
+        var competitionId = UUID.randomUUID();
+        var gameId = UUID.randomUUID();
+        var teamA = UUID.randomUUID();
+        var teamB = UUID.randomUUID();
+        var game = timedGame(gameId, CalculationMethod.SUM);
+        var playerA = UUID.randomUUID();
+        var playerB = UUID.randomUUID();
+
+        var match = matchWithResults(competitionId, gameId, teamA, teamB,
+                List.of(new PlayerResult(playerA, teamA, 15.0), new PlayerResult(playerB, teamB, 30.0)));
+
+        when(gameRepo.findById(gameId)).thenReturn(Optional.of(game));
+        when(matchRepo.findByCompetitionIdAndGameId(competitionId, gameId)).thenReturn(List.of(match));
+        when(playerRepo.findById(playerA)).thenReturn(Optional.of(player(playerA, "FastAlice")));
+        when(playerRepo.findById(playerB)).thenReturn(Optional.of(player(playerB, "SlowBob")));
+
+        var response = service.getGamePlayerLeaderboard(competitionId, gameId);
+
+        assertThat(response.columnHeader()).isEqualTo("Total Time");
+        assertThat(response.rows().get(0).playerName()).isEqualTo("FastAlice");
+    }
+
+    @Test
+    void totalPlayerLeaderboardAppliesPlacementPoints() {
+        var competitionId = UUID.randomUUID();
+        var gameId = UUID.randomUUID();
+        var teamA = UUID.randomUUID();
+        var teamB = UUID.randomUUID();
+        var playerA = UUID.randomUUID();
+        var playerB = UUID.randomUUID();
+        var competition = competition(competitionId, List.of(gameId), List.of(teamA, teamB));
+        var game = scoredGame(gameId, CalculationMethod.SUM);
+
+        var match = matchWithResults(competitionId, gameId, teamA, teamB,
+                List.of(new PlayerResult(playerA, teamA, 200.0), new PlayerResult(playerB, teamB, 50.0)));
+
+        when(competitionRepo.findById(competitionId)).thenReturn(Optional.of(competition));
+        when(gameRepo.findById(gameId)).thenReturn(Optional.of(game));
+        when(matchRepo.findByCompetitionIdAndGameId(competitionId, gameId)).thenReturn(List.of(match));
+        when(playerRepo.findById(playerA)).thenReturn(Optional.of(player(playerA, "TopPlayer")));
+        when(playerRepo.findById(playerB)).thenReturn(Optional.of(player(playerB, "BottomPlayer")));
+
+        var rows = service.getTotalPlayerLeaderboard(competitionId);
+
+        assertThat(rows).hasSize(2);
+        assertThat(rows.get(0).playerName()).isEqualTo("TopPlayer");
+        assertThat(rows.get(0).points()).isEqualTo(100);
+        assertThat(rows.get(1).points()).isEqualTo(90);
+    }
+
     private static Game scoredGame(UUID id, CalculationMethod method) {
         return Game.rehydrate(id, "Bowling", GameType.SCORE_BASED, method, "", NOW, NOW);
     }
@@ -180,6 +260,10 @@ class LeaderboardUseCaseServiceTest {
 
     private static Team team(UUID id, String name) {
         return Team.rehydrate(id, name, List.of(), NOW, NOW);
+    }
+
+    private static Player player(UUID id, String name) {
+        return Player.rehydrate(id, name, NOW, NOW);
     }
 
     private static Competition competition(UUID id, List<UUID> gameIds, List<UUID> teamIds) {

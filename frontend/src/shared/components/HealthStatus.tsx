@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getHealth } from '../../features/items/api/healthApi';
+import { getHealth } from '../api/healthApi';
 
 export function HealthStatus() {
   const [status, setStatus] = useState<'checking' | 'ok' | 'down'>('checking');

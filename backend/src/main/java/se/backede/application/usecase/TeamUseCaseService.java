@@ -6,6 +6,7 @@ import se.backede.application.dto.UpdateTeamRequest;
 import se.backede.application.mapper.TeamDtoMapper;
 import se.backede.domain.model.Team;
 import se.backede.domain.repository.TeamRepositoryPort;
+import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,9 @@ public class TeamUseCaseService {
     }
 
     public TeamResponse create(CreateTeamRequest request) {
+        if (repository.existsByNameIgnoreCase(request.name())) {
+            throw new DomainValidationException("Team name already exists");
+        }
         var team = Team.create(request.name(), request.playerIds(), now());
         return TeamDtoMapper.toResponse(repository.save(team));
     }
@@ -46,6 +50,9 @@ public class TeamUseCaseService {
 
     public TeamResponse update(UUID id, UpdateTeamRequest request) {
         var team = repository.findById(id).orElseThrow(() -> teamNotFound(id));
+        if (repository.existsByNameIgnoreCaseAndIdNot(request.name(), id)) {
+            throw new DomainValidationException("Team name already exists");
+        }
         var updated = team.update(request.name(), request.playerIds(), now());
         return TeamDtoMapper.toResponse(repository.save(updated));
     }

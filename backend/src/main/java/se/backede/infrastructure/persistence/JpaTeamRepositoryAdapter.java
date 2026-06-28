@@ -42,6 +42,16 @@ public class JpaTeamRepositoryAdapter implements TeamRepositoryPort {
     }
 
     @Override
+    public boolean existsByNameIgnoreCase(String name) {
+        return repository.existsByNameIgnoreCase(name);
+    }
+
+    @Override
+    public boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id) {
+        return repository.existsByNameIgnoreCaseAndIdNot(name, id);
+    }
+
+    @Override
     public void deleteById(UUID id) {
         repository.deleteById(id);
     }

@@ -9,6 +9,7 @@ import se.backede.domain.model.Match;
 import se.backede.domain.model.PlayerResult;
 import se.backede.domain.repository.CompetitionRepositoryPort;
 import se.backede.domain.repository.MatchRepositoryPort;
+import se.backede.domain.repository.PlayerRepositoryPort;
 import se.backede.domain.repository.TeamRepositoryPort;
 import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
@@ -18,7 +19,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CompetitionRunUseCaseService {
@@ -26,15 +29,18 @@ public class CompetitionRunUseCaseService {
     private final CompetitionRepositoryPort competitionRepository;
     private final MatchRepositoryPort matchRepository;
     private final TeamRepositoryPort teamRepository;
+    private final PlayerRepositoryPort playerRepository;
     private final Clock clock;
 
     public CompetitionRunUseCaseService(CompetitionRepositoryPort competitionRepository,
                                         MatchRepositoryPort matchRepository,
                                         TeamRepositoryPort teamRepository,
+                                        PlayerRepositoryPort playerRepository,
                                         Clock clock) {
         this.competitionRepository = competitionRepository;
         this.matchRepository = matchRepository;
         this.teamRepository = teamRepository;
+        this.playerRepository = playerRepository;
         this.clock = clock;
     }
 
@@ -80,7 +86,9 @@ public class CompetitionRunUseCaseService {
                             .map(t -> t.name()).orElse("Unknown");
                     String awayName = teamRepository.findById(m.awayTeamId())
                             .map(t -> t.name()).orElse("Unknown");
-                    return MatchDtoMapper.toResponse(m, homeName, awayName);
+                    Map<UUID, String> playerNames = resolvePlayerNames(m.results().stream()
+                            .map(PlayerResult::playerId).toList());
+                    return MatchDtoMapper.toResponse(m, homeName, awayName, playerNames);
                 })
                 .toList();
     }
@@ -102,7 +110,17 @@ public class CompetitionRunUseCaseService {
 
         String homeName = teamRepository.findById(saved.homeTeamId()).map(t -> t.name()).orElse("Unknown");
         String awayName = teamRepository.findById(saved.awayTeamId()).map(t -> t.name()).orElse("Unknown");
-        return MatchDtoMapper.toResponse(saved, homeName, awayName);
+        Map<UUID, String> playerNames = resolvePlayerNames(results.stream().map(PlayerResult::playerId).toList());
+        return MatchDtoMapper.toResponse(saved, homeName, awayName, playerNames);
+    }
+
+    private Map<UUID, String> resolvePlayerNames(List<UUID> playerIds) {
+        return playerIds.stream()
+                .distinct()
+                .collect(Collectors.toMap(
+                        id -> id,
+                        id -> playerRepository.findById(id).map(p -> p.name()).orElse(id.toString())
+                ));
     }
 
     private Instant now() {

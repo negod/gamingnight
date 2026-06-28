@@ -1,6 +1,19 @@
 # AI Coding Assistant Instructions
 
-This project is designed to be easy to continue with Codex, Claude, Mistral, and similar coding assistants.
+This project is designed to be easy to continue with Codex, Claude, Mistral, and similar coding assistants. This file contains the canonical instructions for all AI assistants working on this codebase. For an overview of all documentation, see [README.md](README.md).
+
+## Table of Contents
+
+- [Default Assistant Entrypoints](#default-assistant-entrypoints)
+- [Architecture Rules](#architecture-rules)
+- [Naming Conventions](#naming-conventions)
+- [Adding a New Feature](#adding-a-new-feature)
+- [Documentation Requirements](#documentation-requirements)
+- [Writing Tests First](#writing-tests-first)
+- [Where Code Should Live](#where-code-should-live)
+- [Database Migrations (Liquibase)](#database-migrations-liquibase)
+- [What Must Not Be Done](#what-must-not-be-done)
+- [Avoiding Clean Architecture Breakage](#avoiding-clean-architecture-breakage)
 
 ## Default Assistant Entrypoints
 
@@ -10,7 +23,7 @@ The canonical instructions are in this file. Root-level assistant entrypoints mu
 - `CLAUDE.md` for Claude.
 - `MISTRAL.md` for Mistral-compatible agents.
 
-When changing these instructions, update this file first and keep the root-level entrypoints as short delegates to avoid duplicated rules drifting apart.
+**Important**: When changing these instructions, update this file first and keep the root-level entrypoints as short delegates to avoid duplicated rules drifting apart.
 
 ## Architecture Rules
 

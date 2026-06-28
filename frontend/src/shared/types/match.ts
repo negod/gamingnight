@@ -1,6 +1,8 @@
 export type PlayerResult = {
   playerId: string;
   teamId: string;
+  playerName: string;
+  teamName: string;
   value: number;
 };
 

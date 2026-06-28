@@ -10,7 +10,7 @@ type GenerateTeamsWizardProps = {
 
 export function GenerateTeamsWizard({ players, onGenerate }: GenerateTeamsWizardProps) {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
-  const [teamSize, setTeamSize] = useState(2);
+  const [teamSizeInput, setTeamSizeInput] = useState('2');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +28,9 @@ export function GenerateTeamsWizard({ players, onGenerate }: GenerateTeamsWizard
     setSelectedPlayerIds([]);
   }
 
-  const numTeams = teamSize > 0 ? Math.max(1, Math.floor(selectedPlayerIds.length / teamSize)) : 0;
-  const leftover = teamSize > 0 ? selectedPlayerIds.length % teamSize : 0;
+  const teamSize = Math.max(1, parseInt(teamSizeInput, 10) || 1);
+  const numTeams = Math.max(1, Math.floor(selectedPlayerIds.length / teamSize));
+  const leftover = selectedPlayerIds.length % teamSize;
 
   async function handleGenerate() {
     setError(null);
@@ -88,8 +89,9 @@ export function GenerateTeamsWizard({ players, onGenerate }: GenerateTeamsWizard
         <input
           type="number"
           min={1}
-          value={teamSize}
-          onChange={(e) => setTeamSize(Math.max(1, parseInt(e.target.value, 10) || 1))}
+          value={teamSizeInput}
+          onChange={(e) => setTeamSizeInput(e.target.value)}
+          onBlur={() => setTeamSizeInput(String(teamSize))}
           className="mt-1 w-28 rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
         />
       </label>
@@ -104,7 +106,7 @@ export function GenerateTeamsWizard({ players, onGenerate }: GenerateTeamsWizard
       <button
         type="button"
         onClick={handleGenerate}
-        disabled={generating || selectedPlayerIds.length === 0}
+        disabled={generating}
         className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Shuffle aria-hidden="true" className="h-4 w-4" />

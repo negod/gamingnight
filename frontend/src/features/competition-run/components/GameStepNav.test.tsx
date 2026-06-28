@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { GameStepNav } from './GameStepNav';
 import type { Game } from '../../../shared/types/game';
 

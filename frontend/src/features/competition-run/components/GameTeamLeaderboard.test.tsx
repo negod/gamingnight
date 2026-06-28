@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { expect, test } from 'vitest';
 import { GameTeamLeaderboard } from './GameTeamLeaderboard';
 import type { GameTeamLeaderboard as GameTeamLeaderboardType } from '../../../shared/types/leaderboard';
 
