@@ -10,6 +10,11 @@ export class ApiError extends Error {
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 const tokenStorageKey = 'gaming-night-token';
+let onAuthExpired: (() => void) | null = null;
+
+export function setAuthExpiredHandler(handler: (() => void) | null): void {
+  onAuthExpired = handler;
+}
 
 export function getAuthToken(): string | null {
   return localStorage.getItem(tokenStorageKey);
@@ -36,6 +41,9 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 
   if (!response.ok) {
     const body = await parseBody<{ message?: string; details?: string[] }>(response);
+    if (response.status === 401) {
+      onAuthExpired?.();
+    }
     throw new ApiError(body.message ?? 'Request failed', response.status, body.details ?? []);
   }
 

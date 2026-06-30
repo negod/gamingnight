@@ -39,6 +39,34 @@ describe('TeamForm', () => {
 
     expect(screen.getByText(/no players available/i)).toBeInTheDocument();
   });
+
+  it('filters players while keeping existing team members selected', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <TeamForm
+        initialValues={{ name: 'Team Alpha', playerIds: ['player-1'] }}
+        players={[player('player-1', 'Alice'), player('player-2', 'Bob'), player('player-3', 'Charlie')]}
+        submitLabel="Save team"
+        onSubmit={onSubmit}
+      />,
+    );
+
+    expect(screen.getByLabelText('Alice')).toBeChecked();
+
+    await user.type(screen.getByLabelText(/search players/i), 'bo');
+    expect(screen.queryByLabelText('Alice')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Bob')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Bob'));
+    await user.click(screen.getByRole('button', { name: /save team/i }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      name: 'Team Alpha',
+      playerIds: ['player-1', 'player-2'],
+    });
+  });
 });
 
 function player(id: string, name: string): Player {

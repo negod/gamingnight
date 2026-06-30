@@ -26,10 +26,13 @@ export function TeamList({ teams, onDelete }: TeamListProps) {
           {teams.map((team) => (
             <tr key={team.id} className="hover:bg-slate-50">
               <td className="px-4 py-3 font-medium text-slate-900">
-                <span className="flex items-center gap-2">
+                <Link
+                  to={`/teams/${team.id}/edit`}
+                  className="inline-flex items-center gap-2 rounded-sm text-slate-900 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                >
                   <Users aria-hidden="true" className="h-4 w-4 text-slate-400" />
                   {team.name}
-                </span>
+                </Link>
               </td>
               <td className="px-4 py-3 text-slate-600">{team.playerIds.length}</td>
               <td className="px-4 py-3">

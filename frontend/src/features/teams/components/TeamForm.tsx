@@ -1,4 +1,4 @@
-import { Save } from 'lucide-react';
+import { Save, Search } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { Player } from '../../../shared/types/player';
 import type { TeamFormValues } from '../../../shared/types/team';
@@ -15,8 +15,12 @@ export function TeamForm({ initialValues, players, submitLabel, onSubmit }: Team
   const [values, setValues] = useState<TeamFormValues>(
     initialValues ?? { name: '', playerIds: [] },
   );
+  const [playerSearch, setPlayerSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const visiblePlayers = players.filter((player) =>
+    player.name.toLowerCase().includes(playerSearch.trim().toLowerCase()),
+  );
 
   function togglePlayer(playerId: string) {
     setValues((prev) => ({
@@ -66,19 +70,39 @@ export function TeamForm({ initialValues, players, submitLabel, onSubmit }: Team
         {players.length === 0 ? (
           <p className="mt-2 text-sm text-slate-500">No players available.</p>
         ) : (
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {players.map((player) => (
-              <label key={player.id} className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-50">
+          <>
+            <label className="mt-2 block">
+              <span className="sr-only">Search players</span>
+              <span className="relative block">
+                <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="checkbox"
-                  checked={values.playerIds.includes(player.id)}
-                  onChange={() => togglePlayer(player.id)}
-                  className="h-4 w-4 accent-teal-700"
+                  type="search"
+                  value={playerSearch}
+                  onChange={(e) => setPlayerSearch(e.target.value)}
+                  placeholder="Search players"
+                  className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
                 />
-                <span className="text-sm text-slate-800">{player.name}</span>
-              </label>
-            ))}
-          </div>
+              </span>
+            </label>
+
+            {visiblePlayers.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-500">No players match your search.</p>
+            ) : (
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {visiblePlayers.map((player) => (
+                  <label key={player.id} className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      checked={values.playerIds.includes(player.id)}
+                      onChange={() => togglePlayer(player.id)}
+                      className="h-4 w-4 accent-teal-700"
+                    />
+                    <span className="text-sm text-slate-800">{player.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </fieldset>
 

@@ -35,6 +35,7 @@ export function EditUserPage() {
           players={data.players}
           initialValues={{
             username: data.user.username,
+            email: data.user.email || '',
             role: data.user.role,
             playerId: data.user.playerId,
           }}

@@ -1,5 +1,5 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
-import { clearAuthToken, setAuthToken } from '../api/apiClient';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { clearAuthToken, setAuthExpiredHandler, setAuthToken } from '../api/apiClient';
 import type { AppUser } from '../types/user';
 
 type AuthContextValue = {
@@ -17,6 +17,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? (JSON.parse(stored) as AppUser) : null;
   });
 
+  const clearSession = useCallback(() => {
+    clearAuthToken();
+    localStorage.removeItem(storageKey);
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    setAuthExpiredHandler(clearSession);
+    return () => setAuthExpiredHandler(null);
+  }, [clearSession]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -25,13 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(storageKey, JSON.stringify(nextUser));
         setUser(nextUser);
       },
-      logout: () => {
-        clearAuthToken();
-        localStorage.removeItem(storageKey);
-        setUser(null);
-      },
+      logout: clearSession,
     }),
-    [user],
+    [clearSession, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

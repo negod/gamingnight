@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0017-backfill-game-rule-columns
+      author: backede
+      changes:
+        - sql:
+            sql: |
+              UPDATE games SET
+                match_type       = COALESCE(match_type, 'FREE_FOR_ALL'),
+                participant_rule  = COALESCE(participant_rule, '{"minPlayersPerTeam":1,"maxPlayersPerTeam":4,"numberOfTeams":null,"allowSubstitutes":false}'),
+                result_type      = COALESCE(result_type, 'SCORE'),
+                winner_rule      = COALESCE(winner_rule, 'HIGHEST_VALUE_WINS'),
+                scoring_rule     = COALESCE(scoring_rule, '{"type":"WIN_DRAW_LOSS","pointsForWin":3,"pointsForDraw":1,"pointsForLoss":0}'),
+                tie_breaker_rule = COALESCE(tie_breaker_rule, 'ALLOW_DRAW'),
+                is_active        = COALESCE(is_active, true)
+              WHERE match_type IS NULL
+                 OR participant_rule IS NULL
+                 OR result_type IS NULL
+                 OR winner_rule IS NULL
+                 OR scoring_rule IS NULL
+                 OR tie_breaker_rule IS NULL
+                 OR is_active IS NULL

@@ -2,10 +2,16 @@ package se.backede.application.usecase;
 
 import se.backede.application.dto.CreateGameRequest;
 import se.backede.application.dto.UpdateGameRequest;
-import se.backede.domain.model.CalculationMethod;
 import se.backede.domain.model.Game;
-import se.backede.domain.model.GameType;
+import se.backede.domain.model.MatchType;
+import se.backede.domain.model.ParticipantRule;
+import se.backede.domain.model.ResultType;
+import se.backede.domain.model.ScoringRule;
+import se.backede.domain.model.TieBreakerRule;
+import se.backede.domain.model.WinDrawLossScoringRule;
+import se.backede.domain.model.WinnerRule;
 import se.backede.domain.repository.GameRepositoryPort;
+import se.backede.domain.service.GameRulesValidator;
 import se.backede.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,13 +35,18 @@ class GameUseCaseServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-01-01T10:00:00Z");
 
+    private static final ParticipantRule PARTICIPANTS = new ParticipantRule(1, 4, null, false);
+    private static final ScoringRule SCORING = WinDrawLossScoringRule.of(3, 1, 0);
+
     private GameRepositoryPort repository;
+    private GameRulesValidator rulesValidator;
     private GameUseCaseService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(GameRepositoryPort.class);
-        service = new GameUseCaseService(repository, Clock.fixed(NOW, ZoneOffset.UTC));
+        rulesValidator = mock(GameRulesValidator.class);
+        service = new GameUseCaseService(repository, rulesValidator, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     @Test
@@ -43,18 +54,27 @@ class GameUseCaseServiceTest {
         var captor = ArgumentCaptor.forClass(Game.class);
         when(repository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var response = service.create(new CreateGameRequest("Bowling", GameType.SCORE_BASED, CalculationMethod.SUM, "Bowling rules"));
+        var response = service.create(bowlingRequest());
 
         assertThat(response.name()).isEqualTo("Bowling");
-        assertThat(response.gameType()).isEqualTo(GameType.SCORE_BASED);
-        assertThat(response.calculationMethod()).isEqualTo(CalculationMethod.SUM);
-        assertThat(response.description()).isEqualTo("Bowling rules");
+        assertThat(response.matchType()).isEqualTo(MatchType.FREE_FOR_ALL);
+        assertThat(response.resultType()).isEqualTo(ResultType.SCORE);
+        assertThat(response.isActive()).isTrue();
         assertThat(response.createdAt()).isEqualTo(NOW);
     }
 
     @Test
+    void createInvokesRulesValidator() {
+        when(repository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.create(bowlingRequest());
+
+        verify(rulesValidator).validate(any(Game.class));
+    }
+
+    @Test
     void listsGames() {
-        var game = Game.create("Bowling", GameType.SCORE_BASED, CalculationMethod.SUM, "", NOW);
+        var game = bowlingGame();
         when(repository.findAll()).thenReturn(List.of(game));
 
         var responses = service.list();
@@ -65,7 +85,7 @@ class GameUseCaseServiceTest {
 
     @Test
     void getsGameById() {
-        var game = Game.create("Bowling", GameType.SCORE_BASED, CalculationMethod.SUM, "", NOW);
+        var game = bowlingGame();
         when(repository.findById(game.id())).thenReturn(Optional.of(game));
 
         var response = service.getById(game.id());
@@ -85,15 +105,19 @@ class GameUseCaseServiceTest {
 
     @Test
     void updatesGame() {
-        var game = Game.create("Bowling", GameType.SCORE_BASED, CalculationMethod.SUM, "", NOW.minusSeconds(60));
+        var game = bowlingGame(NOW.minusSeconds(60));
         when(repository.findById(game.id())).thenReturn(Optional.of(game));
         when(repository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var response = service.update(game.id(), new UpdateGameRequest("Darts", GameType.TIME_BASED, CalculationMethod.AVERAGE, "New rules"));
+        var updateRequest = new UpdateGameRequest(
+                "Darts", "Updated", null, null, true,
+                MatchType.PLAYER_VS_PLAYER, PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null);
+        var response = service.update(game.id(), updateRequest);
 
         assertThat(response.name()).isEqualTo("Darts");
-        assertThat(response.gameType()).isEqualTo(GameType.TIME_BASED);
-        assertThat(response.calculationMethod()).isEqualTo(CalculationMethod.AVERAGE);
+        assertThat(response.matchType()).isEqualTo(MatchType.PLAYER_VS_PLAYER);
         assertThat(response.updatedAt()).isEqualTo(NOW);
     }
 
@@ -115,5 +139,25 @@ class GameUseCaseServiceTest {
         assertThatThrownBy(() -> service.delete(id))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Game not found: " + id);
+    }
+
+    private static CreateGameRequest bowlingRequest() {
+        return new CreateGameRequest(
+                "Bowling", "Standard bowling rules", "Wii", "Sports",
+                MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null);
+    }
+
+    private static Game bowlingGame() {
+        return bowlingGame(NOW);
+    }
+
+    private static Game bowlingGame(Instant createdAt) {
+        return Game.create(
+                "Bowling", "", null, null,
+                MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null, createdAt);
     }
 }

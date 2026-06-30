@@ -1,20 +1,39 @@
 import { Link } from 'react-router-dom';
 import { Gamepad2, Pencil, Trash2 } from 'lucide-react';
-import type { Game } from '../../../shared/types/game';
+import type { Game, MatchType, ResultType, WinnerRule } from '../../../shared/types/game';
 
 type GameListProps = {
   games: Game[];
   onDelete: (id: string) => void;
 };
 
-const GAME_TYPE_LABEL: Record<Game['gameType'], string> = {
-  SCORE_BASED: 'Score',
-  TIME_BASED: 'Time',
+const MATCH_TYPE_LABEL: Record<MatchType, string> = {
+  PLAYER_VS_PLAYER: '1v1',
+  TEAM_VS_TEAM: 'Team vs Team',
+  FREE_FOR_ALL: 'Free for All',
+  SOLO_CHALLENGE: 'Solo',
+  COOP_VS_AI: 'Co-op vs AI',
 };
 
-const CALC_METHOD_LABEL: Record<Game['calculationMethod'], string> = {
-  SUM: 'Sum',
-  AVERAGE: 'Average',
+const RESULT_TYPE_LABEL: Record<ResultType, string> = {
+  SCORE: 'Score',
+  TIME: 'Time',
+  PLACEMENT: 'Placement',
+  WINNER_ONLY: 'Winner Only',
+  KILLS: 'Kills',
+  GOALS: 'Goals',
+  ROUNDS_WON: 'Rounds Won',
+  CUSTOM_NUMBER: 'Custom',
+};
+
+const WINNER_RULE_LABEL: Record<WinnerRule, string> = {
+  HIGHEST_VALUE_WINS: 'Highest wins',
+  LOWEST_VALUE_WINS: 'Lowest wins',
+  FIRST_TO_FINISH_WINS: 'First to finish',
+  LAST_REMAINING_WINS: 'Last remaining',
+  MOST_ROUNDS_WON: 'Most rounds',
+  MANUAL_WINNER: 'Manual',
+  CLOSEST_TO_TARGET: 'Closest to target',
 };
 
 export function GameList({ games, onDelete }: GameListProps) {
@@ -28,8 +47,10 @@ export function GameList({ games, onDelete }: GameListProps) {
         <thead className="bg-slate-50 text-left text-slate-600">
           <tr>
             <th className="px-4 py-3 font-medium">Name</th>
-            <th className="px-4 py-3 font-medium">Type</th>
-            <th className="px-4 py-3 font-medium">Calculation</th>
+            <th className="px-4 py-3 font-medium">Match type</th>
+            <th className="px-4 py-3 font-medium">Result</th>
+            <th className="px-4 py-3 font-medium">Winner rule</th>
+            <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium sr-only">Actions</th>
           </tr>
         </thead>
@@ -42,8 +63,20 @@ export function GameList({ games, onDelete }: GameListProps) {
                   {game.name}
                 </span>
               </td>
-              <td className="px-4 py-3 text-slate-600">{GAME_TYPE_LABEL[game.gameType]}</td>
-              <td className="px-4 py-3 text-slate-600">{CALC_METHOD_LABEL[game.calculationMethod]}</td>
+              <td className="px-4 py-3 text-slate-600">{MATCH_TYPE_LABEL[game.matchType]}</td>
+              <td className="px-4 py-3 text-slate-600">{RESULT_TYPE_LABEL[game.resultType]}</td>
+              <td className="px-4 py-3 text-slate-600">{WINNER_RULE_LABEL[game.winnerRule]}</td>
+              <td className="px-4 py-3">
+                {game.isActive ? (
+                  <span className="inline-flex items-center rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                    Active
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                    Inactive
+                  </span>
+                )}
+              </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
                   <Link

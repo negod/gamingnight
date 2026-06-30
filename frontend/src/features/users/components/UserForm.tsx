@@ -18,7 +18,7 @@ const roles: Array<{ value: UserRole; label: string }> = [
 
 export function UserForm({ players, initialValues, submitLabel, onSubmit }: UserFormProps) {
   const [values, setValues] = useState<UserFormValues>(
-    initialValues ?? { username: '', password: '', role: 'USER', playerId: '' },
+    initialValues ?? { username: '', password: '', role: 'USER', playerId: '', email: '' },
   );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +62,17 @@ export function UserForm({ players, initialValues, submitLabel, onSubmit }: User
           value={values.username}
           onChange={(e) => setValues((current) => ({ ...current, username: e.target.value }))}
           required
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-sm font-medium text-slate-700">Email</span>
+        <input
+          type="email"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+          maxLength={320}
+          value={values.email ?? ''}
+          onChange={(e) => setValues((current) => ({ ...current, email: e.target.value }))}
         />
       </label>
 

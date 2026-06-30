@@ -6,10 +6,9 @@ import se.backede.application.dto.GameTeamLeaderboardResponse;
 import se.backede.application.dto.GameTeamLeaderboardRow;
 import se.backede.application.dto.TotalPlayerLeaderboardRow;
 import se.backede.application.dto.TotalTeamLeaderboardRow;
-import se.backede.domain.model.CalculationMethod;
 import se.backede.domain.model.Game;
-import se.backede.domain.model.GameType;
 import se.backede.domain.model.Match;
+import se.backede.domain.model.WinnerRule;
 import se.backede.domain.model.PlayerResult;
 import se.backede.domain.repository.CompetitionRepositoryPort;
 import se.backede.domain.repository.GameRepositoryPort;
@@ -136,11 +135,11 @@ public class LeaderboardUseCaseService {
 
         Map<UUID, Double> aggregates = new HashMap<>();
         for (var entry : teamValues.entrySet()) {
-            aggregates.put(entry.getKey(), aggregate(entry.getValue(), game.calculationMethod()));
+            aggregates.put(entry.getKey(), aggregate(entry.getValue()));
         }
 
         Comparator<Map.Entry<UUID, Double>> cmp = Map.Entry.comparingByValue();
-        if (game.gameType() == GameType.SCORE_BASED) cmp = cmp.reversed();
+        if (highScoreWins(game)) cmp = cmp.reversed();
         var sorted = aggregates.entrySet().stream().sorted(cmp).toList();
 
         var rows = new ArrayList<GameTeamLeaderboardRow>();
@@ -166,11 +165,11 @@ public class LeaderboardUseCaseService {
 
         Map<UUID, Double> aggregates = new HashMap<>();
         for (var entry : playerValues.entrySet()) {
-            aggregates.put(entry.getKey(), aggregate(entry.getValue(), game.calculationMethod()));
+            aggregates.put(entry.getKey(), aggregate(entry.getValue()));
         }
 
         Comparator<Map.Entry<UUID, Double>> cmp = Map.Entry.comparingByValue();
-        if (game.gameType() == GameType.SCORE_BASED) cmp = cmp.reversed();
+        if (highScoreWins(game)) cmp = cmp.reversed();
         var sorted = aggregates.entrySet().stream().sorted(cmp).toList();
 
         var rows = new ArrayList<GamePlayerLeaderboardRow>();
@@ -184,16 +183,21 @@ public class LeaderboardUseCaseService {
         return rows;
     }
 
-    private static double aggregate(List<Double> values, CalculationMethod method) {
-        double sum = values.stream().mapToDouble(Double::doubleValue).sum();
-        return method == CalculationMethod.SUM ? sum : sum / values.size();
+    private static double aggregate(List<Double> values) {
+        return values.stream().mapToDouble(Double::doubleValue).sum();
+    }
+
+    private static boolean highScoreWins(Game game) {
+        return game.winnerRule() != WinnerRule.LOWEST_VALUE_WINS;
     }
 
     private static String columnHeader(Game game) {
-        boolean isScore = game.gameType() == GameType.SCORE_BASED;
-        boolean isSum = game.calculationMethod() == CalculationMethod.SUM;
-        if (isScore) return isSum ? "Total Score" : "Average Score";
-        return isSum ? "Total Time" : "Average Time";
+        return switch (game.resultType()) {
+            case TIME -> "Total Time";
+            case SCORE, GOALS, KILLS, ROUNDS_WON, CUSTOM_NUMBER -> "Total Score";
+            case PLACEMENT -> "Placement";
+            case WINNER_ONLY -> "Result";
+        };
     }
 
     private static int placementPoints(int rank) {

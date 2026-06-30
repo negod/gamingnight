@@ -23,6 +23,10 @@ export function CurrentUserPage() {
               <dd className="mt-1 text-slate-950">{data.username}</dd>
             </div>
             <div>
+              <dt className="font-medium text-slate-500">Email</dt>
+              <dd className="mt-1 text-slate-950">{data.email || '-'}</dd>
+            </div>
+            <div>
               <dt className="font-medium text-slate-500">Role</dt>
               <dd className="mt-1 text-slate-950">{data.role === 'ADMIN' ? 'Admin' : 'User'}</dd>
             </div>

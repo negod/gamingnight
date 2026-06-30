@@ -1,10 +1,15 @@
 package se.backede.application.usecase;
 
-import se.backede.domain.model.CalculationMethod;
 import se.backede.domain.model.Competition;
 import se.backede.domain.model.Game;
-import se.backede.domain.model.GameType;
 import se.backede.domain.model.Match;
+import se.backede.domain.model.MatchType;
+import se.backede.domain.model.ParticipantRule;
+import se.backede.domain.model.ResultType;
+import se.backede.domain.model.ScoringRule;
+import se.backede.domain.model.TieBreakerRule;
+import se.backede.domain.model.WinDrawLossScoringRule;
+import se.backede.domain.model.WinnerRule;
 import se.backede.domain.model.Player;
 import se.backede.domain.model.PlayerResult;
 import se.backede.domain.model.Team;
@@ -53,7 +58,7 @@ class LeaderboardUseCaseServiceTest {
         var gameId = UUID.randomUUID();
         var teamA = UUID.randomUUID();
         var teamB = UUID.randomUUID();
-        var game = scoredGame(gameId, CalculationMethod.SUM);
+        var game = scoredGame(gameId);
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
 
@@ -81,7 +86,7 @@ class LeaderboardUseCaseServiceTest {
         var gameId = UUID.randomUUID();
         var teamA = UUID.randomUUID();
         var teamB = UUID.randomUUID();
-        var game = timedGame(gameId, CalculationMethod.SUM);
+        var game = timedGame(gameId);
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
 
@@ -100,9 +105,9 @@ class LeaderboardUseCaseServiceTest {
     }
 
     @Test
-    void gameTeamLeaderboardAverageHeader() {
+    void gameTeamLeaderboardScoreHeader() {
         var gameId = UUID.randomUUID();
-        var game = scoredGame(gameId, CalculationMethod.AVERAGE);
+        var game = scoredGame(gameId);
         var competitionId = UUID.randomUUID();
 
         when(gameRepo.findById(gameId)).thenReturn(Optional.of(game));
@@ -110,7 +115,7 @@ class LeaderboardUseCaseServiceTest {
 
         var response = service.getGameTeamLeaderboard(competitionId, gameId);
 
-        assertThat(response.columnHeader()).isEqualTo("Average Score");
+        assertThat(response.columnHeader()).isEqualTo("Total Score");
     }
 
     @Test
@@ -120,7 +125,7 @@ class LeaderboardUseCaseServiceTest {
         var teamA = UUID.randomUUID();
         var teamB = UUID.randomUUID();
         var competition = competition(competitionId, List.of(gameId), List.of(teamA, teamB));
-        var game = scoredGame(gameId, CalculationMethod.SUM);
+        var game = scoredGame(gameId);
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
 
@@ -147,7 +152,7 @@ class LeaderboardUseCaseServiceTest {
         var gameId = UUID.randomUUID();
         var teamA = UUID.randomUUID();
         var teamB = UUID.randomUUID();
-        var game = scoredGame(gameId, CalculationMethod.SUM);
+        var game = scoredGame(gameId);
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
 
@@ -170,7 +175,7 @@ class LeaderboardUseCaseServiceTest {
         var gameId = UUID.randomUUID();
         var teamA = UUID.randomUUID();
         var teamB = UUID.randomUUID();
-        var game = scoredGame(gameId, CalculationMethod.SUM);
+        var game = scoredGame(gameId);
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
 
@@ -198,7 +203,7 @@ class LeaderboardUseCaseServiceTest {
         var gameId = UUID.randomUUID();
         var teamA = UUID.randomUUID();
         var teamB = UUID.randomUUID();
-        var game = timedGame(gameId, CalculationMethod.SUM);
+        var game = timedGame(gameId);
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
 
@@ -225,7 +230,7 @@ class LeaderboardUseCaseServiceTest {
         var playerA = UUID.randomUUID();
         var playerB = UUID.randomUUID();
         var competition = competition(competitionId, List.of(gameId), List.of(teamA, teamB));
-        var game = scoredGame(gameId, CalculationMethod.SUM);
+        var game = scoredGame(gameId);
 
         var match = matchWithResults(competitionId, gameId, teamA, teamB,
                 List.of(new PlayerResult(playerA, teamA, 200.0), new PlayerResult(playerB, teamB, 50.0)));
@@ -244,12 +249,21 @@ class LeaderboardUseCaseServiceTest {
         assertThat(rows.get(1).points()).isEqualTo(90);
     }
 
-    private static Game scoredGame(UUID id, CalculationMethod method) {
-        return Game.rehydrate(id, "Bowling", GameType.SCORE_BASED, method, "", NOW, NOW);
+    private static final ParticipantRule PARTICIPANTS = new ParticipantRule(1, 4, null, false);
+    private static final ScoringRule SCORING = WinDrawLossScoringRule.of(3, 1, 0);
+
+    private static Game scoredGame(UUID id) {
+        return Game.rehydrate(id, "Bowling", "", null, null, true,
+                MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, List.of(), NOW, NOW);
     }
 
-    private static Game timedGame(UUID id, CalculationMethod method) {
-        return Game.rehydrate(id, "Run", GameType.TIME_BASED, method, "", NOW, NOW);
+    private static Game timedGame(UUID id) {
+        return Game.rehydrate(id, "Run", "", null, null, true,
+                MatchType.SOLO_CHALLENGE, PARTICIPANTS, ResultType.TIME,
+                WinnerRule.LOWEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, List.of(), NOW, NOW);
     }
 
     private static Match matchWithResults(UUID competitionId, UUID gameId, UUID homeTeam, UUID awayTeam,

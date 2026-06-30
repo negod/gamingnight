@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { getTeam, listPlayers, updateTeam } from '../features/teams/api/teamsApi';
 import { TeamForm } from '../features/teams/components/TeamForm';
 import { useAsync } from '../shared/hooks/useAsync';
@@ -28,6 +29,13 @@ export function EditTeamPage() {
   return (
     <section className="space-y-6">
       <div>
+        <Link
+          to="/teams"
+          className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-950"
+        >
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+          Back to teams
+        </Link>
         <h1 className="text-2xl font-semibold text-slate-950">Edit team</h1>
         <p className="mt-1 text-sm text-slate-600">Update the team name or player assignments.</p>
       </div>

@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0015-apply-game-rule-not-null
+      author: backede
+      changes:
+        - addNotNullConstraint:
+            tableName: games
+            columnName: match_type
+            columnDataType: varchar(30)
+        - addNotNullConstraint:
+            tableName: games
+            columnName: participant_rule
+            columnDataType: text
+        - addNotNullConstraint:
+            tableName: games
+            columnName: result_type
+            columnDataType: varchar(30)
+        - addNotNullConstraint:
+            tableName: games
+            columnName: winner_rule
+            columnDataType: varchar(30)
+        - addNotNullConstraint:
+            tableName: games
+            columnName: scoring_rule
+            columnDataType: text
+        - addNotNullConstraint:
+            tableName: games
+            columnName: tie_breaker_rule
+            columnDataType: varchar(30)
+        - addNotNullConstraint:
+            tableName: games
+            columnName: is_active
+            columnDataType: boolean

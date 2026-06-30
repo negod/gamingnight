@@ -12,9 +12,20 @@ public final class GameDtoMapper {
         return new GameResponse(
                 game.id(),
                 game.name(),
-                game.gameType(),
-                game.calculationMethod(),
                 game.description(),
+                game.platform(),
+                game.genre(),
+                game.isActive(),
+                game.matchType(),
+                game.participantRule(),
+                game.resultType(),
+                game.winnerRule(),
+                game.scoringRule(),
+                game.tieBreakerRule(),
+                game.validationRule(),
+                game.rotationRule(),
+                game.timeLimitRule(),
+                game.bonusRules(),
                 game.createdAt(),
                 game.updatedAt()
         );

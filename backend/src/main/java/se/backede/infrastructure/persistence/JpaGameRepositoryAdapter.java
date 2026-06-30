@@ -27,9 +27,20 @@ public class JpaGameRepositoryAdapter implements GameRepositoryPort {
         if (existing.isPresent()) {
             var entity = existing.get();
             entity.setName(game.name());
-            entity.setGameType(game.gameType());
-            entity.setCalculationMethod(game.calculationMethod());
             entity.setDescription(game.description());
+            entity.setPlatform(game.platform());
+            entity.setGenre(game.genre());
+            entity.setActive(game.isActive());
+            entity.setMatchType(game.matchType());
+            entity.setParticipantRule(game.participantRule());
+            entity.setResultType(game.resultType());
+            entity.setWinnerRule(game.winnerRule());
+            entity.setScoringRule(game.scoringRule());
+            entity.setTieBreakerRule(game.tieBreakerRule());
+            entity.setValidationRule(game.validationRule());
+            entity.setRotationRule(game.rotationRule());
+            entity.setTimeLimitRule(game.timeLimitRule());
+            entity.setBonusRules(game.bonusRules());
             entity.setUpdatedAt(game.updatedAt());
             return mapper.toDomain(entity);
         }

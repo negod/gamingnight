@@ -17,7 +17,7 @@ describe('UserForm', () => {
     await user.selectOptions(screen.getByLabelText(/player/i), 'player-1');
     await user.click(screen.getByRole('button', { name: /create user/i }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ username: 'admin', password: 'secret', role: 'ADMIN', playerId: 'player-1' });
+    expect(onSubmit).toHaveBeenCalledWith({ username: 'admin', email: '', password: 'secret', role: 'ADMIN', playerId: 'player-1' });
   });
 
   it('requires username and player', async () => {
@@ -30,6 +30,21 @@ describe('UserForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Username is required');
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('submits email when provided', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(<UserForm players={[player('player-1', 'Alice')]} submitLabel="Create user" onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/^password$/i), 'secret');
+    await user.selectOptions(screen.getByLabelText(/player/i), 'player-1');
+    await user.click(screen.getByRole('button', { name: /create user/i }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ username: 'testuser', email: 'test@example.com', password: 'secret', role: 'USER', playerId: 'player-1' });
   });
 });
 

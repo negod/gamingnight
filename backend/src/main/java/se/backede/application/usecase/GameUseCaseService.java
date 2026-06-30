@@ -6,6 +6,7 @@ import se.backede.application.dto.UpdateGameRequest;
 import se.backede.application.mapper.GameDtoMapper;
 import se.backede.domain.model.Game;
 import se.backede.domain.repository.GameRepositoryPort;
+import se.backede.domain.service.GameRulesValidator;
 import se.backede.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -19,21 +20,24 @@ import java.util.UUID;
 public class GameUseCaseService {
 
     private final GameRepositoryPort repository;
+    private final GameRulesValidator rulesValidator;
     private final Clock clock;
 
-    public GameUseCaseService(GameRepositoryPort repository, Clock clock) {
+    public GameUseCaseService(GameRepositoryPort repository, GameRulesValidator rulesValidator, Clock clock) {
         this.repository = repository;
+        this.rulesValidator = rulesValidator;
         this.clock = clock;
     }
 
     public GameResponse create(CreateGameRequest request) {
         var game = Game.create(
-                request.name(),
-                request.gameType(),
-                request.calculationMethod(),
-                request.description(),
-                now()
+                request.name(), request.description(), request.platform(), request.genre(),
+                request.matchType(), request.participantRule(), request.resultType(),
+                request.winnerRule(), request.scoringRule(), request.tieBreakerRule(),
+                request.validationRule(), request.rotationRule(), request.timeLimitRule(),
+                request.bonusRules(), now()
         );
+        rulesValidator.validate(game);
         return GameDtoMapper.toResponse(repository.save(game));
     }
 
@@ -53,12 +57,13 @@ public class GameUseCaseService {
     public GameResponse update(UUID id, UpdateGameRequest request) {
         var game = repository.findById(id).orElseThrow(() -> gameNotFound(id));
         var updated = game.update(
-                request.name(),
-                request.gameType(),
-                request.calculationMethod(),
-                request.description(),
-                now()
+                request.name(), request.description(), request.platform(), request.genre(),
+                request.isActive(), request.matchType(), request.participantRule(), request.resultType(),
+                request.winnerRule(), request.scoringRule(), request.tieBreakerRule(),
+                request.validationRule(), request.rotationRule(), request.timeLimitRule(),
+                request.bonusRules(), now()
         );
+        rulesValidator.validate(updated);
         return GameDtoMapper.toResponse(repository.save(updated));
     }
 

@@ -16,14 +16,15 @@ describe('UserList', () => {
     expect(screen.getByText(/no users yet/i)).toBeInTheDocument();
   });
 
-  it('renders users with role and player', () => {
+  it('renders users with email, role and player', () => {
     render(
       <MemoryRouter>
-        <UserList users={[appUser('user-1', 'admin', 'ADMIN', 'Alice')]} onDelete={vi.fn()} />
+        <UserList users={[appUser('user-1', 'admin', 'ADMIN', 'Alice', 'admin@example.com')]} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText('admin')).toBeInTheDocument();
+    expect(screen.getByText('admin@example.com')).toBeInTheDocument();
     expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Alice')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/users/user-1/edit');
@@ -45,10 +46,11 @@ describe('UserList', () => {
   });
 });
 
-function appUser(id: string, username: string, role: UserRole, playerName: string): AppUser {
+function appUser(id: string, username: string, role: UserRole, playerName: string, email: string | null = null): AppUser {
   return {
     id,
     username,
+    email,
     role,
     playerId: 'player-1',
     playerName,

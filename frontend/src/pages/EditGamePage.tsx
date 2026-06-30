@@ -32,9 +32,20 @@ export function EditGamePage() {
         <GameForm
           initialValues={{
             name: game.name,
-            gameType: game.gameType,
-            calculationMethod: game.calculationMethod,
             description: game.description,
+            platform: game.platform,
+            genre: game.genre,
+            isActive: game.isActive,
+            matchType: game.matchType,
+            participantRule: game.participantRule,
+            resultType: game.resultType,
+            winnerRule: game.winnerRule,
+            scoringRule: game.scoringRule,
+            tieBreakerRule: game.tieBreakerRule,
+            validationRule: game.validationRule,
+            rotationRule: game.rotationRule,
+            timeLimitRule: game.timeLimitRule,
+            bonusRules: game.bonusRules,
           }}
           submitLabel="Save changes"
           onSubmit={handleSubmit}

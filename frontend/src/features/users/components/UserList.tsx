@@ -18,6 +18,7 @@ export function UserList({ users, onDelete }: UserListProps) {
         <thead className="bg-slate-50 text-left text-slate-600">
           <tr>
             <th className="px-4 py-3 font-medium">Username</th>
+            <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Role</th>
             <th className="px-4 py-3 font-medium">Player</th>
             <th className="px-4 py-3 font-medium">Created</th>
@@ -33,6 +34,7 @@ export function UserList({ users, onDelete }: UserListProps) {
                   {user.username}
                 </span>
               </td>
+              <td className="px-4 py-3 text-slate-600">{user.email || '-'}</td>
               <td className="px-4 py-3 text-slate-600">{user.role === 'ADMIN' ? 'Admin' : 'User'}</td>
               <td className="px-4 py-3 text-slate-600">{user.playerName}</td>
               <td className="px-4 py-3 text-slate-600">

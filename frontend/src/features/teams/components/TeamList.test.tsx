@@ -23,7 +23,7 @@ describe('TeamList', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Team Alpha')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /team alpha/i })).toHaveAttribute('href', '/teams/team-1/edit');
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/teams/team-1/edit');
   });

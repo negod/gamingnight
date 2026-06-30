@@ -1,8 +1,10 @@
 databaseChangeLog:
   # Current changeset sequence: 0002-create-players, 0002-create-teams, 0003-create-competitions, 0003-create-games,
   # 0006-create-matches, 0007-create-player-results, 0008-seed-test-data, 0009-create-team-names,
-  # 0010-create-users, 0011-add-user-passwords, 0012-add-email-to-users
-  # Note: Gaps exist at 0001, 0004, 0005 due to historical deletions. Next available: 0013
+  # 0010-create-users, 0011-add-user-passwords, 0012-add-email-to-users,
+  # 0013-add-game-rule-columns, 0014-migrate-game-seed-data, 0017-backfill-game-rule-columns,
+  # 0015-apply-game-rule-not-null, 0016-drop-old-game-columns
+  # Note: Gaps exist at 0001, 0004, 0005 due to historical deletions. Next available: 0018
   - include:
       file: db/changelog/changes/0002-create-players.yaml
   - include:
@@ -25,3 +27,13 @@ databaseChangeLog:
       file: db/changelog/changes/0011-add-user-passwords.yaml
   - include:
       file: db/changelog/changes/0012-add-email-to-users.yaml
+  - include:
+      file: db/changelog/changes/0013-add-game-rule-columns.yaml
+  - include:
+      file: db/changelog/changes/0014-migrate-game-seed-data.yaml
+  - include:
+      file: db/changelog/changes/0017-backfill-game-rule-columns.yaml
+  - include:
+      file: db/changelog/changes/0015-apply-game-rule-not-null.yaml
+  - include:
+      file: db/changelog/changes/0016-drop-old-game-columns.yaml

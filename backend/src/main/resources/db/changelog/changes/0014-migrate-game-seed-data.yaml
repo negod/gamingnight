@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0014-migrate-game-seed-data
+      author: backede
+      changes:
+        - sql:
+            sql: |
+              UPDATE games SET
+                match_type       = 'FREE_FOR_ALL',
+                participant_rule  = '{"minPlayersPerTeam":1,"maxPlayersPerTeam":4,"numberOfTeams":null,"allowSubstitutes":false}',
+                result_type      = 'SCORE',
+                winner_rule      = 'HIGHEST_VALUE_WINS',
+                scoring_rule     = '{"type":"WIN_DRAW_LOSS","pointsForWin":3,"pointsForDraw":1,"pointsForLoss":0}',
+                tie_breaker_rule = 'ALLOW_DRAW',
+                is_active        = true
+              WHERE id IN (
+                '30000000-0000-0000-0000-000000000001',
+                '30000000-0000-0000-0000-000000000002'
+              )

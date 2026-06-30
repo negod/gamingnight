@@ -97,7 +97,7 @@ The column header (`Total Score`, `Average Score`, `Total Time`, `Average Time`)
 
 ## Authentication And Authorization
 
-Users log in through `POST /api/auth/login`. The backend verifies the password hash, returns a signed bearer token, and the frontend stores that token for subsequent API calls.
+Users log in through `POST /api/auth/login`. The backend verifies the password hash, returns a signed bearer token, and the frontend stores that token for subsequent API calls. If an API request returns `401 Unauthorized`, the frontend clears the stored token and user profile; the route guard then redirects the user to `/login`.
 
 Role behavior:
 

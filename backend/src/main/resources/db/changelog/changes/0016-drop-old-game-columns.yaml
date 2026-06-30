@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0016-drop-old-game-columns
+      author: backede
+      changes:
+        - dropColumn:
+            tableName: games
+            columnName: game_type
+        - dropColumn:
+            tableName: games
+            columnName: calculation_method
