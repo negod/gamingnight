@@ -56,8 +56,8 @@ describe('CompetitionForm', () => {
 });
 
 const games: Game[] = [
-  { id: 'game-1', name: 'Bowling', gameType: 'SCORE_BASED', calculationMethod: 'SUM', description: '' },
-  { id: 'game-2', name: 'Darts', gameType: 'SCORE_BASED', calculationMethod: 'SUM', description: '' },
+  game('game-1', 'Bowling'),
+  game('game-2', 'Darts'),
 ];
 
 const teams: Team[] = [
@@ -69,3 +69,26 @@ const teams: Team[] = [
     updatedAt: '2026-01-01T10:00:00Z',
   },
 ];
+
+function game(id: string, name: string): Game {
+  return {
+    id,
+    name,
+    description: '',
+    platform: null,
+    genre: null,
+    isActive: true,
+    matchType: 'FREE_FOR_ALL',
+    participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 4, numberOfTeams: null, allowSubstitutes: false },
+    resultType: 'SCORE',
+    winnerRule: 'HIGHEST_VALUE_WINS',
+    scoringRule: { type: 'WIN_DRAW_LOSS', pointsForWin: 3, pointsForDraw: 1, pointsForLoss: 0 },
+    tieBreakerRule: 'ALLOW_DRAW',
+    validationRule: null,
+    rotationRule: 'NONE',
+    timeLimitRule: null,
+    bonusRules: [],
+    createdAt: '2026-01-01T10:00:00Z',
+    updatedAt: '2026-01-01T10:00:00Z',
+  };
+}

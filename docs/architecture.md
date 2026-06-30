@@ -63,7 +63,7 @@ Administrators manage system users through `/api/users` and the `/users` fronten
 
 ### Game Management
 
-Administrators manage games through `/api/games` and the `/games` frontend section. Each game defines whether higher values or lower values rank better through `GameType`, and whether results are aggregated with `CalculationMethod.SUM` or `CalculationMethod.AVERAGE`.
+Administrators manage games through `/api/games` and the `/games` frontend section. Each game defines match setup, participant rules, result type, winner rule, scoring rule, tie-breakers, optional validation, optional time limits, and optional bonus rules. The frontend game form includes optional presets such as Racing, Sports, Action, Fighting, Strategy, Party, and Co-op to fill those rule fields as a starting point; admins can still adjust every rule before saving.
 
 ### Team Management
 
@@ -224,8 +224,8 @@ UI components do not call `fetch` directly.
 | File | Role |
 |---|---|
 | `api/gamesApi.ts` | listGames, getGame, createGame, updateGame, deleteGame |
-| `components/GameList` | Table of games with type, calculation method, edit and delete actions |
-| `components/GameForm` | Form for name, game type (radio), calculation method (radio), and description |
+| `components/GameList` | Table of games with rule summary, edit and delete actions |
+| `components/GameForm` | Form for basic details, optional game type presets, match setup, result rules, scoring, rotation, validation, time limits, and bonus rules |
 | `pages/GamesPage` | List page with delete confirmation |
 | `pages/CreateGamePage` | Create form wired to POST /api/games |
 | `pages/EditGamePage` | Edit form wired to PUT /api/games/{id} |

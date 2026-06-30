@@ -5,9 +5,9 @@ import { GameStepNav } from './GameStepNav';
 import type { Game } from '../../../shared/types/game';
 
 const games: Game[] = [
-  { id: '1', name: 'Bowling', gameType: 'SCORE_BASED', calculationMethod: 'SUM', description: '' },
-  { id: '2', name: 'Darts', gameType: 'SCORE_BASED', calculationMethod: 'SUM', description: '' },
-  { id: '3', name: 'Run', gameType: 'TIME_BASED', calculationMethod: 'AVERAGE', description: '' },
+  game('1', 'Bowling'),
+  game('2', 'Darts'),
+  game('3', 'Run'),
 ];
 
 test('renders all game names', () => {
@@ -58,3 +58,26 @@ test('calls onSelect with game index when game button is clicked', async () => {
 
   expect(onSelect).toHaveBeenCalledWith(1);
 });
+
+function game(id: string, name: string): Game {
+  return {
+    id,
+    name,
+    description: '',
+    platform: null,
+    genre: null,
+    isActive: true,
+    matchType: 'FREE_FOR_ALL',
+    participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 4, numberOfTeams: null, allowSubstitutes: false },
+    resultType: 'SCORE',
+    winnerRule: 'HIGHEST_VALUE_WINS',
+    scoringRule: { type: 'WIN_DRAW_LOSS', pointsForWin: 3, pointsForDraw: 1, pointsForLoss: 0 },
+    tieBreakerRule: 'ALLOW_DRAW',
+    validationRule: null,
+    rotationRule: 'NONE',
+    timeLimitRule: null,
+    bonusRules: [],
+    createdAt: '2026-01-01T10:00:00Z',
+    updatedAt: '2026-01-01T10:00:00Z',
+  };
+}

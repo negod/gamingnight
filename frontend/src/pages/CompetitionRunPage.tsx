@@ -193,11 +193,12 @@ export function CompetitionRunPage() {
                   <MatchResultForm
                     key={match.id}
                     match={match}
+                    game={games[activeGameIndex]}
                     onSave={handleSaveResults}
                     onCancel={() => setEditingMatch(null)}
                   />
                 ) : (
-                  <MatchCard key={match.id} match={match} onEdit={admin ? setEditingMatch : undefined} />
+                  <MatchCard key={match.id} match={match} game={games[activeGameIndex]} onEdit={admin ? setEditingMatch : undefined} />
                 ),
               )}
             </div>

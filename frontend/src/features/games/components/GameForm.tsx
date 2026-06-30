@@ -1,4 +1,4 @@
-import { Save } from 'lucide-react';
+import { Save, Wand2 } from 'lucide-react';
 import { FormEvent, ReactNode, useState } from 'react';
 import type {
   BonusCondition,
@@ -13,6 +13,7 @@ import type {
   WinnerRule,
 } from '../../../shared/types/game';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
+import { GAME_RULE_PRESETS, type GameRulePresetId } from './gameRulePresets';
 
 type GameFormProps = {
   initialValues?: GameFormValues;
@@ -277,8 +278,10 @@ const legendCls = 'text-sm font-semibold text-slate-700';
 
 export function GameForm({ initialValues, submitLabel, onSubmit }: GameFormProps) {
   const [values, setValues] = useState<GameFormValues>(initialValues ?? defaultValues);
+  const [selectedPresetId, setSelectedPresetId] = useState<GameRulePresetId | ''>('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const selectedPreset = GAME_RULE_PRESETS.find((preset) => preset.id === selectedPresetId);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -296,6 +299,24 @@ export function GameForm({ initialValues, submitLabel, onSubmit }: GameFormProps
 
   function set<K extends keyof GameFormValues>(key: K, val: GameFormValues[K]) {
     setValues((v) => ({ ...v, [key]: val }));
+  }
+
+  function applySelectedPreset() {
+    if (!selectedPreset) return;
+    setValues((current) => ({
+      ...current,
+      genre: selectedPreset.values.genre,
+      matchType: selectedPreset.values.matchType,
+      participantRule: selectedPreset.values.participantRule,
+      resultType: selectedPreset.values.resultType,
+      winnerRule: selectedPreset.values.winnerRule,
+      scoringRule: selectedPreset.values.scoringRule,
+      tieBreakerRule: selectedPreset.values.tieBreakerRule,
+      validationRule: selectedPreset.values.validationRule,
+      rotationRule: selectedPreset.values.rotationRule,
+      timeLimitRule: selectedPreset.values.timeLimitRule,
+      bonusRules: selectedPreset.values.bonusRules,
+    }));
   }
 
   return (
@@ -349,6 +370,35 @@ export function GameForm({ initialValues, submitLabel, onSubmit }: GameFormProps
             <span className="text-sm font-medium text-slate-700">Active</span>
           </label>
           <Hint>Inactive games are hidden when building a new competition. Use this to retire a game without deleting its history.</Hint>
+        </div>
+      </div>
+
+      {/* ── Optional setup helper ── */}
+      <div className={sectionCls}>
+        <h2 className={legendCls}>Game type preset</h2>
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">
+              Preset <span className="font-normal text-slate-500">(optional)</span>
+            </span>
+            <select className={selectCls} value={selectedPresetId}
+              onChange={(e) => setSelectedPresetId(e.target.value as GameRulePresetId | '')}>
+              <option value="">Choose a preset</option>
+              {GAME_RULE_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>{preset.name}</option>
+              ))}
+            </select>
+            <Hint>{selectedPreset?.summary ?? 'Use a preset to fill the rule sections below. You can still adjust every rule before saving.'}</Hint>
+          </label>
+          <button
+            type="button"
+            disabled={!selectedPreset}
+            onClick={applySelectedPreset}
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-teal-600 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Wand2 aria-hidden="true" className="h-4 w-4" />
+            Apply preset
+          </button>
         </div>
       </div>
 

@@ -49,6 +49,33 @@ describe('GameForm', () => {
     expect(screen.queryByLabelText(/win points/i)).not.toBeInTheDocument();
   });
 
+  it('applies an optional preset while keeping manual fields editable', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(<GameForm submitLabel="Create game" onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/game name/i), 'Mario Kart');
+    await user.selectOptions(screen.getByRole('combobox', { name: /preset/i }), 'racing');
+    await user.click(screen.getByRole('button', { name: /apply preset/i }));
+
+    expect(screen.getByLabelText(/genre/i)).toHaveValue('Racing');
+    expect(screen.getByRole('combobox', { name: /match type/i })).toHaveValue('FREE_FOR_ALL');
+    expect(screen.getByRole('combobox', { name: /result type/i })).toHaveValue('PLACEMENT');
+    expect(screen.getByRole('combobox', { name: /scoring type/i })).toHaveValue('PLACEMENT');
+
+    await user.selectOptions(screen.getByRole('combobox', { name: /tie-breaker/i }), 'EXTRA_ROUND');
+    await user.click(screen.getByRole('button', { name: /create game/i }));
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+    const submitted: GameFormValues = onSubmit.mock.calls[0][0];
+    expect(submitted.name).toBe('Mario Kart');
+    expect(submitted.genre).toBe('Racing');
+    expect(submitted.resultType).toBe('PLACEMENT');
+    expect(submitted.scoringRule).toMatchObject({ type: 'PLACEMENT' });
+    expect(submitted.tieBreakerRule).toBe('EXTRA_ROUND');
+  });
+
   it('shows validation rule fields when enabled', async () => {
     const user = userEvent.setup();
 
