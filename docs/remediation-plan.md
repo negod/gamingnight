@@ -75,12 +75,12 @@ These must be addressed before any new feature work.
 
 Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, and the standard API error envelope. `RateLimitingFilterTest` verifies each threshold returns `429` after the configured allowance is exceeded.
 
-Full backend test suite: 195 tests pass, with 5 Testcontainers persistence tests skipped when Docker is unavailable.
+Full backend test suite: 196 tests pass, with 5 Testcontainers persistence tests skipped when Docker is unavailable.
 
 **Files affected**
 - `backend/pom.xml`
 - `backend/src/main/java/se/backede/infrastructure/config/RateLimitingFilter.java` (new)
-- `backend/src/main/resources/application.yml` (Bucket4j config)
+- `backend/src/main/resources/application.yml` (`app.rate-limits` thresholds)
 - `backend/src/test/java/se/backede/infrastructure/web/RateLimitingFilterTest.java` (new)
 - `docs/architecture.md`
 
