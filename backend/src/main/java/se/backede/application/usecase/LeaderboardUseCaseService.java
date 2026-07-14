@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Service
 public class LeaderboardUseCaseService {
@@ -124,17 +125,32 @@ public class LeaderboardUseCaseService {
     }
 
     private List<GameTeamLeaderboardRow> computeTeamRows(UUID competitionId, UUID gameId, Game game) {
+        return computeRows(competitionId, gameId, game, PlayerResult::teamId,
+                id -> teamRepository.findById(id).map(t -> t.name()).orElse("Unknown"),
+                GameTeamLeaderboardRow::new);
+    }
+
+    private List<GamePlayerLeaderboardRow> computePlayerRows(UUID competitionId, UUID gameId, Game game) {
+        return computeRows(competitionId, gameId, game, PlayerResult::playerId,
+                id -> playerRepository.findById(id).map(p -> p.name()).orElse("Unknown"),
+                GamePlayerLeaderboardRow::new);
+    }
+
+    private <R> List<R> computeRows(UUID competitionId, UUID gameId, Game game,
+                                    Function<PlayerResult, UUID> keyExtractor,
+                                    Function<UUID, String> nameResolver,
+                                    LeaderboardRowFactory<R> rowFactory) {
         var matches = matchRepository.findByCompetitionIdAndGameId(competitionId, gameId);
 
-        Map<UUID, List<Double>> teamValues = new HashMap<>();
+        Map<UUID, List<Double>> values = new HashMap<>();
         for (Match match : matches) {
             for (PlayerResult result : match.results()) {
-                teamValues.computeIfAbsent(result.teamId(), k -> new ArrayList<>()).add(result.value());
+                values.computeIfAbsent(keyExtractor.apply(result), k -> new ArrayList<>()).add(result.value());
             }
         }
 
         Map<UUID, Double> aggregates = new HashMap<>();
-        for (var entry : teamValues.entrySet()) {
+        for (var entry : values.entrySet()) {
             aggregates.put(entry.getKey(), aggregate(entry.getValue()));
         }
 
@@ -142,45 +158,21 @@ public class LeaderboardUseCaseService {
         if (highScoreWins(game)) cmp = cmp.reversed();
         var sorted = aggregates.entrySet().stream().sorted(cmp).toList();
 
-        var rows = new ArrayList<GameTeamLeaderboardRow>();
+        var rows = new ArrayList<R>();
+        int rank = 1;
         for (int i = 0; i < sorted.size(); i++) {
             var entry = sorted.get(i);
-            int rank = i > 0 && Double.compare(sorted.get(i - 1).getValue(), entry.getValue()) == 0
-                    ? rows.get(i - 1).rank() : i + 1;
-            String name = teamRepository.findById(entry.getKey()).map(t -> t.name()).orElse("Unknown");
-            rows.add(new GameTeamLeaderboardRow(rank, entry.getKey(), name, entry.getValue()));
+            if (i > 0 && Double.compare(sorted.get(i - 1).getValue(), entry.getValue()) != 0) {
+                rank = i + 1;
+            }
+            rows.add(rowFactory.create(rank, entry.getKey(), nameResolver.apply(entry.getKey()), entry.getValue()));
         }
         return rows;
     }
 
-    private List<GamePlayerLeaderboardRow> computePlayerRows(UUID competitionId, UUID gameId, Game game) {
-        var matches = matchRepository.findByCompetitionIdAndGameId(competitionId, gameId);
-
-        Map<UUID, List<Double>> playerValues = new HashMap<>();
-        for (Match match : matches) {
-            for (PlayerResult result : match.results()) {
-                playerValues.computeIfAbsent(result.playerId(), k -> new ArrayList<>()).add(result.value());
-            }
-        }
-
-        Map<UUID, Double> aggregates = new HashMap<>();
-        for (var entry : playerValues.entrySet()) {
-            aggregates.put(entry.getKey(), aggregate(entry.getValue()));
-        }
-
-        Comparator<Map.Entry<UUID, Double>> cmp = Map.Entry.comparingByValue();
-        if (highScoreWins(game)) cmp = cmp.reversed();
-        var sorted = aggregates.entrySet().stream().sorted(cmp).toList();
-
-        var rows = new ArrayList<GamePlayerLeaderboardRow>();
-        for (int i = 0; i < sorted.size(); i++) {
-            var entry = sorted.get(i);
-            int rank = i > 0 && Double.compare(sorted.get(i - 1).getValue(), entry.getValue()) == 0
-                    ? rows.get(i - 1).rank() : i + 1;
-            String name = playerRepository.findById(entry.getKey()).map(p -> p.name()).orElse("Unknown");
-            rows.add(new GamePlayerLeaderboardRow(rank, entry.getKey(), name, entry.getValue()));
-        }
-        return rows;
+    @FunctionalInterface
+    private interface LeaderboardRowFactory<R> {
+        R create(int rank, UUID id, String name, double value);
     }
 
     private static double aggregate(List<Double> values) {

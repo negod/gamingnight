@@ -84,6 +84,8 @@ Auto-generated teams are created from selected players through `POST /api/compet
 5. Admin enters results via `PUT /api/competitions/{cid}/matches/{mid}/results`.
 6. Results are stored as `PlayerResult` entries attached to the `Match`.
 
+Player result values accept scores or times from `-99999.0` through `99999.0` with at most two decimal places. The HTTP request DTO enforces that range and precision before use-case handling, and the domain `PlayerResult` rejects non-finite values (`NaN` and infinity) for all entry paths so leaderboard aggregation cannot be corrupted by invalid floating-point values.
+
 ### Leaderboards
 
 `LeaderboardUseCaseService` computes four views:

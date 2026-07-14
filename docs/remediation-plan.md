@@ -116,7 +116,9 @@ Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, 
 
 ---
 
-#### SO-1 / CC-1 · Split `LeaderboardUseCaseService` and remove duplicate aggregation logic `[High]`
+#### SO-1 / CC-1 · Split `LeaderboardUseCaseService` and remove duplicate aggregation logic `[Resolved]`
+
+**Status**: Resolved (DRY portion). `computeTeamRows` and `computePlayerRows` now delegate to a single generic `computeRows(competitionId, gameId, game, keyExtractor, nameResolver, rowFactory)` method, parameterised by a `Function<PlayerResult, UUID>` key extractor, a `Function<UUID, String>` name resolver, and a `LeaderboardRowFactory<R>` functional interface for constructing the row DTO. The two ~30-line near-duplicate methods are now 4-line delegations. The service was **not** split into `GameLeaderboardUseCaseService` / `TotalLeaderboardUseCaseService`: `getTotalTeamLeaderboard` and `getTotalPlayerLeaderboard` call `computeTeamRows`/`computePlayerRows` internally per game, so the two scopes share both port dependencies and logic — a split would force either duplicated aggregation or a cross-service dependency, with no SRP benefit. `LeaderboardController` is unchanged. All existing `LeaderboardUseCaseServiceTest` cases (ranking, tie-break, header selection, both team/player and game/total scopes) pass unchanged against the refactored implementation — 181 backend tests pass overall.
 
 **Problem**: `LeaderboardUseCaseService.java` is 214 lines with four responsibilities (per-game team, per-game player, total team, total player) and two near-identical 30-line aggregation methods (`computeTeamRows`, `computePlayerRows`). Violates SRP (SOLID) and DRY (Clean Code).
 
@@ -200,23 +202,18 @@ After SEC-1 is implemented, add a `## Security Architecture` section to `docs/ar
 
 ### Codex
 
-#### DDD-2 / SEC-7 · Add range validation to `PlayerResult.value` `[Medium]`
+#### DDD-2 / SEC-7 · Add range validation to `PlayerResult.value` `[Resolved]`
 
-**Problem**: `PlayerResultInput.value` (a `double`) has no `@Min` / `@Max` constraint. The domain `PlayerResult` also imposes no bounds. An attacker can submit `Double.MAX_VALUE`, `NaN`, or `Infinity`, corrupting leaderboard computation silently.
+**Status**: Resolved. `PlayerResultInput.value` now requires a value in the range `-99999.0` through `99999.0` with at most five integer digits and two decimal places. The range is intentionally wide enough for score and time based games while bounding leaderboard impact from malicious or accidental extreme values.
 
-**What to do**
+The domain `PlayerResult` compact constructor rejects non-finite values (`NaN` and infinity) with `DomainValidationException`, protecting non-HTTP entry paths and persistence rehydration.
 
-1. In the request DTO (`EnterResultsRequest` → `PlayerResultInput`):
-   - Add `@DecimalMin("-99999.0")` and `@DecimalMax("99999.0")` (or project-appropriate bounds — document the choice).
-   - Add `@Digits(integer = 5, fraction = 2)` if fractional precision should be bounded.
-2. In `backend/src/main/java/se/backede/domain/model/PlayerResult.java` compact constructor, add:
-   ```java
-   if (!Double.isFinite(value)) throw new DomainValidationException("PlayerResult value must be finite");
-   ```
-3. Add test cases in `CompetitionRunUseCaseServiceTest` for `NaN` and `Infinity` inputs.
-4. Add controller-level test in `CompetitionRunControllerTest` for out-of-range values returning `400`.
+Coverage added:
 
-**Pattern to follow**: look at `@NotBlank` and `@Size` usages in `CreatePlayerRequest.java` and how those are tested in `PlayerControllerTest.java`.
+- `CompetitionRunUseCaseServiceTest` verifies `NaN` and infinity inputs are rejected.
+- `CompetitionRunControllerTest` verifies out-of-range result values return `400 Bad Request`.
+
+Focused tests pass: 18 tests.
 
 **Files affected**
 - `backend/src/main/java/se/backede/application/dto/PlayerResultInput.java` (or equivalent DTO)
@@ -496,11 +493,11 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | SEC-2 | Critical | Claude | ✅ |
 | SEC-3 | Critical | Codex | ✅ |
 | CA-1 / DDD-1 | High | Claude | ✅ |
-| SO-1 / CC-1 | High | Claude | ☐ |
+| SO-1 / CC-1 | High | Claude | ✅ |
 | SO-2 | Medium | Claude | ☐ |
 | CA-2 / FE-1 | Medium | Claude | ☐ |
 | DOC-2 | Medium | Claude | ☐ |
-| DDD-2 / SEC-7 | Medium | Codex | ☐ |
+| DDD-2 / SEC-7 | Medium | Codex | ✅ |
 | TDD-1 | Medium | Codex | ☑ |
 | TDD-2 | Medium | Codex | ☐ |
 | TDD-3 | Medium | Codex | ☐ |

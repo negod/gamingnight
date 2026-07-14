@@ -170,6 +170,38 @@ class CompetitionRunUseCaseServiceTest {
     }
 
     @Test
+    void enterResultsThrowsWhenValueIsNaN() {
+        var competitionId = UUID.randomUUID();
+        var homeTeamId = UUID.randomUUID();
+        var awayTeamId = UUID.randomUUID();
+        var match = Match.create(competitionId, UUID.randomUUID(), homeTeamId, awayTeamId, NOW);
+        var request = new EnterResultsRequest(List.of(
+                new PlayerResultInput(UUID.randomUUID(), homeTeamId, Double.NaN)));
+
+        when(matchRepo.findById(match.id())).thenReturn(Optional.of(match));
+
+        assertThatThrownBy(() -> service.enterResults(competitionId, match.id(), request))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("PlayerResult value must be finite");
+    }
+
+    @Test
+    void enterResultsThrowsWhenValueIsInfinite() {
+        var competitionId = UUID.randomUUID();
+        var homeTeamId = UUID.randomUUID();
+        var awayTeamId = UUID.randomUUID();
+        var match = Match.create(competitionId, UUID.randomUUID(), homeTeamId, awayTeamId, NOW);
+        var request = new EnterResultsRequest(List.of(
+                new PlayerResultInput(UUID.randomUUID(), homeTeamId, Double.POSITIVE_INFINITY)));
+
+        when(matchRepo.findById(match.id())).thenReturn(Optional.of(match));
+
+        assertThatThrownBy(() -> service.enterResults(competitionId, match.id(), request))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("PlayerResult value must be finite");
+    }
+
+    @Test
     void enterResultsThrowsWhenMatchNotFound() {
         var id = UUID.randomUUID();
         when(matchRepo.findById(id)).thenReturn(Optional.empty());

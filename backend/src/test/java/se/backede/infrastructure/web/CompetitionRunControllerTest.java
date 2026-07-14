@@ -144,7 +144,31 @@ class CompetitionRunControllerTest {
 
         mockMvc.perform(put("/api/competitions/{cid}/matches/{mid}/results", competitionId, matchId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"results\": null}"))
+                .content("{\"results\": null}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void enterResultsReturns400WhenResultValueIsOutOfRange() throws Exception {
+        var competitionId = UUID.randomUUID();
+        var matchId = UUID.randomUUID();
+        var playerId = UUID.randomUUID();
+        var teamId = UUID.randomUUID();
+
+        mockMvc.perform(put("/api/competitions/{cid}/matches/{mid}/results", competitionId, matchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "results": [
+                                    {
+                                      "playerId": "%s",
+                                      "teamId": "%s",
+                                      "value": 100000.0
+                                    }
+                                  ]
+                                }
+                                """.formatted(playerId, teamId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"));
     }
 }
