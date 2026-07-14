@@ -69,7 +69,7 @@ These must be addressed before any new feature work.
 **Status**: Resolved. Bucket4j-backed per-IP rate limiting is applied before controller handling for the sensitive mutating endpoints:
 
 - `POST /api/users` — 5 requests/minute per IP.
-- `POST /api/auth/login` — 10 requests/minute per IP.
+- `POST /api/auth/login` — 20 requests/minute per IP (raised from an initial 10; multiple legitimate users can share one IP at a gaming night, and 10/min was tripping the E2E suite's own login volume).
 - `POST /api/competitions/*/start` — 10 requests/minute per IP.
 - `PUT /api/competitions/*/matches/*/results` — 30 requests/minute per IP.
 

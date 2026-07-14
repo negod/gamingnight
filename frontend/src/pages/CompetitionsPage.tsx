@@ -31,9 +31,12 @@ export function CompetitionsPage() {
   const [mode, setMode] = useState<Mode>('list');
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
   const { data: competitions, error: competitionsError, loading: competitionsLoading } = useAsync(listCompetitions, [version]);
-  const { data: games, error: gamesError, loading: gamesLoading } = useAsync(useCallback(listGames, []), []);
-  const { data: teams, error: teamsError, loading: teamsLoading } = useAsync(useCallback(listTeams, []), [version]);
-  const { data: players, error: playersError, loading: playersLoading } = useAsync(useCallback(listPlayers, []), []);
+  const loadGames = useCallback(() => (admin ? listGames() : Promise.resolve([])), [admin]);
+  const loadTeams = useCallback(() => (admin ? listTeams() : Promise.resolve([])), [admin]);
+  const loadPlayers = useCallback(() => (admin ? listPlayers() : Promise.resolve([])), [admin]);
+  const { data: games, error: gamesError, loading: gamesLoading } = useAsync(loadGames, [loadGames]);
+  const { data: teams, error: teamsError, loading: teamsLoading } = useAsync(loadTeams, [loadTeams, version]);
+  const { data: players, error: playersError, loading: playersLoading } = useAsync(loadPlayers, [loadPlayers]);
 
   function returnToList() {
     setMode('list');

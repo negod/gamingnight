@@ -15,7 +15,14 @@
       "Bash(xargs ls)",
       "Bash(grep \"\\\\.java$\")",
       "Bash(mvn clean *)",
-      "Bash(mvn -q test -Dtest='CompetitionTest,CompetitionRunUseCaseServiceTest')"
+      "Bash(mvn -q test -Dtest='CompetitionTest,CompetitionRunUseCaseServiceTest')",
+      "Bash(ln -sf /mnt/c/Programmering/Projekt/gamingnight/frontend/node_modules node_modules)",
+      "Bash(npx eslint *)",
+      "Bash(nc -zv localhost 5432)",
+      "Bash(nc -zv localhost 8080)",
+      "Bash(nc -zv localhost 5173)",
+      "Bash(SPRING_PROFILES_ACTIVE=local mvn -q spring-boot:run)",
+      "Bash(echo \"started with pid $!\")"
     ]
   }
 }

@@ -58,7 +58,7 @@ class RateLimitingFilterTest {
     private CompetitionUseCaseService competitionUseCaseService;
 
     @Test
-    void returns429AfterTenLoginRequestsPerMinuteFromSameIp() throws Exception {
+    void returns429AfterTwentyLoginRequestsPerMinuteFromSameIp() throws Exception {
         RequestBuilder request = post("/api/auth/login")
                 .with(httpRequest -> {
                     httpRequest.setRemoteAddr("10.10.0.4");
@@ -67,7 +67,7 @@ class RateLimitingFilterTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new LoginRequest("admin", "admin")));
 
-        expectTooManyRequestsAfterAllowedRequests(request, 10, 200);
+        expectTooManyRequestsAfterAllowedRequests(request, 20, 200);
     }
 
     @Test

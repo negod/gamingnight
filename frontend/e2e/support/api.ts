@@ -49,10 +49,20 @@ export type E2EApi = {
   createOpenCompetition(name: string, gameIds: string[], teamIds: string[]): Promise<Competition>;
 };
 
-export async function loginViaApi(request: APIRequestContext, credentials: E2ECredentials): Promise<LoginResponse> {
+const loginCache = new Map<string, Promise<LoginResponse>>();
+
+async function loginViaApiUncached(request: APIRequestContext, credentials: E2ECredentials): Promise<LoginResponse> {
   const response = await request.post(`${apiBaseUrl()}/auth/login`, { data: credentials });
   expect(response.ok(), await response.text()).toBeTruthy();
   return response.json() as Promise<LoginResponse>;
+}
+
+export async function loginViaApi(request: APIRequestContext, credentials: E2ECredentials): Promise<LoginResponse> {
+  const cached = loginCache.get(credentials.username);
+  if (cached) return cached;
+  const promise = loginViaApiUncached(request, credentials);
+  loginCache.set(credentials.username, promise);
+  return promise;
 }
 
 export async function createApi(request: APIRequestContext, credentials = adminCredentials()): Promise<E2EApi> {

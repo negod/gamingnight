@@ -1,14 +1,18 @@
 import { expect, test } from '@playwright/test';
 import { createApi } from './support/api';
-import { adminCredentials, runId } from './support/env';
-import { login, recordByText } from './support/ui';
+import { runId } from './support/env';
+import { recordByText } from './support/ui';
+import { ADMIN_STORAGE_STATE } from './global-setup';
+
+// These tests need an authenticated admin session, not the login flow itself.
+test.use({ storageState: ADMIN_STORAGE_STATE });
 
 test('@players admin can create, edit, and delete an isolated player', async ({ page, request }) => {
   const prefix = `e2e-${runId()}-players-`;
   const api = await createApi(request);
   await api.cleanupByPrefix(prefix);
 
-  await login(page, adminCredentials());
+  await page.goto('/');
   await page.getByRole('link', { name: 'Players' }).click();
   await page.getByRole('button', { name: 'New player' }).click();
   await page.getByLabel('Player name').fill(`${prefix}one`);
@@ -30,7 +34,7 @@ test('@games admin can create, edit, and delete an isolated game', async ({ page
   const api = await createApi(request);
   await api.cleanupByPrefix(prefix);
 
-  await login(page, adminCredentials());
+  await page.goto('/');
   await page.getByRole('link', { name: 'Games' }).click();
   await page.getByRole('button', { name: 'New game' }).click();
   await page.getByLabel('Game name').fill(`${prefix}one`);
@@ -53,7 +57,7 @@ test('@teams admin can create, edit, and delete an isolated team', async ({ page
   await api.cleanupByPrefix(prefix);
   const player = await api.createPlayer(`${prefix}player`);
 
-  await login(page, adminCredentials());
+  await page.goto('/');
   await page.getByRole('link', { name: 'Teams' }).click();
   await page.getByRole('button', { name: 'New team' }).click();
   await page.getByLabel('Team name').fill(`${prefix}one`);

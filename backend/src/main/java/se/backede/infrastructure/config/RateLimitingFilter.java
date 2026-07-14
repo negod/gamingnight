@@ -44,7 +44,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     public RateLimitingFilter(
             ObjectMapper objectMapper,
-            @Value("${app.rate-limits.login.requests-per-minute:10}") int loginRequestsPerMinute,
+            @Value("${app.rate-limits.login.requests-per-minute:20}") int loginRequestsPerMinute,
             @Value("${app.rate-limits.signup.requests-per-minute:5}") int signupRequestsPerMinute,
             @Value("${app.rate-limits.create-user.requests-per-minute:5}") int createUserRequestsPerMinute,
             @Value("${app.rate-limits.start-competition.requests-per-minute:10}") int startCompetitionRequestsPerMinute,

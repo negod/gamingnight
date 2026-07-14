@@ -56,3 +56,4 @@ pnpm-debug.log*
 .claude/worktrees/
 /frontend/playwright-report
 /frontend/test-results
+/frontend/e2e/.auth/
