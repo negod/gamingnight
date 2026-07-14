@@ -81,6 +81,47 @@ class UserUseCaseServiceTest {
     }
 
     @Test
+    void createsUserWithNewPlayerCallsign() {
+        when(playerRepository.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        var playerCaptor = ArgumentCaptor.forClass(Player.class);
+        var userCaptor = ArgumentCaptor.forClass(User.class);
+
+        var response = service.create(new CreateUserRequest("admin", null, "secret", UserRole.ADMIN, null, " Ace "));
+
+        verify(playerRepository).save(playerCaptor.capture());
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(playerCaptor.getValue().name()).isEqualTo("Ace");
+        assertThat(userCaptor.getValue().playerId()).isEqualTo(playerCaptor.getValue().id());
+        assertThat(response.playerName()).isEqualTo("Ace");
+    }
+
+    @Test
+    void createThrowsWhenNewPlayerCallsignAlreadyExists() {
+        when(playerRepository.existsByNameIgnoreCase("Ace")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.create(new CreateUserRequest("admin", null, "secret", UserRole.ADMIN, null, " Ace ")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Player callsign already exists");
+    }
+
+    @Test
+    void createThrowsWhenBothExistingAndNewPlayerAreProvided() {
+        var playerId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> service.create(new CreateUserRequest("admin", null, "secret", UserRole.ADMIN, playerId, "Ace")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Choose an existing player or enter a new Player callsign");
+    }
+
+    @Test
+    void createThrowsWhenNoPlayerChoiceIsProvided() {
+        assertThatThrownBy(() -> service.create(new CreateUserRequest("admin", null, "secret", UserRole.ADMIN, null, null)))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Choose an existing player or enter a new Player callsign");
+    }
+
+    @Test
     void createThrowsWhenUsernameExists() {
         var playerId = UUID.randomUUID();
         when(userRepository.existsByUsernameIgnoreCase("admin")).thenReturn(true);

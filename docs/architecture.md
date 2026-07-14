@@ -59,7 +59,7 @@ Administrators manage participants through `/api/players` and the `/players` fro
 
 ### User Administration
 
-Administrators manage system users through `/api/users` and the `/users` frontend section. A user has a unique username, optional unique email, password, one role (`ADMIN` or `USER`), and must be tied to an existing player. A player can only be tied to one user. Authenticated users can manage their own email and linked player's Player callsign through `/api/users/me`; this self-service flow never changes username, role, password, or player link.
+Administrators manage system users through `/api/users` and the `/users` frontend section. A user has a unique username, optional unique email, password, one role (`ADMIN` or `USER`), and must be tied to a player. When creating a user, admins can either select an existing unlinked Player callsign or enter a new Player callsign that is created and linked in the same workflow. A player can only be tied to one user. Authenticated users can manage their own email and linked player's Player callsign through `/api/users/me`; this self-service flow never changes username, role, password, or player link.
 
 ### Game Management
 
@@ -175,7 +175,7 @@ Known gaps, not yet resolved: no token revocation/blacklist (a leaked token stay
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/users` | Create user tied to a player |
+| POST | `/api/users` | Create user tied to an existing player or a newly created Player callsign |
 | GET | `/api/users` | List users |
 | GET | `/api/users/me` | Get the authenticated user's profile |
 | GET | `/api/users/{id}` | Get user |

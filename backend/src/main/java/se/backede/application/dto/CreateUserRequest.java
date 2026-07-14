@@ -24,7 +24,12 @@ public record CreateUserRequest(
         @NotNull(message = "Role is required")
         UserRole role,
 
-        @NotNull(message = "Player is required")
-        UUID playerId
+        UUID playerId,
+
+        @Size(max = 120, message = "Player callsign must be at most 120 characters")
+        String playerCallsign
 ) {
+    public CreateUserRequest(String username, String email, String password, UserRole role, UUID playerId) {
+        this(username, email, password, role, playerId, null);
+    }
 }

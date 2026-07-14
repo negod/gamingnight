@@ -13,6 +13,7 @@ import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -39,12 +40,12 @@ public class UserUseCaseService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public UserResponse create(CreateUserRequest request) {
         validateUsernameAvailable(request.username());
         validateEmailAvailable(request.email());
-        validatePlayerAvailable(request.playerId());
-        var player = playerRepository.findById(request.playerId()).orElseThrow(() -> playerNotFound(request.playerId()));
-        var user = User.create(request.username(), request.email(), passwordService.hash(request.password()), request.role(), request.playerId(), now());
+        var player = resolvePlayerForCreate(request);
+        var user = User.create(request.username(), request.email(), passwordService.hash(request.password()), request.role(), player.id(), now());
         return UserDtoMapper.toResponse(userRepository.save(user), player);
     }
 
@@ -142,6 +143,21 @@ public class UserUseCaseService {
         }
     }
 
+    private Player resolvePlayerForCreate(CreateUserRequest request) {
+        var hasExistingPlayer = request.playerId() != null;
+        var hasNewPlayer = request.playerCallsign() != null && !request.playerCallsign().isBlank();
+        if (hasExistingPlayer == hasNewPlayer) {
+            throw new DomainValidationException("Choose an existing player or enter a new Player callsign");
+        }
+        if (hasExistingPlayer) {
+            validatePlayerAvailable(request.playerId());
+            return playerRepository.findById(request.playerId()).orElseThrow(() -> playerNotFound(request.playerId()));
+        }
+        var player = Player.create(request.playerCallsign(), now());
+        validatePlayerNameAvailable(player.name());
+        return playerRepository.save(player);
+    }
+
     private void validatePlayerAvailableForUpdate(UUID playerId, UUID id) {
         if (!playerRepository.existsById(playerId)) {
             throw playerNotFound(playerId);
@@ -153,6 +169,12 @@ public class UserUseCaseService {
 
     private void validatePlayerNameAvailableForUpdate(String name, UUID playerId) {
         if (playerRepository.existsByNameIgnoreCaseAndIdNot(name, playerId)) {
+            throw new DomainValidationException("Player callsign already exists");
+        }
+    }
+
+    private void validatePlayerNameAvailable(String name) {
+        if (playerRepository.existsByNameIgnoreCase(name)) {
             throw new DomainValidationException("Player callsign already exists");
         }
     }

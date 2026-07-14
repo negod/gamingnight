@@ -14,10 +14,17 @@ describe('UserForm', () => {
     await user.type(screen.getByLabelText(/username/i), ' admin ');
     await user.type(screen.getByLabelText(/^password$/i), 'secret');
     await user.selectOptions(screen.getByLabelText(/role/i), 'ADMIN');
-    await user.selectOptions(screen.getByLabelText(/player callsign/i), 'player-1');
+    await user.selectOptions(screen.getByLabelText(/existing player callsign/i), 'player-1');
     await user.click(screen.getByRole('button', { name: /create user/i }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ username: 'admin', email: '', password: 'secret', role: 'ADMIN', playerId: 'player-1' });
+    expect(onSubmit).toHaveBeenCalledWith({
+      username: 'admin',
+      email: '',
+      password: 'secret',
+      role: 'ADMIN',
+      playerId: 'player-1',
+      playerCallsign: undefined,
+    });
   });
 
   it('requires username and player', async () => {
@@ -41,10 +48,39 @@ describe('UserForm', () => {
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/^password$/i), 'secret');
-    await user.selectOptions(screen.getByLabelText(/player callsign/i), 'player-1');
+    await user.selectOptions(screen.getByLabelText(/existing player callsign/i), 'player-1');
     await user.click(screen.getByRole('button', { name: /create user/i }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ username: 'testuser', email: 'test@example.com', password: 'secret', role: 'USER', playerId: 'player-1' });
+    expect(onSubmit).toHaveBeenCalledWith({
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'secret',
+      role: 'USER',
+      playerId: 'player-1',
+      playerCallsign: undefined,
+    });
+  });
+
+  it('submits a new Player callsign when selected', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(<UserForm players={[player('player-1', 'Alice')]} submitLabel="Create user" onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/username/i), 'newuser');
+    await user.type(screen.getByLabelText(/^password$/i), 'secret');
+    await user.click(screen.getByLabelText(/^new$/i));
+    await user.type(screen.getByLabelText(/new player callsign/i), ' Ace ');
+    await user.click(screen.getByRole('button', { name: /create user/i }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      username: 'newuser',
+      email: '',
+      password: 'secret',
+      role: 'USER',
+      playerId: undefined,
+      playerCallsign: 'Ace',
+    });
   });
 });
 

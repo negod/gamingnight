@@ -54,3 +54,5 @@ pnpm-debug.log*
 
 # Claude Code worktrees
 .claude/worktrees/
+/frontend/playwright-report
+/frontend/test-results

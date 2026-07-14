@@ -71,6 +71,23 @@ class UserControllerTest {
     }
 
     @Test
+    void createsUserWithNewPlayerCallsign() throws Exception {
+        var id = UUID.randomUUID();
+        var playerId = UUID.randomUUID();
+        var request = new CreateUserRequest("admin", null, "secret12", UserRole.ADMIN, null, "Ace");
+        when(userUseCaseService.create(request))
+                .thenReturn(response(id, "admin", null, UserRole.ADMIN, playerId, "Ace"));
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.playerId").value(playerId.toString()))
+                .andExpect(jsonPath("$.playerName").value("Ace"));
+    }
+
+    @Test
     void returnsBadRequestForBlankUsername() throws Exception {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)

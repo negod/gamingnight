@@ -12,10 +12,11 @@ type Mode = 'list' | 'create' | 'edit';
 
 export function UsersPage() {
   const [version, setVersion] = useState(0);
+  const [playersVersion, setPlayersVersion] = useState(0);
   const [mode, setMode] = useState<Mode>('list');
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
   const { data: users, error: usersError, loading: usersLoading } = useAsync(listUsers, [version]);
-  const { data: players, error: playersError, loading: playersLoading } = useAsync(listPlayers, []);
+  const { data: players, error: playersError, loading: playersLoading } = useAsync(listPlayers, [playersVersion]);
 
   function returnToList() {
     setMode('list');
@@ -26,6 +27,7 @@ export function UsersPage() {
     await createUser(values);
     returnToList();
     setVersion((v) => v + 1);
+    setPlayersVersion((v) => v + 1);
   }
 
   async function handleUpdate(values: UserFormValues) {

@@ -4,6 +4,8 @@ import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 import type { Player } from '../../../shared/types/player';
 import type { UserFormValues, UserRole } from '../../../shared/types/user';
 
+type PlayerMode = 'existing' | 'new';
+
 type UserFormProps = {
   players: Player[];
   initialValues?: UserFormValues;
@@ -20,8 +22,10 @@ export function UserForm({ players, initialValues, submitLabel, onSubmit }: User
   const [values, setValues] = useState<UserFormValues>(
     initialValues ?? { username: '', password: '', role: 'USER', playerId: '', email: '' },
   );
+  const [playerMode, setPlayerMode] = useState<PlayerMode>('existing');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const creating = !initialValues;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,14 +39,25 @@ export function UserForm({ players, initialValues, submitLabel, onSubmit }: User
       setError('Password is required');
       return;
     }
-    if (!values.playerId) {
+    if (playerMode === 'existing' && !values.playerId) {
+      setError('Player callsign is required');
+      return;
+    }
+    if (playerMode === 'new' && !values.playerCallsign?.trim()) {
       setError('Player callsign is required');
       return;
     }
 
     setSubmitting(true);
     try {
-      await onSubmit({ ...values, username: values.username.trim() });
+      await onSubmit({
+        username: values.username.trim(),
+        email: values.email ?? '',
+        password: values.password,
+        role: values.role,
+        playerId: playerMode === 'existing' ? values.playerId : undefined,
+        playerCallsign: playerMode === 'new' ? values.playerCallsign?.trim() : undefined,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save user');
     } finally {
@@ -109,22 +124,81 @@ export function UserForm({ players, initialValues, submitLabel, onSubmit }: User
         ) : null}
       </label>
 
-      <label className="block">
-        <span className="text-sm font-medium text-slate-700">Player callsign</span>
-        <select
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-          value={values.playerId}
-          onChange={(e) => setValues((current) => ({ ...current, playerId: e.target.value }))}
-          required
-        >
-          <option value="">Select player callsign</option>
-          {players.map((player) => (
-            <option key={player.id} value={player.id}>
-              {player.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      {creating ? (
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-slate-700">Player callsign</legend>
+          <div className="flex flex-wrap gap-4">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="radio"
+                name="playerMode"
+                value="existing"
+                checked={playerMode === 'existing'}
+                onChange={() => setPlayerMode('existing')}
+                className="h-4 w-4 border-slate-300 text-teal-700 focus:ring-teal-700"
+              />
+              Existing
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="radio"
+                name="playerMode"
+                value="new"
+                checked={playerMode === 'new'}
+                onChange={() => setPlayerMode('new')}
+                className="h-4 w-4 border-slate-300 text-teal-700 focus:ring-teal-700"
+              />
+              New
+            </label>
+          </div>
+          {playerMode === 'existing' ? (
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Existing Player callsign</span>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                value={values.playerId ?? ''}
+                onChange={(e) => setValues((current) => ({ ...current, playerId: e.target.value }))}
+                required
+              >
+                <option value="">Select player callsign</option>
+                {players.map((player) => (
+                  <option key={player.id} value={player.id}>
+                    {player.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">New Player callsign</span>
+              <input
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                maxLength={120}
+                value={values.playerCallsign ?? ''}
+                onChange={(e) => setValues((current) => ({ ...current, playerCallsign: e.target.value }))}
+                required
+              />
+            </label>
+          )}
+        </fieldset>
+      ) : (
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Player callsign</span>
+          <select
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+            value={values.playerId ?? ''}
+            onChange={(e) => setValues((current) => ({ ...current, playerId: e.target.value }))}
+            required
+          >
+            <option value="">Select player callsign</option>
+            {players.map((player) => (
+              <option key={player.id} value={player.id}>
+                {player.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <button
         type="submit"

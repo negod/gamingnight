@@ -16,7 +16,8 @@ export type UserFormValues = {
   email?: string;
   password?: string;
   role: UserRole;
-  playerId: string;
+  playerId?: string;
+  playerCallsign?: string;
 };
 
 export type CurrentUserFormValues = {
