@@ -22,5 +22,6 @@ abstract class PostgreSqlPersistenceTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("app.auth.token-secret", () -> "test-only-token-secret");
     }
 }

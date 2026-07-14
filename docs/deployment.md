@@ -80,12 +80,14 @@ For local development, `npm run dev:backend` activates the `local` profile and u
 
 **Important**: Outside the `local` profile, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD` must always be explicitly supplied. The application will fail to start if these environment variables are not set, as there are no default values configured.
 
+`APP_AUTH_TOKEN_SECRET` must also be explicitly supplied outside local development. The local profile sets `dev-only-change-me` only for development; non-local startup fails fast if the token secret is missing.
+
 These values can come from exported shell variables, IDE run configuration, container configuration, or hosting-provider secrets. Spring Boot does not automatically load `backend/.env` unless the local tooling explicitly sources it.
 
 Important backend settings from `application.yml`:
 
 ```text
-app.auth.token-secret=${APP_AUTH_TOKEN_SECRET:dev-only-change-me}
+app.auth.token-secret=${APP_AUTH_TOKEN_SECRET}
 spring.jpa.hibernate.ddl-auto=validate
 spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
 spring.jpa.open-in-view=false
@@ -186,7 +188,13 @@ backend/src/main/resources/db/changelog/
     |-- 0008-seed-test-data.yaml
     |-- 0009-create-team-names.yaml
     |-- 0010-create-users.yaml
-    `-- 0011-add-user-passwords.yaml
+    |-- 0011-add-user-passwords.yaml
+    |-- 0012-add-email-to-users.yaml
+    |-- 0013-add-game-rule-columns.yaml
+    |-- 0014-migrate-game-seed-data.yaml
+    |-- 0015-apply-game-rule-not-null.yaml
+    |-- 0016-drop-old-game-columns.yaml
+    `-- 0017-backfill-game-rule-columns.yaml
 ```
 
 Add a migration:
@@ -204,7 +212,7 @@ Example:
 ```yaml
 databaseChangeLog:
   - changeSet:
-      id: 0012-add-avatar-to-players
+      id: 0018-add-avatar-to-players
       author: backede
       changes:
         - addColumn:

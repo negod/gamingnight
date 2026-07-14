@@ -125,7 +125,7 @@ Concrete expectations:
 
 ## Database Migrations (Liquibase)
 
-> **Note on existing changesets**: Due to historical deletions, the numbering has gaps and duplicates at 0002 and 0003. These cannot be renamed as they are already applied. All new changesets must use strictly sequential numbers starting from the highest existing prefix + 1 (currently `0012`).
+> **Note on existing changesets**: Due to historical deletions, the numbering has gaps and duplicates at 0002 and 0003. These cannot be renamed as they are already applied. All new changesets must use strictly sequential numbers starting from the highest existing prefix + 1 (currently `0018`).
 
 - All schema changes are YAML changesets under `backend/src/main/resources/db/changelog/changes/`.
 - Name each file with a zero-padded sequential prefix and a short description, e.g. `0008-add-avatar-to-players.yaml`.

@@ -69,12 +69,13 @@ These must be addressed before any new feature work.
 **Status**: Resolved. Bucket4j-backed per-IP rate limiting is applied before controller handling for the sensitive mutating endpoints:
 
 - `POST /api/users` — 5 requests/minute per IP.
+- `POST /api/auth/login` — 10 requests/minute per IP.
 - `POST /api/competitions/*/start` — 10 requests/minute per IP.
 - `PUT /api/competitions/*/matches/*/results` — 30 requests/minute per IP.
 
-Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, and the standard API error envelope.
+Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, and the standard API error envelope. `RateLimitingFilterTest` verifies each threshold returns `429` after the configured allowance is exceeded.
 
-`RateLimitingFilterTest` verifies each threshold returns `429` after the configured allowance is exceeded. Full backend test suite: 178 tests pass.
+Full backend test suite: 195 tests pass, with 5 Testcontainers persistence tests skipped when Docker is unavailable.
 
 **Files affected**
 - `backend/pom.xml`
@@ -163,16 +164,9 @@ Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, 
 
 ---
 
-#### CA-2 / FE-1 · Lift data loading out of `MatchResultForm` `[Medium]`
+#### CA-2 / FE-1 · Lift data loading out of `MatchResultForm` `[Resolved]`
 
-**Problem**: `frontend/src/features/competition-run/components/MatchResultForm.tsx` calls `getTeam()` and `getPlayer()` directly in a `useEffect`. All other components receive data as props. This makes the component stateful and untestable without mocking the API layer.
-
-**What to do**
-
-1. Move the `getTeam` / `getPlayer` calls to `CompetitionRunPage.tsx` (or extract a custom hook `useMatchDetails(matchId)` in `features/competition-run/hooks/`).
-2. Pass team and player data as props to `MatchResultForm`.
-3. `MatchResultForm` becomes a pure controlled form component — no network calls, no `useEffect` for loading.
-4. Update `MatchResultForm.test.tsx` (see TDD-6) to test the form in isolation with static prop data.
+**Status**: Resolved. Match detail loading now lives in `frontend/src/features/competition-run/hooks/useMatchDetails.ts`; `CompetitionRunPage.tsx` calls the hook and passes prepared rows into `MatchResultForm`. The form no longer imports the API layer or fetches teams/players directly, and `MatchResultForm.test.tsx` exercises it with static prop data.
 
 **Files affected**
 - `frontend/src/features/competition-run/components/MatchResultForm.tsx`
@@ -246,7 +240,11 @@ Coverage added:
 - Name over 120 characters -> `DomainValidationException`.
 - Update preserves identity and creation timestamp while trimming the new name.
 
-Verification note: `mvn test -Dtest=TeamTest` could not complete because the current worktree has unrelated user-management compile errors around the new `User.email` field wiring.
+Verification:
+
+```bash
+mvn -f backend/pom.xml -Dtest=TeamTest test
+```
 
 ---
 
@@ -372,13 +370,9 @@ cd frontend && npx vitest run src/features/competition-run/components/MatchCard.
 
 ### Mistral
 
-#### SEC-4 · Remove `info` from actuator exposure `[Medium]`
+#### SEC-4 · Remove `info` from actuator exposure `[Resolved]`
 
-**Problem**: `application.yml` exposes `health,info`. The `info` endpoint can leak build metadata. Only `health` should be public.
-
-**What to do**
-
-In `backend/src/main/resources/application.yml`, change:
+**Status**: Resolved. `backend/src/main/resources/application.yml` exposes only `health` through actuator and sets health details to `never`:
 
 ```yaml
 management:
@@ -391,86 +385,31 @@ management:
       show-details: never
 ```
 
-Remove `info` from the `include` list. If build info is needed internally, secure the `info` endpoint behind `ADMIN` role once Spring Security (SEC-1) is in place.
+---
+
+#### SEC-5 · Remove hardcoded default database credentials `[Resolved]`
+
+**Status**: Resolved. `backend/src/main/resources/application.yml` now requires `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD` with no fallback values, so non-local startup fails fast when database secrets are missing.
+
+The audit also removed the remaining non-local JWT signing-secret fallback: `APP_AUTH_TOKEN_SECRET` is required outside the local profile, while `application-local.yml` keeps `dev-only-change-me` for local development only.
 
 ---
 
-#### SEC-5 · Remove hardcoded default database credentials `[Medium]`
+#### SEC-6 · Add OWASP dependency-check to Maven build `[Resolved]`
 
-**Problem**: `application.yml` falls back to `gaming-night` / `gaming-night` if env vars are not set. This silently allows connection with a well-known password.
-
-**What to do**
-
-In `backend/src/main/resources/application.yml`, replace:
-
-```yaml
-username: ${SPRING_DATASOURCE_USERNAME:gaming-night}
-password: ${SPRING_DATASOURCE_PASSWORD:gaming-night}
-```
-
-with:
-
-```yaml
-username: ${SPRING_DATASOURCE_USERNAME}
-password: ${SPRING_DATASOURCE_PASSWORD}
-```
-
-Spring Boot will throw `IllegalArgumentException` on startup if the variables are not set, which is the correct fail-fast behaviour. Update `docker-compose.yml` and `docs/deployment.md` to confirm both variables are always supplied.
+**Status**: Resolved. `backend/pom.xml` includes `org.owasp:dependency-check-maven` version `10.0.3`, fails the build on CVSS 7+, and points at `backend/owasp-suppressions.xml` for documented false-positive suppressions.
 
 ---
 
-#### SEC-6 · Add OWASP dependency-check to Maven build `[Medium]`
+#### DOC-1 · Update `deployment.md` changelog layout `[Resolved]`
 
-**Problem**: No automated CVE scanning. The AI instructions require flagging known CVEs before shipping.
-
-**What to do**
-
-Add to the `<build><plugins>` section of `backend/pom.xml`:
-
-```xml
-<plugin>
-    <groupId>org.owasp</groupId>
-    <artifactId>dependency-check-maven</artifactId>
-    <version>10.0.3</version>
-    <executions>
-        <execution>
-            <goals><goal>check</goal></goals>
-        </execution>
-    </executions>
-    <configuration>
-        <failBuildOnCVSS>7</failBuildOnCVSS>
-        <suppressionFiles>
-            <suppressionFile>owasp-suppressions.xml</suppressionFile>
-        </suppressionFiles>
-    </configuration>
-</plugin>
-```
-
-Create an empty `backend/owasp-suppressions.xml` for future false-positive suppressions. Run `mvn dependency-check:check` and resolve or suppress any findings before merging.
+**Status**: Resolved. `docs/deployment.md` lists the current changelog files through `0017-backfill-game-rule-columns.yaml`, including `0010-create-users.yaml` and `0011-add-user-passwords.yaml`.
 
 ---
 
-#### DOC-1 · Update `deployment.md` changelog layout `[Low]`
+#### LIQ-1 · Document current irregular Liquibase prefix state `[Resolved]`
 
-**Problem**: `docs/deployment.md` does not list `0010-create-users.yaml` in its changelog section.
-
-**What to do**
-
-Update the "Current layout" or equivalent block in `docs/deployment.md` to include `0010-create-users.yaml`. Also verify the seeded users described in the README exist in `0008-seed-test-data.yaml` (see LIQ-2).
-
----
-
-#### LIQ-1 · Document current irregular Liquibase prefix state `[Low]`
-
-**Problem**: The `changes/` directory has duplicate prefixes (`0002`, `0003`) and gaps (`0001`, `0004`, `0005`) because earlier changesets were deleted. Existing changesets cannot be renamed (they are applied). Future ones must follow strict sequential ordering.
-
-**What to do**
-
-Add a note at the top of the Liquibase section in `docs/ai-instructions.md`:
-
-> **Note on existing changesets**: Due to historical deletions, the numbering has gaps and duplicates at 0002 and 0003. These cannot be renamed as they are already applied. All new changesets must use strictly sequential numbers starting from the highest existing prefix + 1 (currently `0012`).
-
-Also add a comment to `db.changelog-master.yaml` at the top listing the current sequence for reference.
+**Status**: Resolved. `docs/ai-instructions.md` documents the historical duplicate/gap state and says new changesets must start at the current next prefix, `0018`. `db.changelog-master.yaml` also lists the current sequence and next available prefix.
 
 ---
 
@@ -485,27 +424,21 @@ The README and deployment guide document the development credentials as `admin` 
 
 ---
 
-#### CC-2 · Remove empty `domain/service` package `[Low]`
+#### CC-2 · Remove empty `domain/service` package `[Resolved]`
 
-**Problem**: `backend/src/main/java/se/backede/domain/service/` contains only a `package-info.java` with no classes. Dead structural noise.
+**Status**: Resolved / no longer applicable. The package is no longer empty and contains real domain services:
 
-**What to do**
+- `GameRulesValidator`
+- `ScoreCalculator`
+- `WinnerCalculator`
 
-Delete the directory. If domain services are needed in future, create the directory then. No other files reference this package.
+The package should remain.
 
 ---
 
-#### CC-3 · Standardise `@Transactional` across JPA adapters `[Low]`
+#### CC-3 · Standardise `@Transactional` across JPA adapters `[Resolved]`
 
-**Problem**: `JpaMatchRepositoryAdapter` uses a class-level `@Transactional` then overrides individual reads with `@Transactional(readOnly = true)`. Other adapters use method-level annotations only. The inconsistency creates confusion about the default transaction mode.
-
-**What to do**
-
-Choose one pattern and apply it to all five `Jpa*RepositoryAdapter` classes:
-
-- **Preferred**: no class-level `@Transactional`; annotate write methods with `@Transactional` and read methods with `@Transactional(readOnly = true)` individually. This is the most explicit and consistent with Spring best practices.
-
-Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java/se/backede/infrastructure/persistence/`.
+**Status**: Resolved. All `Jpa*RepositoryAdapter.java` files use explicit method-level transaction annotations: writes use `@Transactional`, reads use `@Transactional(readOnly = true)`, and no adapter relies on class-level defaults.
 
 ---
 
@@ -522,11 +455,11 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | CA-2 / FE-1 | Medium | Claude | ✅ |
 | DOC-2 | Medium | Claude | ✅ |
 | DDD-2 / SEC-7 | Medium | Codex | ✅ |
-| TDD-1 | Medium | Codex | ☑ |
+| TDD-1 | Medium | Codex | ✅ |
 | TDD-2 | Medium | Codex | ✅ |
 | TDD-3 | Medium | Codex | ✅ |
-| TDD-4 | Medium | Codex | ☑ |
-| TDD-5 | Medium | Codex | ☑ |
+| TDD-4 | Medium | Codex | ✅ |
+| TDD-5 | Medium | Codex | ✅ |
 | TDD-6 | Medium | Codex | ✅ |
 | SEC-4 | Medium | Mistral | ✅ |
 | SEC-5 | Medium | Mistral | ✅ |

@@ -21,7 +21,7 @@ public class TokenService {
     private final byte[] secret;
     private final Clock clock;
 
-    public TokenService(@Value("${app.auth.token-secret:dev-only-change-me}") String secret, Clock clock) {
+    public TokenService(@Value("${app.auth.token-secret}") String secret, Clock clock) {
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
         this.clock = clock;
     }

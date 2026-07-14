@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn -q -o compile)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(mvn -q compile)",
+      "Bash(echo \"COMPILE_EXIT:$?\")",
+      "Bash(mvn -q test)",
+      "Bash(mvn test *)",
+      "Read(//tmp/claude-1000/**)"
+    ]
+  }
+}

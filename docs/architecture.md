@@ -103,7 +103,7 @@ The column header (`Total Score`, `Average Score`, `Total Time`, `Average Time`)
 
 Authentication is stateless. `POST /api/auth/signup` (public, always creates a `USER`-role account plus a matching `Player`) and `POST /api/auth/login` (public) both return a signed bearer token from `TokenService`. The token is a custom HMAC-SHA256-signed value (`base64url(payload).base64url(signature)` — not an RFC 7519 JWT) carrying the user id, username, role, player id, and a 12-hour expiry. `JwtAuthenticationFilter` verifies the signature in constant time and rejects expired or malformed tokens before `SecurityConfig` authorizes the request. `SessionCreationPolicy` is `STATELESS` — no server-side session is ever created. The frontend stores the token, attaches it as `Authorization: Bearer <token>` on every request, and on any `401 Unauthorized` response clears the stored token/profile and redirects to `/login`.
 
-The signing secret comes from `app.auth.token-secret` (env `APP_AUTH_TOKEN_SECRET`); only the `local` dev profile falls back to `dev-only-change-me`. **Every real deployment must set `APP_AUTH_TOKEN_SECRET` explicitly** — anyone who knows the default secret could forge a valid token for any user and role.
+The signing secret comes from `app.auth.token-secret` (env `APP_AUTH_TOKEN_SECRET`). Local development supplies `dev-only-change-me` through `application-local.yml`; every real deployment must set `APP_AUTH_TOKEN_SECRET` explicitly. Without it, the application fails fast on startup instead of silently using a known signing secret.
 
 Passwords are hashed with PBKDF2WithHmacSHA256 (120,000 iterations, 256-bit derived key, random 16-byte salt per user) and stored as `pbkdf2$<iterations>$<saltB64>$<hashB64>` (`PasswordService`); verification uses a constant-time comparison.
 
@@ -129,7 +129,7 @@ The frontend mirrors these rules in navigation: admins see every tab, while regu
 - **CORS** (`WebConfig`): `/api/**` is restricted to the origins listed in `app.cors.allowed-origins` (env `CORS_ALLOWED_ORIGINS`, default `http://localhost:5173`), the methods the API actually uses, and exposes only the `Authorization` response header.
 - **Security headers** (`SecurityConfig`): Content-Security-Policy (`default-src 'self'`), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy` (camera/microphone/geolocation disabled), plus Spring Security's default `X-Content-Type-Options: nosniff`.
 - **CSRF** is disabled. This is safe here because the API is fully stateless (no cookies, no server-side session) and only honors a bearer token the frontend attaches explicitly — there is no ambient browser-held credential for a forged cross-site request to ride on.
-- **Rate limiting** (`RateLimitingFilter`, Bucket4j, keyed per client IP): `POST /api/users` — 5/min; `POST /api/competitions/{id}/start` — 10/min; `PUT /api/competitions/{cid}/matches/{mid}/results` — 30/min. Requests over the limit get `429 Too Many Requests` with a `Retry-After` header and the standard API error envelope.
+- **Rate limiting** (`RateLimitingFilter`, Bucket4j, keyed per client IP): `POST /api/auth/login` — 10/min; `POST /api/users` — 5/min; `POST /api/competitions/{id}/start` — 10/min; `PUT /api/competitions/{cid}/matches/{mid}/results` — 30/min. Requests over the limit get `429 Too Many Requests` with a `Retry-After` header and the standard API error envelope.
 - **Actuator**: only `/actuator/health` is exposed, with `show-details: never`; `info`, `env`, and all other actuator endpoints are unpublished.
 
 ### Threat Model
@@ -139,7 +139,7 @@ The frontend mirrors these rules in navigation: admins see every tab, while regu
 | Broken access control | Two independent enforcement layers (URL allow-list + `@PreAuthorize` on every mutating use case), so one missing check can't expose a write path; competition reads are further scoped to the requesting user's own player/teams. |
 | CSRF | Not applicable — stateless bearer-token auth with no cookies or sessions, plus CORS restricts which origins can reach the API at all. |
 | Injection (SQL/JPQL) | All persistence goes through Spring Data derived-query repositories (`Jpa*RepositoryAdapter`); the codebase has no native or string-concatenated `@Query` usage. |
-| Insecure defaults | Database credentials (SEC-5) and actuator exposure (SEC-4) have no silent production fallback. The JWT signing secret still defaults to `dev-only-change-me` outside the `local` profile and depends on `APP_AUTH_TOKEN_SECRET` being set at deploy time — this is the one remaining insecure-default risk, tracked for follow-up hardening. |
+| Insecure defaults | Database credentials (SEC-5), actuator exposure (SEC-4), and the JWT signing secret have no silent production fallback. Local-only defaults live in `application-local.yml`; non-local startup requires explicit secrets. |
 | Excessive data exposure | `GlobalExceptionHandler` returns only whitelisted messages/field errors for known exception types; unhandled exceptions fall back to Spring Boot's default error body, which omits stack traces by default (`server.error.include-stacktrace` is not overridden from `never`). |
 
 ### OWASP ASVS Compliance

@@ -10,7 +10,7 @@ This file is the Codex operational quick-reference. Keep it focused on practical
 - Prefer `rg` and `rg --files` for discovery.
 - Use `apply_patch` for manual edits.
 - Keep changes scoped to the requested behavior, and update docs in the same turn when behavior, setup, schema, or API contracts change.
-- When adding database migrations, inspect `backend/src/main/resources/db/changelog/changes/` and `db.changelog-master.yaml` first. The current next prefix is `0012`.
+- When adding database migrations, inspect `backend/src/main/resources/db/changelog/changes/` and `db.changelog-master.yaml` first. The current next prefix is `0018`.
 
 ## Commands
 

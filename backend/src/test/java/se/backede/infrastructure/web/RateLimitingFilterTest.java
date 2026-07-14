@@ -2,7 +2,9 @@ package se.backede.infrastructure.web;
 
 import se.backede.application.dto.CreateUserRequest;
 import se.backede.application.dto.EnterResultsRequest;
+import se.backede.application.dto.LoginRequest;
 import se.backede.application.dto.PlayerResultInput;
+import se.backede.application.usecase.AuthUseCaseService;
 import se.backede.application.usecase.CompetitionRunUseCaseService;
 import se.backede.application.usecase.CompetitionUseCaseService;
 import se.backede.application.usecase.UserUseCaseService;
@@ -31,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest({UserController.class, CompetitionRunController.class, GlobalExceptionHandler.class})
+@WebMvcTest({AuthController.class, UserController.class, CompetitionRunController.class, GlobalExceptionHandler.class})
 @Import({SecurityConfig.class, RateLimitingFilter.class})
 @WithMockUser(roles = "ADMIN")
 class RateLimitingFilterTest {
@@ -46,10 +48,26 @@ class RateLimitingFilterTest {
     private UserUseCaseService userUseCaseService;
 
     @MockBean
+    private AuthUseCaseService authUseCaseService;
+
+    @MockBean
     private CompetitionRunUseCaseService competitionRunUseCaseService;
 
     @MockBean
     private CompetitionUseCaseService competitionUseCaseService;
+
+    @Test
+    void returns429AfterTenLoginRequestsPerMinuteFromSameIp() throws Exception {
+        RequestBuilder request = post("/api/auth/login")
+                .with(httpRequest -> {
+                    httpRequest.setRemoteAddr("10.10.0.4");
+                    return httpRequest;
+                })
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new LoginRequest("admin", "admin")));
+
+        expectTooManyRequestsAfterAllowedRequests(request, 10, 200);
+    }
 
     @Test
     void returns429AfterFiveUserCreateRequestsPerMinuteFromSameIp() throws Exception {
