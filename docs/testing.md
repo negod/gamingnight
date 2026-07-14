@@ -6,6 +6,7 @@ This document describes the test strategy, commands, coverage areas, and Docker 
 
 - [Backend Testing](#backend-testing)
 - [Frontend Testing](#frontend-testing)
+- [Production E2E Testing](#production-e2e-testing)
 - [TDD Workflow](#tdd-workflow)
 - [Key Behaviors Covered](#key-behaviors-covered)
 
@@ -78,6 +79,73 @@ Tests for Areas E and F:
 - `GamePlayerLeaderboard.test.tsx`: verifies per-game player leaderboard rendering.
 - `TotalTeamLeaderboard.test.tsx`: verifies total team leaderboard rendering.
 - `TotalPlayerLeaderboard.test.tsx`: verifies total player leaderboard rendering.
+
+## Production E2E Testing
+
+Playwright E2E tests live under `frontend/e2e` and are designed to run against the deployed production frontend and backend. They must use dedicated production-safe E2E users, not the seeded local `admin/admin` or `user/user` credentials.
+
+Required environment variables:
+
+```text
+E2E_BASE_URL=https://your-cloudflare-frontend
+E2E_API_BASE_URL=https://your-render-backend/api
+E2E_ADMIN_USERNAME=...
+E2E_ADMIN_PASSWORD=...
+E2E_USER_USERNAME=...
+E2E_USER_PASSWORD=...
+```
+
+Run all E2E tests:
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
+Run smoke E2E tests only:
+
+```bash
+cd frontend
+npm run test:e2e:smoke
+```
+
+Run affected E2E tests in GitHub Actions:
+
+```bash
+cd frontend
+npm run test:e2e:affected
+```
+
+Tags used by the suite:
+
+```text
+@smoke
+@auth
+@users
+@players
+@games
+@teams
+@competitions
+@competition-run
+@leaderboards
+```
+
+Affected-test behavior:
+
+- `@smoke` is always included.
+- Feature paths map to their matching tags, for example `frontend/src/features/games/**` maps to `@games`.
+- Competition run, match, and leaderboard files map to `@competition-run` and `@leaderboards`.
+- Shared app shell, routing, auth, API client, frontend package, Playwright config, CI, backend security config, and backend runtime config changes run the full E2E suite.
+- Scheduled and manual workflow runs execute the full E2E suite.
+
+Data safety:
+
+- Tests create records with unique `e2e-<runId>-` prefixes.
+- Cleanup only deletes records whose names start with the current E2E prefix.
+- The current-user edit test restores the original email and Player callsign after verification.
+- If cleanup fails, the `e2e-` prefix is the marker for manual cleanup.
+
+CI uploads `frontend/playwright-report` plus `frontend/test-results`, which contain the HTML report, traces, screenshots, and videos retained for failures.
 
 ## Build Verification
 

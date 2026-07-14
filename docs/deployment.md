@@ -302,6 +302,28 @@ CLOUDFLARE_PAGES_PROJECT_NAME
 VITE_API_BASE_URL
 ```
 
+After the Render backend and Cloudflare frontend deployment jobs complete on `main`, the workflow runs a production E2E job when these additional GitHub secrets are configured:
+
+```text
+E2E_BASE_URL
+E2E_API_BASE_URL
+E2E_ADMIN_USERNAME
+E2E_ADMIN_PASSWORD
+E2E_USER_USERNAME
+E2E_USER_PASSWORD
+```
+
+`E2E_BASE_URL` must be the deployed Cloudflare frontend origin. `E2E_API_BASE_URL` must be the deployed Render backend API base URL ending in `/api`; the workflow derives `/actuator/health` from it while waiting for the backend.
+
+The E2E users must be dedicated production-safe accounts. Do not use the seeded development credentials in production. The admin account needs access to create and delete `e2e-` prefixed players, teams, games, and competitions. The normal user account needs access to its own user page and open competition registration.
+
+Post-deploy E2E behavior:
+
+- Pushes to `main` run `@smoke` tests and feature-tagged tests selected from changed files.
+- Manual `workflow_dispatch` and the weekly schedule run the full Playwright suite.
+- The job uploads the Playwright report, traces, screenshots, and videos as workflow artifacts.
+- If any required E2E secret is missing, the E2E job logs a warning and skips the Playwright run.
+
 See [github-actions.md](github-actions.md) for the full CI/CD setup.
 
 ## Production Checklist
@@ -317,4 +339,5 @@ See [github-actions.md](github-actions.md) for the full CI/CD setup.
 - Render backend is configured as Docker runtime using `backend/Dockerfile`.
 - Cloudflare Pages receives the SPA `_redirects` fallback.
 - GitHub Actions deploy secrets are configured before relying on automatic deploys.
+- Dedicated production E2E users and E2E GitHub secrets are configured before relying on post-deploy E2E checks.
 - Real `.env` files are not committed.

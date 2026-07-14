@@ -225,6 +225,15 @@ Run frontend tests:
 npm run test:frontend
 ```
 
+Run production E2E tests from the frontend package when the deployed URLs and dedicated E2E credentials are available:
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
+GitHub Actions runs affected Playwright E2E tests after production `main` deploys, always including `@smoke`, and runs the full E2E suite on manual and scheduled workflow runs. E2E artifacts include the Playwright report, traces, screenshots, and videos for failures.
+
 For CI/CD pipeline with GitHub Actions (automated testing on push/pull request), see [docs/github-actions.md](docs/github-actions.md).
 
 Build backend:
