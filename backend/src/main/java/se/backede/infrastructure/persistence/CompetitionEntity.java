@@ -35,6 +35,9 @@ public class CompetitionEntity {
     private boolean singleMatch;
 
     @Column(nullable = false)
+    private boolean registrationOpen;
+
+    @Column(nullable = false)
     private boolean started;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -48,6 +51,11 @@ public class CompetitionEntity {
     @Column(name = "team_id", nullable = false)
     private Set<UUID> teamIds = new LinkedHashSet<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "competition_registered_player_ids", joinColumns = @JoinColumn(name = "competition_id"))
+    @Column(name = "player_id", nullable = false)
+    private Set<UUID> registeredPlayerIds = new LinkedHashSet<>();
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -59,13 +67,27 @@ public class CompetitionEntity {
 
     public CompetitionEntity(UUID id, String name, LocalDate date, boolean singleMatch, boolean started,
                              List<UUID> gameIds, Set<UUID> teamIds, Instant createdAt, Instant updatedAt) {
+        this(id, name, date, singleMatch, false, started, gameIds, teamIds, new LinkedHashSet<>(), createdAt, updatedAt);
+    }
+
+    public CompetitionEntity(UUID id, String name, LocalDate date, boolean singleMatch, boolean started,
+                             List<UUID> gameIds, Set<UUID> teamIds, Set<UUID> registeredPlayerIds,
+                             Instant createdAt, Instant updatedAt) {
+        this(id, name, date, singleMatch, false, started, gameIds, teamIds, registeredPlayerIds, createdAt, updatedAt);
+    }
+
+    public CompetitionEntity(UUID id, String name, LocalDate date, boolean singleMatch, boolean registrationOpen,
+                             boolean started, List<UUID> gameIds, Set<UUID> teamIds,
+                             Set<UUID> registeredPlayerIds, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.date = date;
         this.singleMatch = singleMatch;
+        this.registrationOpen = registrationOpen;
         this.started = started;
         this.gameIds = gameIds;
         this.teamIds = teamIds;
+        this.registeredPlayerIds = registeredPlayerIds;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -74,9 +96,11 @@ public class CompetitionEntity {
     public String getName() { return name; }
     public LocalDate getDate() { return date; }
     public boolean isSingleMatch() { return singleMatch; }
+    public boolean isRegistrationOpen() { return registrationOpen; }
     public boolean isStarted() { return started; }
     public List<UUID> getGameIds() { return gameIds; }
     public Set<UUID> getTeamIds() { return teamIds; }
+    public Set<UUID> getRegisteredPlayerIds() { return registeredPlayerIds; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

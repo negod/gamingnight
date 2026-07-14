@@ -55,7 +55,7 @@ class AuthorizationTest {
     @Test
     @WithMockUser(roles = "USER")
     void userRoleOnAdminOnlyEndpointReturns403() throws Exception {
-        var request = new CreateCompetitionRequest("Cup", LocalDate.now(), true, List.of(), List.of());
+        var request = new CreateCompetitionRequest("Cup", LocalDate.now(), true, false, List.of(), List.of());
 
         mockMvc.perform(post("/api/competitions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,7 +76,7 @@ class AuthorizationTest {
     @WithMockUser(roles = "ADMIN")
     void adminRoleCanCreateCompetition() throws Exception {
         var id = UUID.randomUUID();
-        var request = new CreateCompetitionRequest("Cup", LocalDate.now(), true, List.of(), List.of());
+        var request = new CreateCompetitionRequest("Cup", LocalDate.now(), true, false, List.of(), List.of());
         var now = Instant.parse("2026-01-01T10:00:00Z");
         when(competitionUseCaseService.create(any())).thenReturn(
                 new CompetitionResponse(id, "Cup", LocalDate.now(), true, false, List.of(), List.of(), now, now));

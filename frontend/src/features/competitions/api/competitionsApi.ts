@@ -36,6 +36,18 @@ export function generateTeams(competitionId: string, playerIds: string[], teamSi
   });
 }
 
+export function registerForCompetition(competitionId: string): Promise<Competition> {
+  return apiRequest<Competition>(`/competitions/${competitionId}/registrations/me`, {
+    method: 'POST',
+  });
+}
+
+export function unregisterFromCompetition(competitionId: string): Promise<Competition> {
+  return apiRequest<Competition>(`/competitions/${competitionId}/registrations/me`, {
+    method: 'DELETE',
+  });
+}
+
 export function listGames(): Promise<Game[]> {
   return apiRequest<Game[]>('/games');
 }

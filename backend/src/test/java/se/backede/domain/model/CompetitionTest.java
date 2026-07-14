@@ -23,9 +23,11 @@ class CompetitionTest {
         assertThat(competition.name()).isEqualTo("Cup");
         assertThat(competition.date()).isEqualTo(DATE);
         assertThat(competition.singleMatch()).isTrue();
+        assertThat(competition.registrationOpen()).isFalse();
         assertThat(competition.started()).isFalse();
         assertThat(competition.gameIds()).isEmpty();
         assertThat(competition.teamIds()).isEmpty();
+        assertThat(competition.registeredPlayerIds()).isEmpty();
     }
 
     @Test
@@ -82,6 +84,7 @@ class CompetitionTest {
                 "Finals",
                 DATE.plusDays(1),
                 false,
+                true,
                 List.of(gameId),
                 List.of(teamId),
                 NOW.plusSeconds(2)
@@ -90,12 +93,66 @@ class CompetitionTest {
         assertThat(updated.name()).isEqualTo("Finals");
         assertThat(updated.date()).isEqualTo(DATE.plusDays(1));
         assertThat(updated.singleMatch()).isFalse();
+        assertThat(updated.registrationOpen()).isTrue();
         assertThat(updated.started()).isTrue();
         assertThat(updated.gameIds()).containsExactly(gameId);
         assertThat(updated.teamIds()).containsExactly(teamId);
     }
 
+    @Test
+    void registersPlayerBeforeStart() {
+        var playerId = UUID.randomUUID();
+        var competition = openForRegistration();
+
+        var registered = competition.registerPlayer(playerId, NOW.plusSeconds(1));
+        var duplicate = registered.registerPlayer(playerId, NOW.plusSeconds(2));
+
+        assertThat(registered.registeredPlayerIds()).containsExactly(playerId);
+        assertThat(registered.updatedAt()).isEqualTo(NOW.plusSeconds(1));
+        assertThat(duplicate.registeredPlayerIds()).containsExactly(playerId);
+    }
+
+    @Test
+    void unregistersPlayerBeforeStart() {
+        var playerId = UUID.randomUUID();
+        var competition = openForRegistration()
+                .registerPlayer(playerId, NOW.plusSeconds(1));
+
+        var unregistered = competition.unregisterPlayer(playerId, NOW.plusSeconds(2));
+
+        assertThat(unregistered.registeredPlayerIds()).isEmpty();
+        assertThat(unregistered.updatedAt()).isEqualTo(NOW.plusSeconds(2));
+    }
+
+    @Test
+    void rejectsRegistrationChangesAfterStart() {
+        var playerId = UUID.randomUUID();
+        var competition = startable(List.of(UUID.randomUUID()), List.of(UUID.randomUUID(), UUID.randomUUID()))
+                .start(NOW.plusSeconds(1));
+
+        assertThatThrownBy(() -> competition.registerPlayer(playerId, NOW.plusSeconds(2)))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Cannot register for a started competition");
+        assertThatThrownBy(() -> competition.unregisterPlayer(playerId, NOW.plusSeconds(2)))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Cannot unregister from a started competition");
+    }
+
+    @Test
+    void rejectsRegistrationWhenRegistrationIsClosed() {
+        var competition = Competition.create("Cup", DATE, true, NOW);
+
+        assertThatThrownBy(() -> competition.registerPlayer(UUID.randomUUID(), NOW.plusSeconds(1)))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Competition is not open for registration");
+    }
+
     private static Competition startable(List<UUID> gameIds, List<UUID> teamIds) {
         return Competition.rehydrate(UUID.randomUUID(), "Cup", DATE, true, false, gameIds, teamIds, NOW, NOW);
+    }
+
+    private static Competition openForRegistration() {
+        return Competition.create("Cup", DATE, true, NOW)
+                .update("Cup", DATE, true, true, List.of(), List.of(), NOW.plusSeconds(1));
     }
 }

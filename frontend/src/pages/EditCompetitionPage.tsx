@@ -66,6 +66,7 @@ export function EditCompetitionPage() {
             name: competition.name,
             date: competition.date,
             singleMatch: competition.singleMatch,
+            registrationOpen: competition.registrationOpen,
             gameIds: competition.gameIds,
             teamIds: competition.teamIds,
           }}
@@ -83,7 +84,11 @@ export function EditCompetitionPage() {
             Randomly shuffle players into new teams and assign them to this competition.
             Existing team assignments will be replaced.
           </p>
-          <GenerateTeamsWizard players={players} onGenerate={handleGenerateTeams} />
+          <GenerateTeamsWizard
+            players={players}
+            initialSelectedPlayerIds={competition.registeredPlayerIds}
+            onGenerate={handleGenerateTeams}
+          />
         </div>
       ) : null}
     </section>

@@ -67,4 +67,14 @@ public class CompetitionController {
     CompetitionResponse generateTeams(@PathVariable UUID id, @Valid @RequestBody GenerateTeamsRequest request) {
         return generateTeamsUseCaseService.generateTeams(id, request);
     }
+
+    @PostMapping("/{id}/registrations/me")
+    CompetitionResponse registerCurrentUser(@PathVariable UUID id) {
+        return competitionUseCaseService.registerPlayer(id, AuthContext.requireUser().playerId());
+    }
+
+    @DeleteMapping("/{id}/registrations/me")
+    CompetitionResponse unregisterCurrentUser(@PathVariable UUID id) {
+        return competitionUseCaseService.unregisterPlayer(id, AuthContext.requireUser().playerId());
+    }
 }

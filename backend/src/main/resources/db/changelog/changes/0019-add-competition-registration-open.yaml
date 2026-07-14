@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0019-add-competition-registration-open
+      author: backede
+      changes:
+        - addColumn:
+            tableName: competitions
+            columns:
+              - column:
+                  name: registration_open
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

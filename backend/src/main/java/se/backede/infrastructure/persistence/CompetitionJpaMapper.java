@@ -15,9 +15,11 @@ public class CompetitionJpaMapper {
                 competition.name(),
                 competition.date(),
                 competition.singleMatch(),
+                competition.registrationOpen(),
                 competition.started(),
                 new ArrayList<>(competition.gameIds()),
                 new LinkedHashSet<>(competition.teamIds()),
+                new LinkedHashSet<>(competition.registeredPlayerIds()),
                 competition.createdAt(),
                 competition.updatedAt()
         );
@@ -29,9 +31,11 @@ public class CompetitionJpaMapper {
                 entity.getName(),
                 entity.getDate(),
                 entity.isSingleMatch(),
+                entity.isRegistrationOpen(),
                 entity.isStarted(),
                 new ArrayList<>(entity.getGameIds()),
                 new ArrayList<>(entity.getTeamIds()),
+                new ArrayList<>(entity.getRegisteredPlayerIds()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

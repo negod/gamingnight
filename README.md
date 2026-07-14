@@ -26,7 +26,10 @@ The stack is React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, Post
 - Manage games with score-based or time-based ranking and sum or average calculations.
 - Manage teams with globally unique team names.
 - Create competitions with ordered games and assigned teams.
+- Let admins open setup-state competitions for player registration.
+- Let users register their linked player for open setup-state competitions.
 - Generate teams from selected players using seeded, non-repeating team names.
+- Preselect registered players when generating teams for a competition.
 - Start competitions and generate round-robin matches.
 - Enter match results per player.
 - View per-game and total leaderboards for teams and players.
@@ -170,12 +173,12 @@ Fresh databases are automatically populated with development seed data:
 - 1 setup-state competition
 - 288 seeded team names for generated teams
 
-After starting the backend and frontend, open `http://localhost:5173` and log in. Admin users can see every section. Regular users can see their own user page and competitions where their linked player belongs to a competition team.
+After starting the backend and frontend, open `http://localhost:5173` and log in. Admin users can see every section. Regular users can see their own user page, open setup-state competitions they can register for, and started competitions where their linked player is registered or belongs to a competition team.
 
 To add a database change:
 
 1. Add a new YAML changeset under `backend/src/main/resources/db/changelog/changes/`.
-2. Use the next zero-padded prefix and a descriptive filename, for example `0018-add-avatar-to-players.yaml`.
+2. Use the next zero-padded prefix and a descriptive filename, for example `0020-add-avatar-to-players.yaml`.
 3. Set the changeset `id` to the filename without `.yaml`.
 4. Append the file to `db.changelog-master.yaml`.
 5. Start the backend against local PostgreSQL and confirm Liquibase applies the change.

@@ -10,10 +10,22 @@ public record CompetitionResponse(
         String name,
         LocalDate date,
         boolean singleMatch,
+        boolean registrationOpen,
         boolean started,
         List<UUID> gameIds,
         List<UUID> teamIds,
+        List<UUID> registeredPlayerIds,
         Instant createdAt,
         Instant updatedAt
 ) {
+    public CompetitionResponse(UUID id, String name, LocalDate date, boolean singleMatch, boolean started,
+                               List<UUID> gameIds, List<UUID> teamIds, Instant createdAt, Instant updatedAt) {
+        this(id, name, date, singleMatch, false, started, gameIds, teamIds, List.of(), createdAt, updatedAt);
+    }
+
+    public CompetitionResponse(UUID id, String name, LocalDate date, boolean singleMatch, boolean started,
+                               List<UUID> gameIds, List<UUID> teamIds, List<UUID> registeredPlayerIds,
+                               Instant createdAt, Instant updatedAt) {
+        this(id, name, date, singleMatch, false, started, gameIds, teamIds, registeredPlayerIds, createdAt, updatedAt);
+    }
 }

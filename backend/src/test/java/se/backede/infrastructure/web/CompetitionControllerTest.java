@@ -70,7 +70,7 @@ class CompetitionControllerTest {
         var id = UUID.randomUUID();
         var gameId = UUID.randomUUID();
         var teamId = UUID.randomUUID();
-        var request = new CreateCompetitionRequest("Cup", LocalDate.parse("2026-02-01"), true, List.of(gameId), List.of(teamId));
+        var request = new CreateCompetitionRequest("Cup", LocalDate.parse("2026-02-01"), true, false, List.of(gameId), List.of(teamId));
         when(competitionUseCaseService.create(request)).thenReturn(response(id, "Cup", false, List.of(gameId), List.of(teamId)));
 
         mockMvc.perform(post("/api/competitions")
@@ -85,7 +85,7 @@ class CompetitionControllerTest {
 
     @Test
     void returnsBadRequestForInvalidCreateRequest() throws Exception {
-        var request = new CreateCompetitionRequest("", null, true, List.of(), List.of());
+        var request = new CreateCompetitionRequest("", null, true, false, List.of(), List.of());
 
         mockMvc.perform(post("/api/competitions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -126,7 +126,7 @@ class CompetitionControllerTest {
     @Test
     void updatesCompetition() throws Exception {
         var id = UUID.randomUUID();
-        var request = new UpdateCompetitionRequest("Finals", LocalDate.parse("2026-02-02"), false, List.of(), List.of());
+        var request = new UpdateCompetitionRequest("Finals", LocalDate.parse("2026-02-02"), false, true, List.of(), List.of());
         when(competitionUseCaseService.update(id, request)).thenReturn(response(id, "Finals", false, List.of(), List.of()));
 
         mockMvc.perform(put("/api/competitions/{id}", id)
@@ -139,7 +139,7 @@ class CompetitionControllerTest {
     @Test
     void updateReturnsBadRequestWhenCompetitionHasStarted() throws Exception {
         var id = UUID.randomUUID();
-        var request = new UpdateCompetitionRequest("Finals", LocalDate.parse("2026-02-02"), false, List.of(), List.of());
+        var request = new UpdateCompetitionRequest("Finals", LocalDate.parse("2026-02-02"), false, false, List.of(), List.of());
         when(competitionUseCaseService.update(id, request)).thenThrow(new DomainValidationException("Cannot edit a started competition"));
 
         mockMvc.perform(put("/api/competitions/{id}", id)
@@ -179,7 +179,38 @@ class CompetitionControllerTest {
                 .andExpect(jsonPath("$.teamIds[0]").value(teamId.toString()));
     }
 
+    @Test
+    void registersCurrentUserForCompetition() throws Exception {
+        var competitionId = UUID.randomUUID();
+        var playerId = UUID.randomUUID();
+        AuthContext.set(new AuthenticatedUser(UUID.randomUUID(), "user", UserRole.USER, playerId));
+        when(competitionUseCaseService.registerPlayer(competitionId, playerId))
+                .thenReturn(response(competitionId, "Cup", false, List.of(), List.of(), List.of(playerId)));
+
+        mockMvc.perform(post("/api/competitions/{id}/registrations/me", competitionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.registeredPlayerIds[0]").value(playerId.toString()));
+    }
+
+    @Test
+    void unregistersCurrentUserFromCompetition() throws Exception {
+        var competitionId = UUID.randomUUID();
+        var playerId = UUID.randomUUID();
+        AuthContext.set(new AuthenticatedUser(UUID.randomUUID(), "user", UserRole.USER, playerId));
+        when(competitionUseCaseService.unregisterPlayer(competitionId, playerId))
+                .thenReturn(response(competitionId, "Cup", false, List.of(), List.of(), List.of()));
+
+        mockMvc.perform(delete("/api/competitions/{id}/registrations/me", competitionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.registeredPlayerIds").isEmpty());
+    }
+
     private static CompetitionResponse response(UUID id, String name, boolean started, List<UUID> gameIds, List<UUID> teamIds) {
+        return response(id, name, started, gameIds, teamIds, List.of());
+    }
+
+    private static CompetitionResponse response(UUID id, String name, boolean started, List<UUID> gameIds,
+                                                List<UUID> teamIds, List<UUID> registeredPlayerIds) {
         var now = Instant.parse("2026-01-01T10:00:00Z");
         return new CompetitionResponse(
                 id,
@@ -189,6 +220,7 @@ class CompetitionControllerTest {
                 started,
                 gameIds,
                 teamIds,
+                registeredPlayerIds,
                 now,
                 now
         );

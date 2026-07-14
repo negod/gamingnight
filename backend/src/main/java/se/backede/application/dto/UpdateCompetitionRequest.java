@@ -18,6 +18,8 @@ public record UpdateCompetitionRequest(
 
         boolean singleMatch,
 
+        boolean registrationOpen,
+
         @NotNull(message = "Game list is required")
         List<UUID> gameIds,
 

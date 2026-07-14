@@ -15,7 +15,7 @@ type CompetitionFormProps = {
 
 export function CompetitionForm({ initialValues, games, teams, submitLabel, onSubmit }: CompetitionFormProps) {
   const [values, setValues] = useState<CompetitionFormValues>(
-    initialValues ?? { name: '', date: '', singleMatch: true, gameIds: [], teamIds: [] },
+    initialValues ?? { name: '', date: '', singleMatch: true, registrationOpen: false, gameIds: [], teamIds: [] },
   );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -95,6 +95,16 @@ export function CompetitionForm({ initialValues, games, teams, submitLabel, onSu
           className="h-4 w-4 accent-teal-700"
         />
         <span className="text-sm font-medium text-slate-700">Single match per team pair</span>
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          checked={values.registrationOpen}
+          onChange={(e) => setValues({ ...values, registrationOpen: e.target.checked })}
+          className="h-4 w-4 accent-teal-700"
+        />
+        <span className="text-sm font-medium text-slate-700">Open for player registrations</span>
       </label>
 
       <fieldset>

@@ -8,7 +8,9 @@
       "Bash(mvn -q test)",
       "Bash(mvn test *)",
       "Read(//tmp/claude-1000/**)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(mvn -q test -Dtest=RateLimitingFilterTest)",
+      "Bash(xargs -I{} echo {})"
     ]
   }
 }

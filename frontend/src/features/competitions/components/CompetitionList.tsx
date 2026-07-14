@@ -1,14 +1,24 @@
 import { Link } from 'react-router-dom';
-import { Pencil, Play, Trash2, Trophy } from 'lucide-react';
+import { Pencil, Play, Trash2, Trophy, UserCheck, UserPlus } from 'lucide-react';
 import type { Competition } from '../../../shared/types/competition';
 
 type CompetitionListProps = {
   competitions: Competition[];
   onDelete: (id: string) => void;
+  onRegister?: (id: string) => void;
+  onUnregister?: (id: string) => void;
   canManage?: boolean;
+  currentPlayerId?: string;
 };
 
-export function CompetitionList({ competitions, onDelete, canManage = true }: CompetitionListProps) {
+export function CompetitionList({
+  competitions,
+  onDelete,
+  onRegister,
+  onUnregister,
+  canManage = true,
+  currentPlayerId,
+}: CompetitionListProps) {
   if (competitions.length === 0) {
     return <p className="text-sm text-slate-500">No competitions yet.</p>;
   }
@@ -43,6 +53,10 @@ export function CompetitionList({ competitions, onDelete, canManage = true }: Co
                   <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
                     Started
                   </span>
+                ) : competition.registrationOpen ? (
+                  <span className="inline-flex items-center rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                    Open
+                  </span>
                 ) : (
                   <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                     Setup
@@ -60,6 +74,27 @@ export function CompetitionList({ competitions, onDelete, canManage = true }: Co
                       Edit
                     </Link>
                   )}
+                  {!canManage && currentPlayerId && !competition.started && competition.registrationOpen ? (
+                    competition.registeredPlayerIds.includes(currentPlayerId) ? (
+                      <button
+                        type="button"
+                        onClick={() => onUnregister?.(competition.id)}
+                        className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                      >
+                        <UserCheck aria-hidden="true" className="h-3.5 w-3.5" />
+                        Registered
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onRegister?.(competition.id)}
+                        className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50"
+                      >
+                        <UserPlus aria-hidden="true" className="h-3.5 w-3.5" />
+                        Register
+                      </button>
+                    )
+                  ) : null}
                   <Link
                     to={`/competitions/${competition.id}/run`}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50"

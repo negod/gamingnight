@@ -41,6 +41,26 @@ describe('GenerateTeamsWizard', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Select at least one player');
     expect(onGenerate).not.toHaveBeenCalled();
   });
+
+  it('preselects registered players', async () => {
+    const user = userEvent.setup();
+    const onGenerate = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <GenerateTeamsWizard
+        players={players}
+        initialSelectedPlayerIds={['player-1', 'player-3']}
+        onGenerate={onGenerate}
+      />,
+    );
+
+    expect(screen.getByLabelText('Alice')).toBeChecked();
+    expect(screen.getByLabelText('Carol')).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: /generate teams/i }));
+
+    expect(onGenerate).toHaveBeenCalledWith(['player-1', 'player-3'], 2);
+  });
 });
 
 const players = [

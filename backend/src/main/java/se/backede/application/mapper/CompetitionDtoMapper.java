@@ -14,9 +14,11 @@ public final class CompetitionDtoMapper {
                 competition.name(),
                 competition.date(),
                 competition.singleMatch(),
+                competition.registrationOpen(),
                 competition.started(),
                 competition.gameIds(),
                 competition.teamIds(),
+                competition.registeredPlayerIds(),
                 competition.createdAt(),
                 competition.updatedAt()
         );

@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/games/*").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/teams/*").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/players/*").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/api/competitions/*/registrations/me").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/competitions/*/registrations/me").hasAnyRole("ADMIN", "USER")
                         .anyRequest().hasRole("ADMIN")
                 )
                 .build();

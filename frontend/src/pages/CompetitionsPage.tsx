@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { deleteCompetition, listCompetitions } from '../features/competitions/api/competitionsApi';
+import {
+  deleteCompetition,
+  listCompetitions,
+  registerForCompetition,
+  unregisterFromCompetition,
+} from '../features/competitions/api/competitionsApi';
 import { CompetitionList } from '../features/competitions/components/CompetitionList';
 import { useAsync } from '../shared/hooks/useAsync';
 import { ErrorMessage } from '../shared/components/ErrorMessage';
@@ -17,6 +22,16 @@ export function CompetitionsPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this competition?')) return;
     await deleteCompetition(id);
+    setVersion((v) => v + 1);
+  }
+
+  async function handleRegister(id: string) {
+    await registerForCompetition(id);
+    setVersion((v) => v + 1);
+  }
+
+  async function handleUnregister(id: string) {
+    await unregisterFromCompetition(id);
     setVersion((v) => v + 1);
   }
 
@@ -40,7 +55,16 @@ export function CompetitionsPage() {
 
       {loading ? <LoadingMessage /> : null}
       {error ? <ErrorMessage message={error} /> : null}
-      {data ? <CompetitionList competitions={data} onDelete={handleDelete} canManage={admin} /> : null}
+      {data ? (
+        <CompetitionList
+          competitions={data}
+          onDelete={handleDelete}
+          onRegister={handleRegister}
+          onUnregister={handleUnregister}
+          canManage={admin}
+          currentPlayerId={user?.playerId}
+        />
+      ) : null}
     </section>
   );
 }

@@ -23,6 +23,7 @@ describe('CompetitionForm', () => {
     await user.type(screen.getByLabelText(/date/i), '2026-07-01');
     await user.click(screen.getByLabelText('Darts'));
     await user.click(screen.getByLabelText('Bowling'));
+    await user.click(screen.getByLabelText(/open for player registrations/i));
     await user.click(screen.getByLabelText(/Team Alpha/));
     await user.click(screen.getByRole('button', { name: /create competition/i }));
 
@@ -30,6 +31,7 @@ describe('CompetitionForm', () => {
       name: 'Summer Cup',
       date: '2026-07-01',
       singleMatch: true,
+      registrationOpen: true,
       gameIds: ['game-2', 'game-1'],
       teamIds: ['team-1'],
     });

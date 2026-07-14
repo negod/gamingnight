@@ -43,7 +43,7 @@ public class CompetitionUseCaseService {
         validateTeamsExist(request.teamIds());
         var competition = Competition.create(request.name(), request.date(), request.singleMatch(), now());
         var withGamesAndTeams = competition.update(
-                competition.name(), competition.date(), competition.singleMatch(),
+                competition.name(), competition.date(), competition.singleMatch(), request.registrationOpen(),
                 request.gameIds(), request.teamIds(), now()
         );
         return CompetitionDtoMapper.toResponse(competitionRepository.save(withGamesAndTeams));
@@ -58,7 +58,7 @@ public class CompetitionUseCaseService {
 
     public List<CompetitionResponse> listForPlayer(UUID playerId) {
         return competitionRepository.findAll().stream()
-                .filter(competition -> playerHasTeamInCompetition(playerId, competition))
+                .filter(competition -> playerCanAccessCompetition(playerId, competition))
                 .sorted(Comparator.comparing(Competition::date).reversed())
                 .map(CompetitionDtoMapper::toResponse)
                 .toList();
@@ -73,7 +73,7 @@ public class CompetitionUseCaseService {
     public CompetitionResponse getByIdForPlayer(UUID id, UUID playerId) {
         var competition = competitionRepository.findById(id)
                 .orElseThrow(() -> competitionNotFound(id));
-        if (!playerHasTeamInCompetition(playerId, competition)) {
+        if (!playerCanAccessCompetition(playerId, competition)) {
             throw competitionNotFound(id);
         }
         return CompetitionDtoMapper.toResponse(competition);
@@ -81,7 +81,7 @@ public class CompetitionUseCaseService {
 
     public boolean playerCanAccessCompetition(UUID competitionId, UUID playerId) {
         return competitionRepository.findById(competitionId)
-                .map(competition -> playerHasTeamInCompetition(playerId, competition))
+                .map(competition -> playerCanAccessCompetition(playerId, competition))
                 .orElse(false);
     }
 
@@ -94,7 +94,7 @@ public class CompetitionUseCaseService {
         validateGamesExist(request.gameIds());
         validateTeamsExist(request.teamIds());
         var updated = competition.update(
-                request.name(), request.date(), request.singleMatch(),
+                request.name(), request.date(), request.singleMatch(), request.registrationOpen(),
                 request.gameIds(), request.teamIds(), now()
         );
         return CompetitionDtoMapper.toResponse(competitionRepository.save(updated));
@@ -106,6 +106,24 @@ public class CompetitionUseCaseService {
             throw competitionNotFound(id);
         }
         competitionRepository.deleteById(id);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public CompetitionResponse registerPlayer(UUID id, UUID playerId) {
+        var competition = competitionRepository.findById(id).orElseThrow(() -> competitionNotFound(id));
+        return CompetitionDtoMapper.toResponse(competitionRepository.save(competition.registerPlayer(playerId, now())));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public CompetitionResponse unregisterPlayer(UUID id, UUID playerId) {
+        var competition = competitionRepository.findById(id).orElseThrow(() -> competitionNotFound(id));
+        return CompetitionDtoMapper.toResponse(competitionRepository.save(competition.unregisterPlayer(playerId, now())));
+    }
+
+    private boolean playerCanAccessCompetition(UUID playerId, Competition competition) {
+        return (!competition.started() && competition.registrationOpen())
+                || competition.registeredPlayerIds().contains(playerId)
+                || playerHasTeamInCompetition(playerId, competition);
     }
 
     private boolean playerHasTeamInCompetition(UUID playerId, Competition competition) {

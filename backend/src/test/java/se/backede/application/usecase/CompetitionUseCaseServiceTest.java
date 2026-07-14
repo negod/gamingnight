@@ -3,6 +3,7 @@ package se.backede.application.usecase;
 import se.backede.application.dto.CreateCompetitionRequest;
 import se.backede.application.dto.UpdateCompetitionRequest;
 import se.backede.domain.model.Competition;
+import se.backede.domain.model.Team;
 import se.backede.domain.repository.CompetitionRepositoryPort;
 import se.backede.domain.repository.GameRepositoryPort;
 import se.backede.domain.repository.TeamRepositoryPort;
@@ -63,6 +64,7 @@ class CompetitionUseCaseServiceTest {
                 "Cup",
                 DATE,
                 false,
+                true,
                 List.of(gameA, gameB),
                 List.of(teamA, teamB)
         ));
@@ -70,6 +72,7 @@ class CompetitionUseCaseServiceTest {
         assertThat(response.name()).isEqualTo("Cup");
         assertThat(response.date()).isEqualTo(DATE);
         assertThat(response.singleMatch()).isFalse();
+        assertThat(response.registrationOpen()).isTrue();
         assertThat(response.started()).isFalse();
         assertThat(response.gameIds()).containsExactly(gameA, gameB);
         assertThat(response.teamIds()).containsExactly(teamA, teamB);
@@ -84,6 +87,7 @@ class CompetitionUseCaseServiceTest {
                 "Cup",
                 DATE,
                 true,
+                false,
                 List.of(gameId),
                 List.of()
         )))
@@ -102,6 +106,7 @@ class CompetitionUseCaseServiceTest {
                 "Cup",
                 DATE,
                 true,
+                false,
                 List.of(gameId),
                 List.of(teamId)
         )))
@@ -121,6 +126,87 @@ class CompetitionUseCaseServiceTest {
     }
 
     @Test
+    void listForPlayerIncludesOpenCompetitionsAndStartedCompetitionsWherePlayerParticipates() {
+        var playerId = UUID.randomUUID();
+        var unrelatedStarted = competition("Hidden", DATE.plusDays(2), true);
+        var openCompetition = competition("Open", DATE.plusDays(1), false, true);
+        var closedCompetition = competition("Closed", DATE.plusDays(3), false, false);
+        var registeredStarted = competitionWithRegistration("Registered", DATE, true, playerId);
+        when(competitionRepository.findAll()).thenReturn(List.of(closedCompetition, unrelatedStarted, openCompetition, registeredStarted));
+
+        var responses = service.listForPlayer(playerId);
+
+        assertThat(responses).extracting("name").containsExactly("Open", "Registered");
+    }
+
+    @Test
+    void getByIdForPlayerAllowsOpenCompetitionBeforeRegistration() {
+        var playerId = UUID.randomUUID();
+        var competition = competition("Open", DATE, false, true);
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+
+        var response = service.getByIdForPlayer(competition.id(), playerId);
+
+        assertThat(response.id()).isEqualTo(competition.id());
+    }
+
+    @Test
+    void getByIdForPlayerHidesClosedSetupCompetition() {
+        var playerId = UUID.randomUUID();
+        var competition = competition("Closed", DATE, false, false);
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+
+        assertThatThrownBy(() -> service.getByIdForPlayer(competition.id(), playerId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Competition not found: " + competition.id());
+    }
+
+    @Test
+    void getByIdForPlayerAllowsStartedRegisteredCompetition() {
+        var playerId = UUID.randomUUID();
+        var competition = competitionWithRegistration("Registered", DATE, true, playerId);
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+
+        var response = service.getByIdForPlayer(competition.id(), playerId);
+
+        assertThat(response.registeredPlayerIds()).containsExactly(playerId);
+    }
+
+    @Test
+    void getByIdForPlayerAllowsStartedCompetitionWherePlayerHasTeam() {
+        var playerId = UUID.randomUUID();
+        var teamId = UUID.randomUUID();
+        var competition = Competition.rehydrate(
+                UUID.randomUUID(),
+                "Started",
+                DATE,
+                true,
+                true,
+                List.of(UUID.randomUUID()),
+                List.of(teamId),
+                NOW.minusSeconds(60),
+                NOW.minusSeconds(60)
+        );
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(Team.rehydrate(teamId, "Team", List.of(playerId), NOW, NOW)));
+
+        var response = service.getByIdForPlayer(competition.id(), playerId);
+
+        assertThat(response.id()).isEqualTo(competition.id());
+    }
+
+    @Test
+    void getByIdForPlayerHidesStartedCompetitionWherePlayerDoesNotParticipate() {
+        var playerId = UUID.randomUUID();
+        var competition = competition("Started", DATE, true);
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+
+        assertThatThrownBy(() -> service.getByIdForPlayer(competition.id(), playerId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Competition not found: " + competition.id());
+    }
+
+    @Test
     void updatesCompetitionBeforeItHasStarted() {
         var competition = competition("Cup", DATE, false);
         var gameId = UUID.randomUUID();
@@ -134,12 +220,14 @@ class CompetitionUseCaseServiceTest {
                 "Finals",
                 DATE.plusDays(1),
                 false,
+                true,
                 List.of(gameId),
                 List.of(teamId)
         ));
 
         assertThat(response.name()).isEqualTo("Finals");
         assertThat(response.date()).isEqualTo(DATE.plusDays(1));
+        assertThat(response.registrationOpen()).isTrue();
         assertThat(response.gameIds()).containsExactly(gameId);
         assertThat(response.teamIds()).containsExactly(teamId);
     }
@@ -153,6 +241,7 @@ class CompetitionUseCaseServiceTest {
                 "Finals",
                 DATE,
                 true,
+                false,
                 List.of(),
                 List.of()
         )))
@@ -170,7 +259,51 @@ class CompetitionUseCaseServiceTest {
         verify(competitionRepository).deleteById(id);
     }
 
+    @Test
+    void registersPlayerForCompetition() {
+        var playerId = UUID.randomUUID();
+        var competition = competition("Cup", DATE, false, true);
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+        when(competitionRepository.save(any(Competition.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.registerPlayer(competition.id(), playerId);
+
+        assertThat(response.registeredPlayerIds()).containsExactly(playerId);
+    }
+
+    @Test
+    void unregistersPlayerFromCompetition() {
+        var playerId = UUID.randomUUID();
+        var competition = competitionWithRegistration("Cup", DATE, false, playerId);
+        when(competitionRepository.findById(competition.id())).thenReturn(Optional.of(competition));
+        when(competitionRepository.save(any(Competition.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.unregisterPlayer(competition.id(), playerId);
+
+        assertThat(response.registeredPlayerIds()).isEmpty();
+    }
+
     private static Competition competition(String name, LocalDate date, boolean started) {
+        return competition(name, date, started, false);
+    }
+
+    private static Competition competition(String name, LocalDate date, boolean started, boolean registrationOpen) {
+        return Competition.rehydrate(
+                UUID.randomUUID(),
+                name,
+                date,
+                true,
+                registrationOpen,
+                started,
+                List.of(UUID.randomUUID()),
+                List.of(UUID.randomUUID()),
+                List.of(),
+                NOW.minusSeconds(60),
+                NOW.minusSeconds(60)
+        );
+    }
+
+    private static Competition competitionWithRegistration(String name, LocalDate date, boolean started, UUID playerId) {
         return Competition.rehydrate(
                 UUID.randomUUID(),
                 name,
@@ -179,6 +312,7 @@ class CompetitionUseCaseServiceTest {
                 started,
                 List.of(UUID.randomUUID()),
                 List.of(UUID.randomUUID()),
+                List.of(playerId),
                 NOW.minusSeconds(60),
                 NOW.minusSeconds(60)
         );

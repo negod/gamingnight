@@ -1,18 +1,30 @@
 import { Shuffle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Player } from '../../../shared/types/player';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
 
 type GenerateTeamsWizardProps = {
   players: Player[];
+  initialSelectedPlayerIds?: string[];
   onGenerate: (playerIds: string[], teamSize: number) => Promise<void>;
 };
 
-export function GenerateTeamsWizard({ players, onGenerate }: GenerateTeamsWizardProps) {
-  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
+const defaultInitialSelectedPlayerIds: string[] = [];
+
+export function GenerateTeamsWizard({
+  players,
+  initialSelectedPlayerIds = defaultInitialSelectedPlayerIds,
+  onGenerate,
+}: GenerateTeamsWizardProps) {
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>(initialSelectedPlayerIds);
   const [teamSizeInput, setTeamSizeInput] = useState('2');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const availablePlayerIds = new Set(players.map((player) => player.id));
+    setSelectedPlayerIds(initialSelectedPlayerIds.filter((id) => availablePlayerIds.has(id)));
+  }, [initialSelectedPlayerIds, players]);
 
   function togglePlayer(id: string) {
     setSelectedPlayerIds((prev) =>
