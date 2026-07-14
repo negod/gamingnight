@@ -127,7 +127,15 @@ jobs:
           cache: maven
 
       - name: Run OWASP dependency check
-        run: mvn -B -f backend/pom.xml dependency-check:check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY || vars.NVD_API_KEY }}
+        run: |
+          if [ -n "$NVD_API_KEY" ]; then
+            mvn -B -f backend/pom.xml -DnvdApiKey="$NVD_API_KEY" dependency-check:check
+          else
+            echo "::warning::NVD_API_KEY is not set; OWASP Dependency-Check will run without an NVD API key."
+            mvn -B -f backend/pom.xml dependency-check:check
+          fi
 
   deploy-backend:
     name: Deploy Backend to Render

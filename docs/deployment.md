@@ -302,6 +302,8 @@ CLOUDFLARE_PAGES_PROJECT_NAME
 VITE_API_BASE_URL
 ```
 
+The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and passes it to OWASP Dependency-Check as the NVD API key.
+
 After the Render backend and Cloudflare frontend deployment jobs complete on `main`, the workflow runs a production E2E job when these additional GitHub secrets are configured:
 
 ```text

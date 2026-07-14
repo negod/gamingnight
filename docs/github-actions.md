@@ -29,6 +29,7 @@ Add these in GitHub: `Settings -> Secrets and variables -> Actions -> Repository
 | `CLOUDFLARE_API_TOKEN` | Frontend deploy | Cloudflare API token with permission to deploy the Pages project. |
 | `CLOUDFLARE_PAGES_PROJECT_NAME` | Frontend deploy | Cloudflare Pages project name for Wrangler/direct upload deploys. |
 | `VITE_API_BASE_URL` | Frontend deploy | Production backend API URL, for example `https://gaming-night-api.onrender.com/api`. |
+| `NVD_API_KEY` | Dependency scan | Optional but recommended NVD API key for OWASP Dependency-Check. Store it as a repository secret; the workflow also accepts an Actions variable with the same name. |
 
 Render runtime secrets are configured in Render, not GitHub, unless you later change the workflow to call the Render API directly.
 
@@ -102,6 +103,7 @@ Keep Liquibase enabled. On first backend startup against an empty Supabase datab
 |---|---|
 | Backend deploy skipped | `RENDER_DEPLOY_HOOK_URL` exists in GitHub Actions secrets. |
 | Frontend deploy skipped | All Cloudflare secrets and `VITE_API_BASE_URL` exist in GitHub Actions secrets. |
+| Dependency scan warns about missing NVD API key | Add `NVD_API_KEY` under GitHub Actions repository secrets, or as an Actions variable if you already manage it there. |
 | Backend cannot start on Render | Render env vars include Supabase JDBC URL, username, password, and `APP_AUTH_TOKEN_SECRET`. |
 | Browser gets CORS errors | Render `CORS_ALLOWED_ORIGINS` exactly matches the Cloudflare Pages production origin. |
 | Direct route refresh returns 404 | Confirm `frontend/public/_redirects` is included in the Cloudflare Pages build output. |
