@@ -302,9 +302,9 @@ CLOUDFLARE_PAGES_PROJECT_NAME
 VITE_API_BASE_URL
 ```
 
-The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and passes it to OWASP Dependency-Check as the NVD API key.
+The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and lets the OWASP Dependency-Check Maven plugin read it from the environment. The workflow caches the Dependency-Check data directory at `~/.cache/dependency-check`; the first run after a cache miss downloads the NVD database, while later runs reuse the cached database and fetch updates.
 
-After the Render backend and Cloudflare frontend deployment jobs complete on `main`, the workflow runs a production E2E job when these additional GitHub secrets are configured:
+After the Render backend and Cloudflare frontend deployment jobs complete successfully on `main`, the workflow runs a production E2E job. Manual and scheduled E2E runs also require the backend tests, frontend tests, builds, and dependency scan to pass first. The E2E job requires these additional GitHub secrets:
 
 ```text
 E2E_BASE_URL
@@ -324,7 +324,7 @@ Post-deploy E2E behavior:
 - Pushes to `main` run `@smoke` tests and feature-tagged tests selected from changed files.
 - Manual `workflow_dispatch` and the weekly schedule run the full Playwright suite.
 - The job uploads the Playwright report, traces, screenshots, and videos as workflow artifacts.
-- If any required E2E secret is missing, the E2E job logs a warning and skips the Playwright run.
+- If any required E2E secret is missing, the E2E job fails instead of skipping the Playwright run.
 
 See [github-actions.md](github-actions.md) for the full CI/CD setup.
 

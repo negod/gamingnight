@@ -12,11 +12,11 @@ The workflow runs on pushes and pull requests to `main` and `develop`.
 | `frontend-test` | Runs Vitest/React Testing Library tests with Node.js 20. |
 | `backend-docker-build` | Builds the backend Docker image from `backend/Dockerfile`. |
 | `frontend-build` | Builds the Vite static frontend and uploads `frontend/dist` as an artifact. |
-| `dependency-check` | Runs the OWASP Dependency-Check Maven plugin. |
+| `dependency-check` | Runs the OWASP Dependency-Check Maven plugin and caches its vulnerability database between workflow runs. |
 | `deploy-backend` | On `main` pushes, triggers Render through a deploy hook. |
 | `deploy-frontend` | On `main` pushes, builds with the production API URL and deploys to Cloudflare Pages with Wrangler. |
 
-Deploy jobs are safe to merge before secrets are configured. If a required deploy secret is missing, the job logs a warning and skips that deploy.
+Deploy jobs only run on pushes to `main`. When they run, missing required deploy secrets fail the job instead of skipping it so release failures stay visible.
 
 ## Required GitHub Secrets
 
@@ -29,7 +29,7 @@ Add these in GitHub: `Settings -> Secrets and variables -> Actions -> Repository
 | `CLOUDFLARE_API_TOKEN` | Frontend deploy | Cloudflare API token with permission to deploy the Pages project. |
 | `CLOUDFLARE_PAGES_PROJECT_NAME` | Frontend deploy | Cloudflare Pages project name for Wrangler/direct upload deploys. |
 | `VITE_API_BASE_URL` | Frontend deploy | Production backend API URL, for example `https://gaming-night-api.onrender.com/api`. |
-| `NVD_API_KEY` | Dependency scan | Optional but recommended NVD API key for OWASP Dependency-Check. Store it as a repository secret; the workflow also accepts an Actions variable with the same name. |
+| `NVD_API_KEY` | Dependency scan | Optional but recommended NVD API key for OWASP Dependency-Check. Store it as a repository secret; the workflow also accepts an Actions variable with the same name. The key is read from the environment by the Maven plugin. |
 
 Render runtime secrets are configured in Render, not GitHub, unless you later change the workflow to call the Render API directly.
 
@@ -94,16 +94,17 @@ Keep Liquibase enabled. On first backend startup against an empty Supabase datab
 1. Push or merge to `main`.
 2. GitHub Actions runs backend tests, frontend tests, backend Docker build, frontend build, and dependency scan.
 3. If all required jobs pass, `deploy-backend` triggers Render.
-4. If Cloudflare secrets are configured, `deploy-frontend` builds with `VITE_API_BASE_URL` and uploads `frontend/dist` to Cloudflare Pages.
+4. `deploy-frontend` builds with `VITE_API_BASE_URL` and uploads `frontend/dist` to Cloudflare Pages.
 5. Render starts the backend container, Liquibase applies pending migrations, and `/actuator/health` becomes available.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
-| Backend deploy skipped | `RENDER_DEPLOY_HOOK_URL` exists in GitHub Actions secrets. |
-| Frontend deploy skipped | All Cloudflare secrets and `VITE_API_BASE_URL` exist in GitHub Actions secrets. |
+| Backend deploy fails because configuration is missing | `RENDER_DEPLOY_HOOK_URL` exists in GitHub Actions secrets. |
+| Frontend deploy fails because configuration is missing | All Cloudflare secrets and `VITE_API_BASE_URL` exist in GitHub Actions secrets. |
 | Dependency scan warns about missing NVD API key | Add `NVD_API_KEY` under GitHub Actions repository secrets, or as an Actions variable if you already manage it there. |
+| Dependency scan downloads the full NVD database | The first run after a cache miss is expected to download the database. Later runs restore `~/.cache/dependency-check` and should only fetch updates. The cache key rotates weekly so the stored database is periodically refreshed. |
 | Backend cannot start on Render | Render env vars include Supabase JDBC URL, username, password, and `APP_AUTH_TOKEN_SECRET`. |
 | Browser gets CORS errors | Render `CORS_ALLOWED_ORIGINS` exactly matches the Cloudflare Pages production origin. |
 | Direct route refresh returns 404 | Confirm `frontend/public/_redirects` is included in the Cloudflare Pages build output. |
