@@ -278,7 +278,7 @@ Render provides `PORT` automatically for many services. The application reads it
 
 For Supabase, use the session pooler connection string for the Render backend unless your service can reach the direct IPv6 database endpoint or the Supabase project has the IPv4 add-on. The session pooler is the right fit for a persistent backend on IPv4-only networks. The username usually has the form `postgres.PROJECT_REF`; copy the exact JDBC host, username, and database name from Supabase's connection panel.
 
-Render should be configured with auto-deploy disabled if GitHub Actions must be the release gate. In that setup, GitHub Actions triggers Render through `RENDER_DEPLOY_HOOK_URL` only after tests, builds, and the dependency scan pass.
+Render should be configured with auto-deploy disabled if GitHub Actions must be the release gate. In that setup, GitHub Actions triggers Render through `RENDER_DEPLOY_HOOK_URL` only after tests and builds pass.
 
 ### GitHub Actions Deployment
 
@@ -289,8 +289,9 @@ On every push or pull request to `main` or `develop`, it runs:
 - backend tests,
 - frontend tests,
 - backend Docker image build,
-- frontend production build,
-- OWASP Dependency-Check.
+- frontend production build.
+
+OWASP Dependency-Check runs on the weekly schedule and on manual `workflow_dispatch` runs. It is intentionally not a deploy gate for push builds.
 
 On pushes to `main`, it also deploys when these GitHub secrets are configured:
 
@@ -302,9 +303,9 @@ CLOUDFLARE_PAGES_PROJECT_NAME
 VITE_API_BASE_URL
 ```
 
-The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and lets the OWASP Dependency-Check Maven plugin read it from the environment. The workflow caches the Dependency-Check data directory at `~/.cache/dependency-check`; the first run after a cache miss downloads the NVD database, while later runs reuse the cached database and fetch updates. The scan uses `backend/owasp-suppressions.xml` for suppressions and disables the optional Sonatype OSS Index analyzer to avoid unrelated credential failures.
+The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and lets the OWASP Dependency-Check Maven plugin read it from the environment. The workflow restores the Dependency-Check data directory at `~/.cache/dependency-check`, runs `dependency-check:update-only`, saves the refreshed database before scanning, and then scans with `autoUpdate=false`. The first run after a cache miss downloads the NVD database, while later runs reuse the cached database and fetch updates. The scan uses `backend/owasp-suppressions.xml` for suppressions, disables the optional Sonatype OSS Index analyzer to avoid unrelated credential failures, and uploads the HTML report as a workflow artifact. A failing scheduled/manual scan marks that workflow run failed but does not block push deployments.
 
-After the Render backend and Cloudflare frontend deployment jobs complete successfully on `main`, the workflow runs a production E2E job. Manual and scheduled E2E runs also require the backend tests, frontend tests, builds, and dependency scan to pass first. The E2E job requires these additional GitHub secrets:
+After the Render backend and Cloudflare frontend deployment jobs complete successfully on `main`, the workflow runs a production E2E job. Manual and scheduled E2E runs require the backend tests, frontend tests, and builds to pass first. The E2E job requires these additional GitHub secrets:
 
 ```text
 E2E_BASE_URL

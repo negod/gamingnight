@@ -102,7 +102,7 @@
                 </executions>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+                    <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
                     <suppressionFiles>
                         <suppressionFile>${project.basedir}/owasp-suppressions.xml</suppressionFile>
                     </suppressionFiles>

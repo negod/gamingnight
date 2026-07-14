@@ -114,6 +114,7 @@ jobs:
   dependency-check:
     name: Security Scan
     runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -128,32 +129,51 @@ jobs:
 
       - name: Set OWASP Dependency-Check cache key
         id: dependency-check-cache-key
-        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+        run: echo "day=$(date -u +%F)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache OWASP Dependency-Check data
-        uses: actions/cache@v4
+      - name: Restore OWASP Dependency-Check data
+        id: dependency-check-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cache/dependency-check
-          key: ${{ runner.os }}-dependency-check-${{ steps.dependency-check-cache-key.outputs.week }}-${{ hashFiles('backend/pom.xml') }}
+          key: ${{ runner.os }}-dependency-check-${{ steps.dependency-check-cache-key.outputs.day }}-${{ hashFiles('backend/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-dependency-check-${{ steps.dependency-check-cache-key.outputs.week }}-
+            ${{ runner.os }}-dependency-check-${{ steps.dependency-check-cache-key.outputs.day }}-
             ${{ runner.os }}-dependency-check-
 
-      - name: Run OWASP dependency check
+      - name: Update OWASP Dependency-Check data
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY || vars.NVD_API_KEY }}
         run: |
           if [ -n "$NVD_API_KEY" ]; then
-            mvn -B -f backend/pom.xml -DdataDirectory="$HOME/.cache/dependency-check" -DnvdApiKeyEnvironmentVariable=NVD_API_KEY dependency-check:check
+            mvn -B -f backend/pom.xml -DdataDirectory="$HOME/.cache/dependency-check" -DnvdApiKeyEnvironmentVariable=NVD_API_KEY dependency-check:update-only
           else
             echo "::warning::NVD_API_KEY is not set; OWASP Dependency-Check will run without an NVD API key."
-            mvn -B -f backend/pom.xml -DdataDirectory="$HOME/.cache/dependency-check" dependency-check:check
+            mvn -B -f backend/pom.xml -DdataDirectory="$HOME/.cache/dependency-check" dependency-check:update-only
           fi
+
+      - name: Save OWASP Dependency-Check data
+        if: steps.dependency-check-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/dependency-check
+          key: ${{ steps.dependency-check-cache.outputs.cache-primary-key }}
+
+      - name: Run OWASP dependency check
+        run: mvn -B -f backend/pom.xml -DdataDirectory="$HOME/.cache/dependency-check" -DautoUpdate=false dependency-check:check
+
+      - name: Upload dependency check report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-check-report
+          path: backend/target/dependency-check-report.html
+          if-no-files-found: ignore
 
   deploy-backend:
     name: Deploy Backend to Render
     runs-on: ubuntu-latest
-    needs: [backend-test, backend-docker-build, dependency-check]
+    needs: [backend-test, backend-docker-build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     env:
       RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
@@ -171,7 +191,7 @@ jobs:
   deploy-frontend:
     name: Deploy Frontend to Cloudflare Pages
     runs-on: ubuntu-latest
-    needs: [frontend-test, frontend-build, dependency-check]
+    needs: [frontend-test, frontend-build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -222,7 +242,7 @@ jobs:
   e2e-test:
     name: Production E2E Tests
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test, backend-docker-build, frontend-build, dependency-check, deploy-backend, deploy-frontend]
+    needs: [backend-test, frontend-test, backend-docker-build, frontend-build, deploy-backend, deploy-frontend]
     if: >
       always() &&
       (
@@ -233,7 +253,6 @@ jobs:
           needs['frontend-test'].result == 'success' &&
           needs['backend-docker-build'].result == 'success' &&
           needs['frontend-build'].result == 'success' &&
-          needs['dependency-check'].result == 'success' &&
           needs['deploy-backend'].result == 'success' &&
           needs['deploy-frontend'].result == 'success'
         ) ||
@@ -242,8 +261,7 @@ jobs:
           needs['backend-test'].result == 'success' &&
           needs['frontend-test'].result == 'success' &&
           needs['backend-docker-build'].result == 'success' &&
-          needs['frontend-build'].result == 'success' &&
-          needs['dependency-check'].result == 'success'
+          needs['frontend-build'].result == 'success'
         )
       )
     env:

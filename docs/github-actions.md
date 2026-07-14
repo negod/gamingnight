@@ -4,7 +4,7 @@ This repository uses `.github/workflows/ci.yml` to test, build, and deploy Gamin
 
 ## Pipeline
 
-The workflow runs on pushes and pull requests to `main` and `develop`.
+The workflow runs tests and builds on pushes and pull requests to `main` and `develop`. The OWASP Dependency-Check security scan runs on the weekly schedule and when the workflow is started manually.
 
 | Job | Purpose |
 |---|---|
@@ -12,7 +12,7 @@ The workflow runs on pushes and pull requests to `main` and `develop`.
 | `frontend-test` | Runs Vitest/React Testing Library tests with Node.js 20. |
 | `backend-docker-build` | Builds the backend Docker image from `backend/Dockerfile`. |
 | `frontend-build` | Builds the Vite static frontend and uploads `frontend/dist` as an artifact. |
-| `dependency-check` | Runs the OWASP Dependency-Check Maven plugin and caches its vulnerability database between workflow runs. |
+| `dependency-check` | Runs the OWASP Dependency-Check Maven plugin on scheduled/manual workflow runs, caches its vulnerability database, and uploads the HTML report. |
 | `deploy-backend` | On `main` pushes, triggers Render through a deploy hook. |
 | `deploy-frontend` | On `main` pushes, builds with the production API URL and deploys to Cloudflare Pages with Wrangler. |
 
@@ -92,7 +92,7 @@ Keep Liquibase enabled. On first backend startup against an empty Supabase datab
 ## Release Flow
 
 1. Push or merge to `main`.
-2. GitHub Actions runs backend tests, frontend tests, backend Docker build, frontend build, and dependency scan.
+2. GitHub Actions runs backend tests, frontend tests, backend Docker build, and frontend build.
 3. If all required jobs pass, `deploy-backend` triggers Render.
 4. `deploy-frontend` builds with `VITE_API_BASE_URL` and uploads `frontend/dist` to Cloudflare Pages.
 5. Render starts the backend container, Liquibase applies pending migrations, and `/actuator/health` becomes available.
@@ -104,8 +104,9 @@ Keep Liquibase enabled. On first backend startup against an empty Supabase datab
 | Backend deploy fails because configuration is missing | `RENDER_DEPLOY_HOOK_URL` exists in GitHub Actions secrets. |
 | Frontend deploy fails because configuration is missing | All Cloudflare secrets and `VITE_API_BASE_URL` exist in GitHub Actions secrets. |
 | Dependency scan warns about missing NVD API key | Add `NVD_API_KEY` under GitHub Actions repository secrets, or as an Actions variable if you already manage it there. |
-| Dependency scan downloads the full NVD database | The first run after a cache miss is expected to download the database. Later runs restore `~/.cache/dependency-check` and should only fetch updates. The cache key rotates weekly so the stored database is periodically refreshed. |
+| Dependency scan downloads the full NVD database | The first run after a cache miss is expected to download the database. The workflow restores `~/.cache/dependency-check`, runs `dependency-check:update-only`, saves the refreshed database before scanning, then scans with `autoUpdate=false`. The cache key rotates daily so a failed vulnerability scan does not discard the downloaded database. |
 | Dependency scan reports suppression or OSS Index warnings | The Maven plugin reads suppressions from `backend/owasp-suppressions.xml` using the backend project base directory. Sonatype OSS Index is disabled; NVD remains the authoritative vulnerability source for the CI scan. |
+| Dependency scan fails | Scheduled/manual workflow runs become red and include the uploaded `dependency-check-report` artifact. Push deploys are not blocked by the scan. |
 | Backend cannot start on Render | Render env vars include Supabase JDBC URL, username, password, and `APP_AUTH_TOKEN_SECRET`. |
 | Browser gets CORS errors | Render `CORS_ALLOWED_ORIGINS` exactly matches the Cloudflare Pages production origin. |
 | Direct route refresh returns 404 | Confirm `frontend/public/_redirects` is included in the Cloudflare Pages build output. |
