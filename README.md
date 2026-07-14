@@ -175,7 +175,7 @@ After starting the backend and frontend, open `http://localhost:5173` and log in
 To add a database change:
 
 1. Add a new YAML changeset under `backend/src/main/resources/db/changelog/changes/`.
-2. Use the next zero-padded prefix and a descriptive filename, for example `0012-add-avatar-to-players.yaml`.
+2. Use the next zero-padded prefix and a descriptive filename, for example `0018-add-avatar-to-players.yaml`.
 3. Set the changeset `id` to the filename without `.yaml`.
 4. Append the file to `db.changelog-master.yaml`.
 5. Start the backend against local PostgreSQL and confirm Liquibase applies the change.
@@ -250,6 +250,9 @@ See [docs/deployment.md](docs/deployment.md) for production setup.
 Short version:
 
 - Deploy the frontend as static assets from `frontend`, built with `npm run build`.
-- Deploy the backend from `backend`, built with `mvn clean package`, started with `java -jar target/gaming-night-0.0.1-SNAPSHOT.jar`.
-- Provide a PostgreSQL database and set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, and `CORS_ALLOWED_ORIGINS`.
+- Deploy the backend on Render as a Docker web service using `backend/Dockerfile`.
+- Use Supabase PostgreSQL for production; for Render, use the Supabase session pooler JDBC URL unless direct IPv6 access or the IPv4 add-on is available.
+- Provide `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `APP_AUTH_TOKEN_SECRET`, and `CORS_ALLOWED_ORIGINS` as Render environment variables.
+- Deploy the frontend to Cloudflare Pages with `VITE_API_BASE_URL` pointing at the Render backend `/api`.
+- GitHub Actions tests, builds, runs dependency scanning, and can deploy automatically from `main` when the required GitHub secrets are configured.
 - Keep Hibernate set to `ddl-auto=validate`; Liquibase owns schema changes.

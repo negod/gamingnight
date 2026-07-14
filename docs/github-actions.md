@@ -1,411 +1,114 @@
-# GitHub Actions CI/CD Setup
+# GitHub Actions CI/CD
 
-This document describes the GitHub Actions workflow setup for Gaming Night, including backend testing, frontend testing, end-to-end testing, and security scanning.
+This repository uses `.github/workflows/ci.yml` to test, build, and deploy Gaming Night.
 
-## Table of Contents
+## Pipeline
 
-- [Overview](#overview)
-- [Workflow Structure](#workflow-structure)
-- [Backend Tests](#backend-tests)
-- [Frontend Tests](#frontend-tests)
-- [End-to-End Tests](#end-to-end-tests)
-- [Security Scanning](#security-scanning)
-- [Setup Instructions](#setup-instructions)
-- [Customization Options](#customization-options)
-- [Troubleshooting](#troubleshooting)
+The workflow runs on pushes and pull requests to `main` and `develop`.
 
-## Overview
+| Job | Purpose |
+|---|---|
+| `backend-test` | Runs the Spring Boot/JUnit test suite with Java 21. |
+| `frontend-test` | Runs Vitest/React Testing Library tests with Node.js 20. |
+| `backend-docker-build` | Builds the backend Docker image from `backend/Dockerfile`. |
+| `frontend-build` | Builds the Vite static frontend and uploads `frontend/dist` as an artifact. |
+| `dependency-check` | Runs the OWASP Dependency-Check Maven plugin. |
+| `deploy-backend` | On `main` pushes, triggers Render through a deploy hook. |
+| `deploy-frontend` | On `main` pushes, builds with the production API URL and deploys to Cloudflare Pages with Wrangler. |
 
-Gaming Night uses GitHub Actions for continuous integration with a comprehensive testing pipeline that runs on every push and pull request to `main` and `develop` branches.
+Deploy jobs are safe to merge before secrets are configured. If a required deploy secret is missing, the job logs a warning and skips that deploy.
 
-**Workflow File**: `.github/workflows/ci.yml`
+## Required GitHub Secrets
 
-**Pipeline Jobs**:
-1. **Backend Tests** - Maven tests with PostgreSQL service container
-2. **Frontend Tests** - Vitest with React Testing Library
-3. **E2E Tests** - Cypress end-to-end tests (depends on backend/frontend jobs)
-4. **Security Scan** - OWASP dependency-check for vulnerability detection
+Add these in GitHub: `Settings -> Secrets and variables -> Actions -> Repository secrets`.
 
-## Workflow Structure
+| Secret | Used by | Description |
+|---|---|---|
+| `RENDER_DEPLOY_HOOK_URL` | Backend deploy | Render deploy hook URL for the backend service. Disable Render auto-deploy if GitHub Actions should be the release gate. |
+| `CLOUDFLARE_ACCOUNT_ID` | Frontend deploy | Cloudflare account id. |
+| `CLOUDFLARE_API_TOKEN` | Frontend deploy | Cloudflare API token with permission to deploy the Pages project. |
+| `CLOUDFLARE_PAGES_PROJECT_NAME` | Frontend deploy | Cloudflare Pages project name for Wrangler/direct upload deploys. |
+| `VITE_API_BASE_URL` | Frontend deploy | Production backend API URL, for example `https://gaming-night-api.onrender.com/api`. |
 
-```mermaid
-graph TD
-    A[Push/Pull Request] --> B[Backend Tests]
-    A --> C[Frontend Tests]
-    B --> D[E2E Tests]
-    C --> D
-    A --> E[Security Scan]
+Render runtime secrets are configured in Render, not GitHub, unless you later change the workflow to call the Render API directly.
+
+## Render Backend Service
+
+Create the backend as a Render Web Service backed by the GitHub repository.
+
+Recommended settings:
+
+```text
+Runtime: Docker
+Root directory: backend
+Dockerfile path: Dockerfile
+Health check path: /actuator/health
+Auto-deploy: off, if GitHub Actions should gate production deploys
 ```
 
-The E2E tests depend on both Backend and Frontend tests completing successfully.
+Set these Render environment variables:
 
-## Backend Tests
-
-### Configuration
-- **Trigger**: Runs on push/pull request to main/develop
-- **Environment**: Ubuntu latest
-- **Java**: JDK 21 (Temurin distribution)
-- **Database**: PostgreSQL 16 service container
-- **Build Tool**: Maven with dependency caching
-
-### Test Execution
-```yaml
-# Environment variables for Spring Boot
-SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/gaming-night
-SPRING_DATASOURCE_USERNAME: gaming-night
-SPRING_DATASOURCE_PASSWORD: gaming-night
+```text
+SPRING_DATASOURCE_URL=jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require
+SPRING_DATASOURCE_USERNAME=postgres.PROJECT_REF
+SPRING_DATASOURCE_PASSWORD=your-supabase-database-password
+APP_AUTH_TOKEN_SECRET=long-random-production-secret
+CORS_ALLOWED_ORIGINS=https://your-cloudflare-pages-domain
 ```
 
-### Commands
+Render supplies `PORT`; the backend reads it through `server.port=${PORT:8080}`.
+
+## Cloudflare Pages Frontend
+
+The workflow deploys with Wrangler/direct upload:
+
 ```bash
-cd backend
-mvn test -Dtest="*Test,*Spec" -DfailIfNoTests=false
+npx wrangler@latest pages deploy frontend/dist --project-name "$CLOUDFLARE_PAGES_PROJECT_NAME"
 ```
 
-### Includes
-- Domain model tests
-- Use case service tests with mocked ports
-- Controller tests with `@WebMvcTest`
-- Persistence tests with Testcontainers (if Docker available in CI)
+Use this CI-managed deploy path if GitHub Actions should be the production release gate. Do not also enable Cloudflare Pages Git auto-deploy for the same production branch, because that can publish before the GitHub Actions pipeline finishes.
 
-## Frontend Tests
+`frontend/public/_redirects` contains the SPA fallback:
 
-### Configuration
-- **Trigger**: Runs on push/pull request to main/develop
-- **Environment**: Ubuntu latest
-- **Node.js**: Version 20
-- **Build Tool**: npm with dependency caching
-
-### Test Execution
-```bash
-cd frontend
-npm ci          # Clean install
-npm test        # Run Vitest tests
+```text
+/* /index.html 200
 ```
 
-### Includes
-- Component tests with React Testing Library
-- Form validation tests
-- Navigation tests
-- API client tests
+This is required because the frontend uses `BrowserRouter`; direct visits to routes like `/competitions` must serve `index.html`.
 
-## End-to-End Tests
+## Supabase PostgreSQL
 
-### Configuration
-- **Trigger**: Runs after Backend and Frontend tests pass
-- **Environment**: Ubuntu latest
-- **Java**: JDK 21 for backend
-- **Node.js**: Version 20 for frontend
-- **Database**: PostgreSQL 16 service container
-- **Testing Framework**: Cypress
+Use the Supabase session pooler for the Render backend unless your Render service can reach Supabase directly over IPv6 or your Supabase project has the IPv4 add-on.
 
-### Setup Process
-1. **Database**: PostgreSQL service container starts
-2. **Dependencies**: Install frontend dependencies
-3. **Build**: Create production build of frontend
-4. **Cypress**: Install Cypress as dev dependency
-5. **Backend**: Start Spring Boot server in background
-6. **Frontend**: Start Vite preview server in background
-7. **Tests**: Run Cypress in headless mode
+Use the JDBC form of the Supabase session pooler URL:
 
-### Test Execution
-```bash
-# Backend server
-cd backend
-mvn spring-boot:run &
-sleep 60  # Wait for Spring Boot startup
-
-# Frontend server  
-cd frontend
-npm run preview &
-sleep 10  # Wait for Vite preview
-
-# Cypress tests
-cd frontend
-npx cypress run --headless --browser chrome
+```text
+jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require
 ```
 
-### Test Coverage
-- User authentication flows
-- Competition creation and management
-- Player and team management
-- Game setup and scoring
-- Leaderboard functionality
-- Cross-browser compatibility
+Keep Liquibase enabled. On first backend startup against an empty Supabase database, Liquibase creates the schema and seeds the development data.
 
-## Security Scanning
+## Release Flow
 
-### Configuration
-- **Trigger**: Runs on push/pull request to main/develop
-- **Tool**: OWASP dependency-check Maven plugin
-- **Threshold**: Fails build on CVSS 7+ vulnerabilities
-
-### Execution
-```bash
-cd backend
-mvn dependency-check:check
-```
-
-### Features
-- Scans all dependencies for known CVEs
-- Uses suppression file for false positives (`backend/owasp-suppressions.xml`)
-- Fails build if critical/high vulnerabilities found
-- Reports detailed vulnerability information
-
-## Setup Instructions
-
-### Step 1: Create GitHub Actions Directory
-```bash
-mkdir -p .github/workflows
-```
-
-### Step 2: Add Workflow File
-Create `.github/workflows/ci.yml` with the content from this repository.
-
-### Step 3: Commit and Push
-```bash
-git add .github/workflows/ci.yml
-git commit -m "Add GitHub Actions CI workflow"
-git push origin main
-```
-
-### Step 4: Verify Setup
-1. Go to your GitHub repository
-2. Click on "Actions" tab
-3. The workflow should automatically run on the next push
-
-## Customization Options
-
-### Trigger Configuration
-To change when the workflow runs, modify the `on:` section:
-
-```yaml
-on:
-  push:
-    branches: [ main, develop, feature/* ]  # Add more branches
-  pull_request:
-    branches: [ main ]                    # Only on PR to main
-  schedule:
-    - cron: '0 0 * * *'                 # Daily at midnight
-```
-
-### Environment Variables
-Add secrets in GitHub repository settings for production credentials:
-
-```yaml
-# In your workflow
-env:
-  SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-  SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USERNAME }}
-  SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
-```
-
-### Matrix Testing
-Add matrix strategy for multiple Java/Node versions:
-
-```yaml
-strategy:
-  matrix:
-    java: ['21']
-    node: ['20', '22']
-```
-
-### Artifact Storage
-Save test reports and build artifacts:
-
-```yaml
-- name: Upload test results
-  uses: actions/upload-artifact@v4
-  with:
-    name: test-results
-    path: |
-      backend/target/surefire-reports/
-      frontend/test-results/
-```
+1. Push or merge to `main`.
+2. GitHub Actions runs backend tests, frontend tests, backend Docker build, frontend build, and dependency scan.
+3. If all required jobs pass, `deploy-backend` triggers Render.
+4. If Cloudflare secrets are configured, `deploy-frontend` builds with `VITE_API_BASE_URL` and uploads `frontend/dist` to Cloudflare Pages.
+5. Render starts the backend container, Liquibase applies pending migrations, and `/actuator/health` becomes available.
 
 ## Troubleshooting
 
-### Common Issues
+| Symptom | Check |
+|---|---|
+| Backend deploy skipped | `RENDER_DEPLOY_HOOK_URL` exists in GitHub Actions secrets. |
+| Frontend deploy skipped | All Cloudflare secrets and `VITE_API_BASE_URL` exist in GitHub Actions secrets. |
+| Backend cannot start on Render | Render env vars include Supabase JDBC URL, username, password, and `APP_AUTH_TOKEN_SECRET`. |
+| Browser gets CORS errors | Render `CORS_ALLOWED_ORIGINS` exactly matches the Cloudflare Pages production origin. |
+| Direct route refresh returns 404 | Confirm `frontend/public/_redirects` is included in the Cloudflare Pages build output. |
+| Liquibase fails | Check the Supabase database user has permission to create tables/indexes and insert seed data. |
 
-#### 1. Database Connection Failed
-**Symptom**: Backend tests fail with database connection errors
-**Solution**: Check PostgreSQL service container is running and credentials match
+## Notes
 
-#### 2. Out of Memory Errors
-**Symptom**: Java process killed due to memory limits
-**Solution**: Add memory configuration:
-```yaml
-- name: Run backend tests
-  run: mvn test -Xmx2g
-```
-
-#### 3. Cypress Tests Failing
-**Symptom**: E2E tests fail due to timing issues
-**Solution**: Increase wait times or add proper element waiting:
-```bash
-# In Cypress tests
-cy.get('[data-testid="element"]').should('be.visible')
-```
-
-#### 4. Dependency Cache Miss
-**Symptom**: Slow builds due to missing cache
-**Solution**: Verify cache keys and paths in workflow
-
-#### 5. Spring Boot Startup Timeout
-**Symptom**: Backend server doesn't start in time
-**Solution**: Increase sleep time or add health check:
-```bash
-# Add health check
-curl -f http://localhost:8080/actuator/health || exit 1
-```
-
-### Debugging Workflows
-
-1. **View Logs**: Go to Actions tab → Click on workflow run → View step logs
-2. **Enable Debug**: Add `ACT=debug` secret to see detailed GitHub Actions logs
-3. **Local Testing**: Run workflow locally using [act](https://github.com/nektos/act)
-
-```bash
-# Install act
-npm install -g act
-
-# Run workflow locally
-act -j backend-test
-```
-
-## Performance Optimization
-
-### Caching Strategies
-```yaml
-# Maven cache
-- uses: actions/cache@v3
-  with:
-    path: ~/.m2/repository
-    key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-
-# npm cache  
-- uses: actions/cache@v3
-  with:
-    path: ~/.npm
-    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-```
-
-### Parallel Jobs
-The workflow already runs backend and frontend tests in parallel, then E2E tests after they complete.
-
-### Test Selection
-Run specific test groups:
-```bash
-# Backend - only domain tests
-mvn test -Dtest="*DomainTest"
-
-# Backend - only controller tests  
-mvn test -Dtest="*ControllerTest"
-
-# Frontend - specific test file
-npm test -- GameForm.test.tsx
-```
-
-## Monitoring and Notifications
-
-### Slack Notifications
-Add Slack integration for workflow results:
-
-```yaml
-- name: Notify Slack on failure
-  if: failure()
-  uses: rtCamp/action-slack-notify@v2
-  env:
-    SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-    SLACK_COLOR: danger
-    SLACK_TITLE: "Gaming Night CI Failed"
-```
-
-### Email Notifications
-Configure in GitHub repository settings under "Manage notifications".
-
-## Deployment Integration
-
-The CI workflow can be extended to include deployment:
-
-```yaml
-deploy:
-  name: Deploy to Production
-  runs-on: ubuntu-latest
-  needs: [backend-test, frontend-test, e2e-test, dependency-check]
-  if: github.ref == 'refs/heads/main'
-  
-  steps:
-    - name: Deploy backend
-      run: ./deploy-backend.sh
-    
-    - name: Deploy frontend
-      run: ./deploy-frontend.sh
-```
-
-## Security Considerations
-
-### Secrets Management
-- Never hardcode credentials in workflow files
-- Use GitHub Secrets for sensitive data
-- Rotate secrets regularly
-- Limit access to secrets
-
-### Permissions
-The workflow uses default permissions. For production, consider:
-
-```yaml
-permissions:
-  contents: read
-  packages: read
-  # Only needed for deployment jobs
-  deployments: write
-```
-
-### Code Scanning
-GitHub provides additional security features:
-- CodeQL analysis (built-in)
-- Secret scanning
-- Dependency graph
-
-Enable these in repository settings under "Security" tab.
-
-## Maintenance
-
-### Update Dependencies
-Regularly update action versions:
-
-```yaml
-# Check for updates at https://github.com/marketplace?type=actions
-- uses: actions/checkout@v4        # Latest as of 2026
-- uses: actions/setup-java@v4      # Latest as of 2026
-- uses: actions/setup-node@v4      # Latest as of 2026
-```
-
-### Monitor Test Performance
-- Track test execution times
-- Identify and fix slow tests
-- Consider test parallelization for large test suites
-
-### Clean Up Old Workflow Runs
-GitHub retains workflow runs for 90 days by default. Clean up old runs to save storage:
-
-```bash
-# List old runs (via GitHub API)
-# Delete old runs manually via GitHub UI
-```
-
-## References
-
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Cypress GitHub Actions](https://on.cypress.io/ci-changes#github-actions)
-- [OWASP Dependency-Check](https://owasp.github.io/dependency-check/)
-- [Spring Boot Testcontainers](https://www.testcontainers.org/modules/databases/postgres/)
-
-## Support
-
-For issues with the GitHub Actions setup:
-1. Check the workflow logs in GitHub Actions tab
-2. Review this documentation for common issues
-3. Consult the official documentation links above
-4. Create an issue in the repository for persistent problems
+- Do not commit real `.env` files or secrets.
+- Keep Render auto-deploy disabled if GitHub Actions must be the only production release gate.
+- The frontend build embeds `VITE_API_BASE_URL` at build time, so changing the backend URL requires a new frontend deploy.

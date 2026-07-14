@@ -244,7 +244,13 @@ Build output directory: dist
 Environment: VITE_API_BASE_URL=https://your-backend-service/api
 ```
 
-The frontend is a static site. It must be rebuilt when `VITE_API_BASE_URL` changes.
+The frontend is a static site. It must be rebuilt when `VITE_API_BASE_URL` changes. If GitHub Actions should be the production release gate, deploy Cloudflare Pages through Wrangler/direct upload from the workflow and do not also enable Cloudflare Pages Git auto-deploy for `main`.
+
+Because the app uses React Router `BrowserRouter`, `frontend/public/_redirects` contains this Cloudflare Pages SPA fallback:
+
+```text
+/* /index.html 200
+```
 
 ### Backend: Render Web Service
 
@@ -252,15 +258,15 @@ Configuration:
 
 ```text
 Root directory: backend
-Runtime: Java
-Build command: mvn clean package
-Start command: java -jar target/gaming-night-0.0.1-SNAPSHOT.jar
+Runtime: Docker
+Dockerfile path: Dockerfile
+Health check path: /actuator/health
 ```
 
 Environment variables:
 
 ```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:PORT/DATABASE?sslmode=require
+SPRING_DATASOURCE_URL=jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require
 SPRING_DATASOURCE_USERNAME=USER
 SPRING_DATASOURCE_PASSWORD=PASSWORD
 APP_AUTH_TOKEN_SECRET=long-random-production-secret
@@ -270,14 +276,45 @@ PORT=8080
 
 Render provides `PORT` automatically for many services. The application reads it through `server.port=${PORT:8080}`.
 
+For Supabase, use the session pooler connection string for the Render backend unless your service can reach the direct IPv6 database endpoint or the Supabase project has the IPv4 add-on. The session pooler is the right fit for a persistent backend on IPv4-only networks. The username usually has the form `postgres.PROJECT_REF`; copy the exact JDBC host, username, and database name from Supabase's connection panel.
+
+Render should be configured with auto-deploy disabled if GitHub Actions must be the release gate. In that setup, GitHub Actions triggers Render through `RENDER_DEPLOY_HOOK_URL` only after tests, builds, and the dependency scan pass.
+
+### GitHub Actions Deployment
+
+The repository includes `.github/workflows/ci.yml`.
+
+On every push or pull request to `main` or `develop`, it runs:
+
+- backend tests,
+- frontend tests,
+- backend Docker image build,
+- frontend production build,
+- OWASP Dependency-Check.
+
+On pushes to `main`, it also deploys when these GitHub secrets are configured:
+
+```text
+RENDER_DEPLOY_HOOK_URL
+CLOUDFLARE_ACCOUNT_ID
+CLOUDFLARE_API_TOKEN
+CLOUDFLARE_PAGES_PROJECT_NAME
+VITE_API_BASE_URL
+```
+
+See [github-actions.md](github-actions.md) for the full CI/CD setup.
+
 ## Production Checklist
 
 - PostgreSQL is reachable from the backend.
-- `SPRING_DATASOURCE_URL` uses the provider's production database.
+- `SPRING_DATASOURCE_URL` uses the Supabase production database, preferably the session pooler URL for Render.
 - `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` are set as secrets.
 - `APP_AUTH_TOKEN_SECRET` is set to a strong private value and is not the development default.
 - `CORS_ALLOWED_ORIGINS` is the exact frontend origin, not `*`.
 - Frontend `VITE_API_BASE_URL` points to the deployed backend `/api`.
 - Liquibase runs successfully during backend startup.
 - Hibernate remains on `ddl-auto=validate`.
+- Render backend is configured as Docker runtime using `backend/Dockerfile`.
+- Cloudflare Pages receives the SPA `_redirects` fallback.
+- GitHub Actions deploy secrets are configured before relying on automatic deploys.
 - Real `.env` files are not committed.
