@@ -169,6 +169,8 @@ Keep tests readable. Test behavior, not implementation details.
 | Starting an already-started competition throws | `CompetitionRunUseCaseServiceTest.startThrowsWhenAlreadyStarted` |
 | Starting with fewer than 2 teams throws | `CompetitionRunUseCaseServiceTest.startThrowsWhenFewerThanTwoTeams` |
 | Entering results replaces existing results | `CompetitionRunUseCaseServiceTest.enterResultsUpdatesMatch` |
+| Match cards render status, team names, player names, values, and edit action | `MatchCard.test.tsx` |
+| Match result forms render grouped/duel inputs, submit result payloads, and cancel | `MatchResultForm.test.tsx` |
 
 ### Leaderboards (Area F)
 
