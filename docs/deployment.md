@@ -302,7 +302,7 @@ CLOUDFLARE_PAGES_PROJECT_NAME
 VITE_API_BASE_URL
 ```
 
-The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and lets the OWASP Dependency-Check Maven plugin read it from the environment. The workflow caches the Dependency-Check data directory at `~/.cache/dependency-check`; the first run after a cache miss downloads the NVD database, while later runs reuse the cached database and fetch updates.
+The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and lets the OWASP Dependency-Check Maven plugin read it from the environment. The workflow caches the Dependency-Check data directory at `~/.cache/dependency-check`; the first run after a cache miss downloads the NVD database, while later runs reuse the cached database and fetch updates. The scan uses `backend/owasp-suppressions.xml` for suppressions and disables the optional Sonatype OSS Index analyzer to avoid unrelated credential failures.
 
 After the Render backend and Cloudflare frontend deployment jobs complete successfully on `main`, the workflow runs a production E2E job. Manual and scheduled E2E runs also require the backend tests, frontend tests, builds, and dependency scan to pass first. The E2E job requires these additional GitHub secrets:
 

@@ -105,6 +105,7 @@ Keep Liquibase enabled. On first backend startup against an empty Supabase datab
 | Frontend deploy fails because configuration is missing | All Cloudflare secrets and `VITE_API_BASE_URL` exist in GitHub Actions secrets. |
 | Dependency scan warns about missing NVD API key | Add `NVD_API_KEY` under GitHub Actions repository secrets, or as an Actions variable if you already manage it there. |
 | Dependency scan downloads the full NVD database | The first run after a cache miss is expected to download the database. Later runs restore `~/.cache/dependency-check` and should only fetch updates. The cache key rotates weekly so the stored database is periodically refreshed. |
+| Dependency scan reports suppression or OSS Index warnings | The Maven plugin reads suppressions from `backend/owasp-suppressions.xml` using the backend project base directory. Sonatype OSS Index is disabled; NVD remains the authoritative vulnerability source for the CI scan. |
 | Backend cannot start on Render | Render env vars include Supabase JDBC URL, username, password, and `APP_AUTH_TOKEN_SECRET`. |
 | Browser gets CORS errors | Render `CORS_ALLOWED_ORIGINS` exactly matches the Cloudflare Pages production origin. |
 | Direct route refresh returns 404 | Confirm `frontend/public/_redirects` is included in the Cloudflare Pages build output. |

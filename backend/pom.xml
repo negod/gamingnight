@@ -102,8 +102,9 @@
                 </executions>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
                     <suppressionFiles>
-                        <suppressionFile>owasp-suppressions.xml</suppressionFile>
+                        <suppressionFile>${project.basedir}/owasp-suppressions.xml</suppressionFile>
                     </suppressionFiles>
                 </configuration>
             </plugin>
