@@ -86,6 +86,20 @@ Full backend test suite: 196 tests pass, with 5 Testcontainers persistence tests
 
 ---
 
+#### SEC-8 · Rate limit the public signup endpoint `[Resolved]`
+
+**Status**: Resolved. Found during a follow-up audit of this plan: `POST /api/auth/signup` is fully unauthenticated and creates both a `User` and a `Player` row per call, but was missing from `RateLimitingFilter` even though its sibling account-creation endpoint (`POST /api/users`) was already throttled. Without a limit, the endpoint was an open door for unlimited scripted account/player creation.
+
+`RateLimitingFilter` now limits `POST /api/auth/signup` to 5 requests/minute per IP (`app.rate-limits.signup.requests-per-minute`, matching `create-user`'s threshold since both mint a `User` + `Player`). `RateLimitingFilterTest` adds `returns429AfterFiveSignupRequestsPerMinuteFromSameIp`, following the same pattern as the login/create-user cases. `docs/architecture.md`'s rate-limiting bullet and REST API description were updated accordingly.
+
+**Files affected**
+- `backend/src/main/java/se/backede/infrastructure/config/RateLimitingFilter.java`
+- `backend/src/main/resources/application.yml`
+- `backend/src/test/java/se/backede/infrastructure/web/RateLimitingFilterTest.java`
+- `docs/architecture.md`
+
+---
+
 ## Priority 1 — Architecture and DDD
 
 ---
@@ -449,6 +463,7 @@ The package should remain.
 | SEC-1 | Critical | Claude | ✅ |
 | SEC-2 | Critical | Claude | ✅ |
 | SEC-3 | Critical | Codex | ✅ |
+| SEC-8 | High | Claude | ✅ |
 | CA-1 / DDD-1 | High | Claude | ✅ |
 | SO-1 / CC-1 | High | Claude | ✅ |
 | SO-2 | Medium | Claude | ✅ |

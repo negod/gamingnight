@@ -47,7 +47,7 @@ The infrastructure layer contains adapters that implement the ports defined in t
 | `Game` | A game with `GameType` (SCORE_BASED / TIME_BASED) and `CalculationMethod` (SUM / AVERAGE) |
 | `Team` | A named group of players. Team names are unique across the application |
 | `TeamName` | A seeded catalog entry used as the source for random generated team names |
-| `Competition` | An event with ordered games and teams; can be started once |
+| `Competition` | An event with ordered games, teams, an admin-controlled registration-open flag, and pre-start player registrations; can be started once |
 | `Match` | A single matchup between two teams within a game of a competition |
 | `PlayerResult` | A player's individual score or time in a match (value type, no identity) |
 
@@ -71,9 +71,9 @@ Administrators manage teams through `/api/teams` and the `/teams` frontend secti
 
 ### Competition Setup
 
-Administrators manage competition setup through `/api/competitions` and the `/competitions` frontend section. A competition stores its name, date, single-match setting, ordered game IDs, team IDs, and started state. Setup changes validate referenced games, teams, and generated-team players before saving.
+Administrators manage competition setup through `/api/competitions` and the `/competitions` frontend section. A competition stores its name, date, single-match setting, registration-open flag, ordered game IDs, team IDs, registered player IDs, and started state. Setup changes validate referenced games, teams, and generated-team players before saving. Authenticated users can register or unregister their linked player only while the competition is not started and `registrationOpen` is enabled.
 
-Auto-generated teams are created from selected players through `POST /api/competitions/{id}/generate-teams`. The use case shuffles players, fills teams according to the requested team size, distributes leftovers one per team, picks unused names from the seeded `team_names` catalog, saves the teams, and replaces the competition's assigned teams. Team names are unique across the app, including manually created teams, so generated names never reuse an existing team name. Started competitions cannot be edited or regenerated.
+Auto-generated teams are created from selected players through `POST /api/competitions/{id}/generate-teams`. The use case shuffles players, fills teams according to the requested team size, distributes leftovers one per team, picks unused names from the seeded `team_names` catalog, saves the teams, and replaces the competition's assigned teams. Registered players are preselected in the frontend generate-teams workflow. Team names are unique across the app, including manually created teams, so generated names never reuse an existing team name. Started competitions cannot be edited, regenerated, registered for, or unregistered from.
 
 ### Competition Run
 
@@ -118,8 +118,9 @@ Two roles exist: `ADMIN` and `USER` (`UserRole`). Authorization is enforced at t
 |---|---|---|
 | `POST /api/auth/login`, `POST /api/auth/signup` | Public | Public |
 | `GET /api/users/me` | ✅ | ✅ |
-| `GET` on competitions, matches, and leaderboards (`/api/competitions/**`) | ✅ (all) | ✅, filtered to competitions where the user's linked player belongs to a competition team |
+| `GET` on competitions, matches, and leaderboards (`/api/competitions/**`) | ✅ (all) | ✅, open setup competitions are visible; started competitions are filtered to competitions where the user's linked player is registered or belongs to a competition team |
 | `GET` a single game, team, or player (`/api/games/*`, `/api/teams/*`, `/api/players/*`) | ✅ | ✅ |
+| Register/unregister own player for an open setup competition | ✅ | ✅ |
 | List all players, games, teams, or users; any create/update/delete on players, games, teams, competitions, or users; start a competition; enter/edit results; generate teams | ✅ | ❌ (falls through to the `ADMIN`-only default) |
 
 The frontend mirrors these rules in navigation: admins see every tab, while regular users see only `Competitions` and `My user`.
@@ -129,7 +130,7 @@ The frontend mirrors these rules in navigation: admins see every tab, while regu
 - **CORS** (`WebConfig`): `/api/**` is restricted to the origins listed in `app.cors.allowed-origins` (env `CORS_ALLOWED_ORIGINS`, default `http://localhost:5173`), the methods the API actually uses, and exposes only the `Authorization` response header.
 - **Security headers** (`SecurityConfig`): Content-Security-Policy (`default-src 'self'`), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy` (camera/microphone/geolocation disabled), plus Spring Security's default `X-Content-Type-Options: nosniff`.
 - **CSRF** is disabled. This is safe here because the API is fully stateless (no cookies, no server-side session) and only honors a bearer token the frontend attaches explicitly — there is no ambient browser-held credential for a forged cross-site request to ride on.
-- **Rate limiting** (`RateLimitingFilter`, Bucket4j, keyed per client IP): `POST /api/auth/login` — 10/min; `POST /api/users` — 5/min; `POST /api/competitions/{id}/start` — 10/min; `PUT /api/competitions/{cid}/matches/{mid}/results` — 30/min. Requests over the limit get `429 Too Many Requests` with a `Retry-After` header and the standard API error envelope.
+- **Rate limiting** (`RateLimitingFilter`, Bucket4j, keyed per client IP): `POST /api/auth/login` — 10/min; `POST /api/auth/signup` — 5/min; `POST /api/users` — 5/min; `POST /api/competitions/{id}/start` — 10/min; `PUT /api/competitions/{cid}/matches/{mid}/results` — 30/min. Requests over the limit get `429 Too Many Requests` with a `Retry-After` header and the standard API error envelope.
 - **Actuator**: only `/actuator/health` is exposed, with `show-details: never`; `info`, `env`, and all other actuator endpoints are unpublished.
 
 ### Threat Model
@@ -148,7 +149,7 @@ The frontend mirrors these rules in navigation: admins see every tab, while regu
 
 Met: strong salted password hashing (V2.4), stateless token-based session management (V3), RBAC enforced at two independent layers (V4), request validation on every mutating DTO plus domain-level invariants (V5), generic/whitelisted error responses (V7), CORS/CSP/security-header hardening (V14), and automated dependency CVE scanning via the OWASP dependency-check Maven plugin (SEC-6).
 
-Known gaps, not yet resolved: no token revocation/blacklist (a leaked token stays valid until its 12-hour expiry), no rate limiting or lockout on `/api/auth/login` itself (only the three endpoints above are throttled), no MFA, and no dedicated security-event audit log. These should be closed before claiming full Level 2.
+Known gaps, not yet resolved: no token revocation/blacklist (a leaked token stays valid until its 12-hour expiry), no account lockout beyond per-IP rate limiting, no MFA, and no dedicated security-event audit log. These should be closed before claiming full Level 2.
 
 ## REST API
 
@@ -210,6 +211,8 @@ Known gaps, not yet resolved: no token revocation/blacklist (a leaked token stay
 | PUT | `/api/competitions/{id}` | Update setup before start |
 | DELETE | `/api/competitions/{id}` | Delete competition |
 | POST | `/api/competitions/{id}/generate-teams` | Auto-generate teams from selected players |
+| POST | `/api/competitions/{id}/registrations/me` | Register the authenticated user's linked player when registration is open before start |
+| DELETE | `/api/competitions/{id}/registrations/me` | Unregister the authenticated user's linked player when the competition has not started |
 
 ### Competition Run
 
@@ -288,10 +291,10 @@ UI components do not call `fetch` directly.
 
 | File | Role |
 |---|---|
-| `api/competitionsApi.ts` | Competition CRUD and generate-teams API calls |
-| `components/CompetitionList` | Table of competitions with setup and started status |
+| `api/competitionsApi.ts` | Competition CRUD, registration, and generate-teams API calls |
+| `components/CompetitionList` | Table of competitions with setup, started status, and user registration actions |
 | `components/CompetitionForm` | Form for competition settings, ordered games, and teams |
-| `components/GenerateTeamsWizard` | Player selection and team-size workflow for generating teams |
+| `components/GenerateTeamsWizard` | Player selection and team-size workflow for generating teams, preselecting registered players |
 | `pages/CompetitionsPage` | List page with delete confirmation |
 | `pages/CreateCompetitionPage` | Create form wired to POST /api/competitions |
 | `pages/EditCompetitionPage` | Edit form wired to PUT /api/competitions/{id} |

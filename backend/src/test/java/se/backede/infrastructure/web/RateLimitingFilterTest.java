@@ -4,6 +4,7 @@ import se.backede.application.dto.CreateUserRequest;
 import se.backede.application.dto.EnterResultsRequest;
 import se.backede.application.dto.LoginRequest;
 import se.backede.application.dto.PlayerResultInput;
+import se.backede.application.dto.SignupRequest;
 import se.backede.application.usecase.AuthUseCaseService;
 import se.backede.application.usecase.CompetitionRunUseCaseService;
 import se.backede.application.usecase.CompetitionUseCaseService;
@@ -67,6 +68,20 @@ class RateLimitingFilterTest {
                 .content(objectMapper.writeValueAsString(new LoginRequest("admin", "admin")));
 
         expectTooManyRequestsAfterAllowedRequests(request, 10, 200);
+    }
+
+    @Test
+    void returns429AfterFiveSignupRequestsPerMinuteFromSameIp() throws Exception {
+        RequestBuilder request = post("/api/auth/signup")
+                .with(httpRequest -> {
+                    httpRequest.setRemoteAddr("10.10.0.5");
+                    return httpRequest;
+                })
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        new SignupRequest("newuser", "newuser@example.com", "secret12")));
+
+        expectTooManyRequestsAfterAllowedRequests(request, 5, 201);
     }
 
     @Test

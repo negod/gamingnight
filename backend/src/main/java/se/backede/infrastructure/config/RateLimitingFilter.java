@@ -29,6 +29,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final String CREATE_USER = "create-user";
     private static final String LOGIN = "login";
+    private static final String SIGNUP = "signup";
     private static final String START_COMPETITION = "start-competition";
     private static final String ENTER_RESULTS = "enter-results";
 
@@ -44,12 +45,14 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     public RateLimitingFilter(
             ObjectMapper objectMapper,
             @Value("${app.rate-limits.login.requests-per-minute:10}") int loginRequestsPerMinute,
+            @Value("${app.rate-limits.signup.requests-per-minute:5}") int signupRequestsPerMinute,
             @Value("${app.rate-limits.create-user.requests-per-minute:5}") int createUserRequestsPerMinute,
             @Value("${app.rate-limits.start-competition.requests-per-minute:10}") int startCompetitionRequestsPerMinute,
             @Value("${app.rate-limits.enter-results.requests-per-minute:30}") int enterResultsRequestsPerMinute) {
         this.objectMapper = objectMapper;
         this.requestsPerMinuteByEndpoint = Map.of(
                 LOGIN, loginRequestsPerMinute,
+                SIGNUP, signupRequestsPerMinute,
                 CREATE_USER, createUserRequestsPerMinute,
                 START_COMPETITION, startCompetitionRequestsPerMinute,
                 ENTER_RESULTS, enterResultsRequestsPerMinute
@@ -96,6 +99,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         if ("POST".equals(method) && "/api/auth/login".equals(path)) {
             return LOGIN;
+        }
+        if ("POST".equals(method) && "/api/auth/signup".equals(path)) {
+            return SIGNUP;
         }
         if ("POST".equals(method) && "/api/users".equals(path)) {
             return CREATE_USER;

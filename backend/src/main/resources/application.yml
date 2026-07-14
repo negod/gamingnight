@@ -28,6 +28,8 @@ app:
   rate-limits:
     login:
       requests-per-minute: 10
+    signup:
+      requests-per-minute: 5
     create-user:
       requests-per-minute: 5
     start-competition:
