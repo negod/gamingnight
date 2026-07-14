@@ -67,14 +67,14 @@ java -jar backend/target/gaming-night-0.0.1-SNAPSHOT.jar
 
 Required backend configuration:
 
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/gaming-night
-SPRING_DATASOURCE_USERNAME=gaming-night
-SPRING_DATASOURCE_PASSWORD=gaming-night
-APP_AUTH_TOKEN_SECRET=dev-only-change-me
-CORS_ALLOWED_ORIGINS=http://localhost:5173
-PORT=8080
-```
+| Variable | Required | Description | Local example | Production example |
+|---|---|---|---|---|
+| `SPRING_DATASOURCE_URL` | Yes outside `local` profile | JDBC URL for the PostgreSQL database. | `jdbc:postgresql://localhost:5432/gaming-night` | `jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require` |
+| `SPRING_DATASOURCE_USERNAME` | Yes outside `local` profile | PostgreSQL username. | `gaming-night` | `postgres.PROJECT_REF` |
+| `SPRING_DATASOURCE_PASSWORD` | Yes outside `local` profile | PostgreSQL password. | `gaming-night` | Provider password |
+| `APP_AUTH_TOKEN_SECRET` | Yes outside `local` profile | Secret used to sign stateless bearer tokens. Changing it invalidates existing tokens. | `dev-only-change-me` | Long random private secret |
+| `CORS_ALLOWED_ORIGINS` | No, defaults to local frontend | Comma-separated browser origins allowed to call `/api/**`. Use origins only, not `/api` paths. | `http://localhost:5173` | `https://gamingnight.pages.dev` |
+| `PORT` | No, defaults to `8080` | HTTP port for the Spring Boot server. Render normally supplies it automatically. | `8080` | Supplied by Render |
 
 For local development, `npm run dev:backend` activates the `local` profile and uses `backend/src/main/resources/application-local.yml` to connect to the Docker Compose PostgreSQL database.
 
@@ -129,9 +129,9 @@ npm run preview
 
 Frontend configuration:
 
-```text
-VITE_API_BASE_URL=http://localhost:8080/api
-```
+| Variable | Required | Description | Local example | Production example |
+|---|---|---|---|---|
+| `VITE_API_BASE_URL` | Yes for production builds | Backend API base URL embedded by Vite at build time. It must point to the backend and end in `/api`; changing it requires a new frontend build and deploy. | `http://localhost:8080/api` | `https://gaming-night-api.onrender.com/api` |
 
 For production, set `VITE_API_BASE_URL` to the deployed backend API base URL before building the frontend.
 
@@ -295,28 +295,26 @@ OWASP Dependency-Check runs on the weekly schedule and on manual `workflow_dispa
 
 On pushes to `main`, it also deploys when these GitHub secrets are configured:
 
-```text
-RENDER_DEPLOY_HOOK_URL
-CLOUDFLARE_ACCOUNT_ID
-CLOUDFLARE_API_TOKEN
-CLOUDFLARE_PAGES_PROJECT_NAME
-VITE_API_BASE_URL
-```
+| Secret | Required for | Description |
+|---|---|---|
+| `RENDER_DEPLOY_HOOK_URL` | Backend deploy | Render deploy hook URL for the backend service. |
+| `CLOUDFLARE_ACCOUNT_ID` | Frontend deploy | Cloudflare account id. |
+| `CLOUDFLARE_API_TOKEN` | Frontend deploy | Cloudflare API token with permission to deploy the Pages project. |
+| `CLOUDFLARE_PAGES_PROJECT_NAME` | Frontend deploy | Cloudflare Pages project name for Wrangler/direct upload deploys. |
+| `VITE_API_BASE_URL` | Frontend deploy | Production backend API base URL embedded into the frontend build, for example `https://gaming-night-api.onrender.com/api`. |
 
 The dependency scan reads `NVD_API_KEY` from GitHub Actions secrets, with a fallback to an Actions variable of the same name, and lets the OWASP Dependency-Check Maven plugin read it from the environment. The workflow restores the Dependency-Check data directory at `~/.cache/dependency-check`, runs `dependency-check:update-only`, saves the refreshed database before scanning, and then scans with `autoUpdate=false`. The first run after a cache miss downloads the NVD database, while later runs reuse the cached database and fetch updates. The scan uses `backend/owasp-suppressions.xml` for suppressions, disables the optional Sonatype OSS Index analyzer to avoid unrelated credential failures, and uploads the HTML report as a workflow artifact. A failing scheduled/manual scan marks that workflow run failed but does not block push deployments.
 
 After the Render backend and Cloudflare frontend deployment jobs complete successfully on `main`, the workflow runs a production E2E job. Manual and scheduled E2E runs require the backend tests, frontend tests, and builds to pass first. The E2E job requires these additional GitHub secrets:
 
-```text
-E2E_BASE_URL
-E2E_API_BASE_URL
-E2E_ADMIN_USERNAME
-E2E_ADMIN_PASSWORD
-E2E_USER_USERNAME
-E2E_USER_PASSWORD
-```
-
-`E2E_BASE_URL` must be the deployed Cloudflare frontend origin. `E2E_API_BASE_URL` must be the deployed Render backend API base URL ending in `/api`; the workflow derives `/actuator/health` from it while waiting for the backend.
+| Secret | Description | Example |
+|---|---|---|
+| `E2E_BASE_URL` | Public frontend origin that Playwright opens in the browser. Do not include `/api` or another path. | `https://gamingnight.pages.dev` |
+| `E2E_API_BASE_URL` | Public backend API base URL used by Playwright global setup to log in directly. Must end in `/api`; the workflow derives `/actuator/health` from it while waiting for the backend. | `https://gaming-night-api.onrender.com/api` |
+| `E2E_ADMIN_USERNAME` | Username for a dedicated production-safe admin E2E account. | `e2e-admin` |
+| `E2E_ADMIN_PASSWORD` | Password for the admin E2E account. | GitHub secret value |
+| `E2E_USER_USERNAME` | Username for a dedicated production-safe regular E2E account. | `e2e-user` |
+| `E2E_USER_PASSWORD` | Password for the regular E2E account. | GitHub secret value |
 
 The E2E users must be dedicated production-safe accounts. Do not use the seeded development credentials in production. The admin account needs access to create and delete `e2e-` prefixed players, teams, games, and competitions. The normal user account needs access to its own user page and open competition registration.
 

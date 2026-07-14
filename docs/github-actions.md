@@ -28,7 +28,13 @@ Add these in GitHub: `Settings -> Secrets and variables -> Actions -> Repository
 | `CLOUDFLARE_ACCOUNT_ID` | Frontend deploy | Cloudflare account id. |
 | `CLOUDFLARE_API_TOKEN` | Frontend deploy | Cloudflare API token with permission to deploy the Pages project. |
 | `CLOUDFLARE_PAGES_PROJECT_NAME` | Frontend deploy | Cloudflare Pages project name for Wrangler/direct upload deploys. |
-| `VITE_API_BASE_URL` | Frontend deploy | Production backend API URL, for example `https://gaming-night-api.onrender.com/api`. |
+| `VITE_API_BASE_URL` | Frontend deploy | Production backend API base URL embedded into the Vite frontend build. It must point to the backend and end in `/api`, for example `https://gaming-night-api.onrender.com/api`. |
+| `E2E_BASE_URL` | Production E2E | Public frontend origin that Playwright opens in the browser. Do not include `/api` or another path, for example `https://gamingnight.pages.dev`. |
+| `E2E_API_BASE_URL` | Production E2E | Public backend API base URL used by Playwright global setup to log in directly. Must end in `/api`, for example `https://gaming-night-api.onrender.com/api`. |
+| `E2E_ADMIN_USERNAME` | Production E2E | Username for a dedicated production-safe admin E2E account. |
+| `E2E_ADMIN_PASSWORD` | Production E2E | Password for the admin E2E account. |
+| `E2E_USER_USERNAME` | Production E2E | Username for a dedicated production-safe regular E2E account. |
+| `E2E_USER_PASSWORD` | Production E2E | Password for the regular E2E account. |
 | `NVD_API_KEY` | Dependency scan | Optional but recommended NVD API key for OWASP Dependency-Check. Store it as a repository secret; the workflow also accepts an Actions variable with the same name. The key is read from the environment by the Maven plugin. |
 
 Render runtime secrets are configured in Render, not GitHub, unless you later change the workflow to call the Render API directly.
@@ -49,13 +55,13 @@ Auto-deploy: off, if GitHub Actions should gate production deploys
 
 Set these Render environment variables:
 
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require
-SPRING_DATASOURCE_USERNAME=postgres.PROJECT_REF
-SPRING_DATASOURCE_PASSWORD=your-supabase-database-password
-APP_AUTH_TOKEN_SECRET=long-random-production-secret
-CORS_ALLOWED_ORIGINS=https://your-cloudflare-pages-domain
-```
+| Variable | Description | Example |
+|---|---|---|
+| `SPRING_DATASOURCE_URL` | JDBC URL for the PostgreSQL database. | `jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require` |
+| `SPRING_DATASOURCE_USERNAME` | PostgreSQL username. | `postgres.PROJECT_REF` |
+| `SPRING_DATASOURCE_PASSWORD` | PostgreSQL password. | `your-supabase-database-password` |
+| `APP_AUTH_TOKEN_SECRET` | Secret used to sign bearer tokens. Use a long random value; rotating it invalidates existing login tokens. | `long-random-production-secret` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins allowed to call `/api/**` from browsers. Use origins only, not `/api` paths. | `https://gamingnight.pages.dev` |
 
 Render supplies `PORT`; the backend reads it through `server.port=${PORT:8080}`.
 

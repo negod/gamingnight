@@ -192,14 +192,14 @@ Do not edit a changeset that has already been applied to any shared or productio
 
 Production backend values are required by `backend/src/main/resources/application.yml` and must be supplied as real environment variables:
 
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/gaming-night
-SPRING_DATASOURCE_USERNAME=gaming-night
-SPRING_DATASOURCE_PASSWORD=gaming-night
-APP_AUTH_TOKEN_SECRET=dev-only-change-me
-CORS_ALLOWED_ORIGINS=http://localhost:5173
-PORT=8080
-```
+| Variable | Set in | Description | Example |
+|---|---|---|---|
+| `SPRING_DATASOURCE_URL` | Backend host, for example Render | JDBC URL for the PostgreSQL database. | `jdbc:postgresql://aws-REGION.pooler.supabase.com:5432/postgres?sslmode=require` |
+| `SPRING_DATASOURCE_USERNAME` | Backend host | PostgreSQL username. | `postgres.PROJECT_REF` |
+| `SPRING_DATASOURCE_PASSWORD` | Backend host | PostgreSQL password. | `your-database-password` |
+| `APP_AUTH_TOKEN_SECRET` | Backend host | Secret used to sign bearer tokens. Changing it invalidates existing login tokens. | `long-random-production-secret` |
+| `CORS_ALLOWED_ORIGINS` | Backend host | Comma-separated frontend origins allowed to call `/api/**` from browsers. Use origins only, not `/api` paths. | `https://gamingnight.pages.dev` |
+| `PORT` | Backend host | HTTP port for the Spring Boot server. Render usually supplies this automatically. | `8080` |
 
 Set `APP_AUTH_TOKEN_SECRET` to a strong private value outside local development. Existing login tokens become invalid when this value changes.
 
@@ -207,9 +207,18 @@ Local development uses `backend/src/main/resources/application-local.yml` throug
 
 Frontend defaults are defined in `frontend/.env.example`:
 
-```text
-VITE_API_BASE_URL=http://localhost:8080/api
-```
+| Variable | Set in | Description | Example |
+|---|---|---|---|
+| `VITE_API_BASE_URL` | Frontend build environment, for example Cloudflare Pages or GitHub Actions | Backend API base URL embedded into the Vite build. Must point to the backend and end in `/api`. Rebuild and redeploy the frontend after changing it. | `https://gaming-night-api.onrender.com/api` |
+
+Production E2E tests use separate GitHub Actions secrets:
+
+| Variable | Description | Example |
+|---|---|---|
+| `E2E_BASE_URL` | Public frontend origin that Playwright opens in the browser. Do not include `/api` or another path. | `https://gamingnight.pages.dev` |
+| `E2E_API_BASE_URL` | Public backend API base URL used by Playwright global setup to log in directly. Must end in `/api`. | `https://gaming-night-api.onrender.com/api` |
+| `E2E_ADMIN_USERNAME` / `E2E_ADMIN_PASSWORD` | Dedicated production-safe admin account for E2E setup and admin flows. | `e2e-admin` / secret |
+| `E2E_USER_USERNAME` / `E2E_USER_PASSWORD` | Dedicated production-safe regular user account for E2E user flows. | `e2e-user` / secret |
 
 ## Tests And Builds
 
