@@ -1,6 +1,7 @@
 import { Crown, Minus, Pencil } from 'lucide-react';
 import type { Match, PlayerResult } from '../../../shared/types/match';
 import type { Game } from '../../../shared/types/game';
+import { formatResultValue, roundResultValue } from './formatResultValue';
 
 type MatchCardProps = {
   match: Match;
@@ -11,7 +12,7 @@ type MatchCardProps = {
 // ─── Winner resolution ────────────────────────────────────────────────────────
 
 function teamTotal(results: PlayerResult[], teamId: string): number {
-  return results.filter((r) => r.teamId === teamId).reduce((s, r) => s + r.value, 0);
+  return roundResultValue(results.filter((r) => r.teamId === teamId).reduce((s, r) => s + r.value, 0));
 }
 
 type WinnerOutcome = { kind: 'home' | 'away' | 'draw' } | { kind: 'unknown' };
@@ -94,7 +95,7 @@ function DuelCard({ match, game, onEdit }: { match: Match; game?: Game; onEdit?:
           )}
           {match.completed && homeResult != null ? (
             <span className={`mt-1 text-2xl font-bold tabular-nums ${homeWon ? 'text-teal-700' : 'text-slate-400'}`}>
-              {homeResult.value}
+              {formatResultValue(homeResult.value)}
             </span>
           ) : (
             <span className="mt-1 text-2xl font-bold text-slate-200">–</span>
@@ -129,7 +130,7 @@ function DuelCard({ match, game, onEdit }: { match: Match; game?: Game; onEdit?:
           )}
           {match.completed && awayResult != null ? (
             <span className={`mt-1 text-2xl font-bold tabular-nums ${awayWon ? 'text-teal-700' : 'text-slate-400'}`}>
-              {awayResult.value}
+              {formatResultValue(awayResult.value)}
             </span>
           ) : (
             <span className="mt-1 text-2xl font-bold text-slate-200">–</span>
@@ -176,7 +177,7 @@ function TeamCard({ match, game, onEdit }: { match: Match; game?: Game; onEdit?:
         <div className="flex shrink-0 flex-col items-center">
           {match.completed ? (
             <span className={`text-sm font-bold tabular-nums ${draw ? 'text-slate-500' : 'text-slate-800'}`}>
-              {homeTotal} – {awayTotal}
+              {formatResultValue(homeTotal)} – {formatResultValue(awayTotal)}
             </span>
           ) : (
             <span className="text-xs font-bold text-slate-400">VS</span>
@@ -211,7 +212,7 @@ function TeamCard({ match, game, onEdit }: { match: Match; game?: Game; onEdit?:
             {homeResults.map((r, i) => (
               <li key={i} className="flex justify-between text-sm">
                 <span className="font-medium text-slate-800 truncate">{r.playerName}</span>
-                <span className="ml-2 shrink-0 font-mono text-slate-600">{r.value}</span>
+                <span className="ml-2 shrink-0 font-mono text-slate-600">{formatResultValue(r.value)}</span>
               </li>
             ))}
           </ul>
@@ -219,7 +220,7 @@ function TeamCard({ match, game, onEdit }: { match: Match; game?: Game; onEdit?:
             {awayResults.map((r, i) => (
               <li key={i} className="flex justify-between text-sm">
                 <span className="font-medium text-slate-800 truncate">{r.playerName}</span>
-                <span className="ml-2 shrink-0 font-mono text-slate-600">{r.value}</span>
+                <span className="ml-2 shrink-0 font-mono text-slate-600">{formatResultValue(r.value)}</span>
               </li>
             ))}
           </ul>

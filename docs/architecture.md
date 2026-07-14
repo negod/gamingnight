@@ -96,6 +96,7 @@ Player result values accept scores or times from `-99999.0` through `99999.0` wi
 - **Total player** - same placement-point system per player.
 
 The column header (`Total Score`, `Average Score`, `Total Time`, `Average Time`) is computed from the game's type and calculation method and returned alongside the leaderboard rows.
+Aggregated decimal result values are rounded to at most three decimal places in per-game leaderboards and match result displays.
 
 ## Security Architecture
 

@@ -176,7 +176,11 @@ public class LeaderboardUseCaseService {
     }
 
     private static double aggregate(List<Double> values) {
-        return values.stream().mapToDouble(Double::doubleValue).sum();
+        return roundToThreeDecimals(values.stream().mapToDouble(Double::doubleValue).sum());
+    }
+
+    private static double roundToThreeDecimals(double value) {
+        return Math.round(value * 1000.0) / 1000.0;
     }
 
     private static boolean highScoreWins(Game game) {

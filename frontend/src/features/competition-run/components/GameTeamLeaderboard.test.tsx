@@ -44,3 +44,18 @@ test('displays rank numbers', () => {
   expect(cells[0]).toHaveTextContent('1');
   expect(cells[3]).toHaveTextContent('2');
 });
+
+test('formats decimal values with at most three places', () => {
+  const leaderboard: GameTeamLeaderboardType = {
+    columnHeader: 'Total Score',
+    rows: [
+      { rank: 1, teamId: 'a', teamName: 'Alpha', value: 0.30000000000000004 },
+      { rank: 2, teamId: 'b', teamName: 'Beta', value: 0.1234567 },
+    ],
+  };
+
+  render(<GameTeamLeaderboard leaderboard={leaderboard} />);
+
+  expect(screen.getByText('0.3')).toBeInTheDocument();
+  expect(screen.getByText('0.123')).toBeInTheDocument();
+});

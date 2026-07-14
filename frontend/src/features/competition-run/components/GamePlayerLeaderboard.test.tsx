@@ -29,15 +29,19 @@ test('shows no results message when rows are empty', () => {
   expect(screen.getByText(/no results yet/i)).toBeInTheDocument();
 });
 
-test('displays decimal values formatted to two places', () => {
+test('displays decimal values with at most three places', () => {
   const leaderboard: GamePlayerLeaderboardType = {
     columnHeader: 'Average Time',
-    rows: [{ rank: 1, playerId: 'a', playerName: 'Alice', value: 12.5 }],
+    rows: [
+      { rank: 1, playerId: 'a', playerName: 'Alice', value: 12.5 },
+      { rank: 2, playerId: 'b', playerName: 'Bob', value: 12.34567 },
+    ],
   };
 
   render(<GamePlayerLeaderboard leaderboard={leaderboard} />);
 
-  expect(screen.getByText('12.50')).toBeInTheDocument();
+  expect(screen.getByText('12.5')).toBeInTheDocument();
+  expect(screen.getByText('12.346')).toBeInTheDocument();
 });
 
 test('displays rank numbers', () => {

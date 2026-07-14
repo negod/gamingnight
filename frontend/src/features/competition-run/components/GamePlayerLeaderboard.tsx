@@ -1,4 +1,5 @@
 import type { GamePlayerLeaderboard as GamePlayerLeaderboardType } from '../../../shared/types/leaderboard';
+import { formatResultValue } from './formatResultValue';
 
 type Props = { leaderboard: GamePlayerLeaderboardType };
 
@@ -22,7 +23,7 @@ export function GamePlayerLeaderboard({ leaderboard }: Props) {
             <td className="py-2 pr-4 font-mono text-slate-500">{row.rank}</td>
             <td className="py-2 pr-4 font-medium text-slate-900">{row.playerName}</td>
             <td className="py-2 text-right font-mono text-slate-700">
-              {row.value % 1 === 0 ? row.value.toFixed(0) : row.value.toFixed(2)}
+              {formatResultValue(row.value)}
             </td>
           </tr>
         ))}

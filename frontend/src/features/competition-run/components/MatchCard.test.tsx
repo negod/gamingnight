@@ -27,6 +27,43 @@ describe('MatchCard', () => {
     expect(screen.getByText('13')).toBeInTheDocument();
   });
 
+  it('rounds merged team totals to at most three decimals', () => {
+    render(
+      <MatchCard
+        match={match({
+          completed: true,
+          results: [
+            result('player-1', 'home-team', 'Alice', 'Alpha', 0.1),
+            result('player-2', 'home-team', 'Aron', 'Alpha', 0.2),
+            result('player-3', 'away-team', 'Bob', 'Beta', 0.1234567),
+          ],
+        })}
+        game={game('TEAM_VS_TEAM')}
+      />,
+    );
+
+    expect(screen.getByText('0.3 – 0.123')).toBeInTheDocument();
+    expect(screen.queryByText(/0\.300000/)).not.toBeInTheDocument();
+  });
+
+  it('formats duel values with at most three decimals', () => {
+    render(
+      <MatchCard
+        match={match({
+          completed: true,
+          results: [
+            result('player-1', 'home-team', 'Alice', 'Alpha', 1.23456),
+            result('player-2', 'away-team', 'Bob', 'Beta', 2),
+          ],
+        })}
+        game={game('PLAYER_VS_PLAYER')}
+      />,
+    );
+
+    expect(screen.getByText('1.235')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
   it('renders duel player names and calls edit handler', async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();

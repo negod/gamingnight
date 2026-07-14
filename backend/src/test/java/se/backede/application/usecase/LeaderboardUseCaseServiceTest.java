@@ -119,6 +119,34 @@ class LeaderboardUseCaseServiceTest {
     }
 
     @Test
+    void gameTeamLeaderboardRoundsAggregatedValuesToThreeDecimals() {
+        var competitionId = UUID.randomUUID();
+        var gameId = UUID.randomUUID();
+        var teamA = UUID.randomUUID();
+        var teamB = UUID.randomUUID();
+        var game = scoredGame(gameId);
+        var playerA = UUID.randomUUID();
+        var playerB = UUID.randomUUID();
+        var playerC = UUID.randomUUID();
+
+        var match = matchWithResults(competitionId, gameId, teamA, teamB,
+                List.of(
+                        new PlayerResult(playerA, teamA, 0.1),
+                        new PlayerResult(playerB, teamA, 0.2),
+                        new PlayerResult(playerC, teamB, 0.1234567)
+                ));
+
+        when(gameRepo.findById(gameId)).thenReturn(Optional.of(game));
+        when(matchRepo.findByCompetitionIdAndGameId(competitionId, gameId)).thenReturn(List.of(match));
+        when(teamRepo.findById(teamA)).thenReturn(Optional.of(team(teamA, "Alpha")));
+        when(teamRepo.findById(teamB)).thenReturn(Optional.of(team(teamB, "Beta")));
+
+        var response = service.getGameTeamLeaderboard(competitionId, gameId);
+
+        assertThat(response.rows()).extracting("value").containsExactly(0.3, 0.123);
+    }
+
+    @Test
     void totalTeamLeaderboardAppliesPlacementPoints() {
         var competitionId = UUID.randomUUID();
         var gameId = UUID.randomUUID();
