@@ -22,7 +22,7 @@ class GameTest {
     @Test
     void createsGameWithAllRequiredFields() {
         var game = Game.create(
-                "Bowling", "Standard bowling rules", "Wii", "Bowling",
+                "Bowling", "Standard bowling rules", "Wii", "Bowling", "https://en.wikipedia.org/wiki/Bowling",
                 MatchType.FREE_FOR_ALL, DEFAULT_PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null, NOW);
@@ -30,6 +30,7 @@ class GameTest {
         assertThat(game.id()).isNotNull();
         assertThat(game.name()).isEqualTo("Bowling");
         assertThat(game.description()).isEqualTo("Standard bowling rules");
+        assertThat(game.referenceUrl()).isEqualTo("https://en.wikipedia.org/wiki/Bowling");
         assertThat(game.isActive()).isTrue();
         assertThat(game.matchType()).isEqualTo(MatchType.FREE_FOR_ALL);
         assertThat(game.resultType()).isEqualTo(ResultType.SCORE);
@@ -43,7 +44,7 @@ class GameTest {
     @Test
     void treatsNullDescriptionAsEmpty() {
         var game = Game.create(
-                "Darts", null, null, null,
+                "Darts", null, null, null, null,
                 MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null, NOW);
@@ -52,9 +53,55 @@ class GameTest {
     }
 
     @Test
+    void treatsNullReferenceUrlAsEmpty() {
+        var game = Game.create(
+                "Darts", null, null, null, null,
+                MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null, NOW);
+
+        assertThat(game.referenceUrl()).isEqualTo("");
+    }
+
+    @Test
+    void acceptsHttpReferenceUrl() {
+        var game = Game.create(
+                "Darts", null, null, null, "http://example.com/rules",
+                MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null, NOW);
+
+        assertThat(game.referenceUrl()).isEqualTo("http://example.com/rules");
+    }
+
+    @Test
+    void rejectsReferenceUrlWithDisallowedScheme() {
+        assertThatThrownBy(() -> Game.create(
+                "Darts", null, null, null, "javascript:alert(1)",
+                MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null, NOW))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Reference URL must start with http:// or https://");
+    }
+
+    @Test
+    void rejectsTooLongReferenceUrl() {
+        var url = "https://example.com/" + "a".repeat(2048);
+
+        assertThatThrownBy(() -> Game.create(
+                "Darts", null, null, null, url,
+                MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
+                WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
+                null, null, null, null, NOW))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Reference URL must be at most 2048 characters");
+    }
+
+    @Test
     void normalisesNullBonusRulesToEmptyList() {
         var game = Game.create(
-                "Darts", null, null, null,
+                "Darts", null, null, null, null,
                 MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null, NOW);
@@ -65,7 +112,7 @@ class GameTest {
     @Test
     void rejectsMissingName() {
         assertThatThrownBy(() -> Game.create(
-                "  ", null, null, null,
+                "  ", null, null, null, null,
                 MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null, NOW))
@@ -78,7 +125,7 @@ class GameTest {
         var name = "a".repeat(121);
 
         assertThatThrownBy(() -> Game.create(
-                name, null, null, null,
+                name, null, null, null, null,
                 MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null, NOW))
@@ -92,13 +139,13 @@ class GameTest {
         var updatedAt = Instant.parse("2026-01-02T10:00:00Z");
         var newScoring = WinnerTakesAllScoringRule.of(5);
         var game = Game.rehydrate(
-                UUID.randomUUID(), "Bowling", "", null, null, true,
+                UUID.randomUUID(), "Bowling", "", null, null, null, true,
                 MatchType.FREE_FOR_ALL, DEFAULT_PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, DEFAULT_SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, List.of(), createdAt, createdAt);
 
         var updated = game.update(
-                "Darts", "New rules", null, null, false,
+                "Darts", "New rules", null, null, "https://example.com/darts", false,
                 MatchType.PLAYER_VS_PLAYER, DEFAULT_PARTICIPANTS, ResultType.WINNER_ONLY,
                 WinnerRule.LAST_REMAINING_WINS, newScoring, TieBreakerRule.EXTRA_ROUND,
                 null, null, null, null, updatedAt);
@@ -107,6 +154,7 @@ class GameTest {
         assertThat(updated.name()).isEqualTo("Darts");
         assertThat(updated.matchType()).isEqualTo(MatchType.PLAYER_VS_PLAYER);
         assertThat(updated.resultType()).isEqualTo(ResultType.WINNER_ONLY);
+        assertThat(updated.referenceUrl()).isEqualTo("https://example.com/darts");
         assertThat(updated.isActive()).isFalse();
         assertThat(updated.createdAt()).isEqualTo(createdAt);
         assertThat(updated.updatedAt()).isEqualTo(updatedAt);

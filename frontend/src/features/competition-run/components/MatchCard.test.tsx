@@ -126,6 +126,7 @@ function game(matchType: Game['matchType']): Game {
     description: '',
     platform: null,
     genre: null,
+    referenceUrl: null,
     isActive: true,
     matchType,
     participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 4, numberOfTeams: null, allowSubstitutes: false },

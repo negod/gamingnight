@@ -24,6 +24,10 @@ public record UpdateGameRequest(
         String description,
         String platform,
         String genre,
+
+        @Size(max = 2048, message = "Reference URL must be at most 2048 characters")
+        String referenceUrl,
+
         boolean isActive,
 
         @NotNull(message = "matchType is required")

@@ -4,8 +4,8 @@ databaseChangeLog:
   # 0010-create-users, 0011-add-user-passwords, 0012-add-email-to-users,
   # 0013-add-game-rule-columns, 0014-migrate-game-seed-data, 0017-backfill-game-rule-columns,
   # 0015-apply-game-rule-not-null, 0016-drop-old-game-columns, 0018-add-competition-registrations,
-  # 0019-add-competition-registration-open
-  # Note: Gaps exist at 0001, 0004, 0005 due to historical deletions. Next available: 0020
+  # 0019-add-competition-registration-open, 0020-add-reference-url-to-games
+  # Note: Gaps exist at 0001, 0004, 0005 due to historical deletions. Next available: 0021
   - include:
       file: db/changelog/changes/0002-create-players.yaml
   - include:
@@ -42,3 +42,5 @@ databaseChangeLog:
       file: db/changelog/changes/0018-add-competition-registrations.yaml
   - include:
       file: db/changelog/changes/0019-add-competition-registration-open.yaml
+  - include:
+      file: db/changelog/changes/0020-add-reference-url-to-games.yaml

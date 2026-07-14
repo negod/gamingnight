@@ -15,6 +15,7 @@ public final class GameDtoMapper {
                 game.description(),
                 game.platform(),
                 game.genre(),
+                game.referenceUrl(),
                 game.isActive(),
                 game.matchType(),
                 game.participantRule(),

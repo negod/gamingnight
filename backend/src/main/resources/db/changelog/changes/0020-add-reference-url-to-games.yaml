@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0020-add-reference-url-to-games
+      author: backede
+      changes:
+        - addColumn:
+            tableName: games
+            columns:
+              - column:
+                  name: reference_url
+                  type: varchar(2048)
+                  constraints:
+                    nullable: true

@@ -35,6 +35,7 @@ export function EditGamePage() {
             description: game.description,
             platform: game.platform,
             genre: game.genre,
+            referenceUrl: game.referenceUrl,
             isActive: game.isActive,
             matchType: game.matchType,
             participantRule: game.participantRule,

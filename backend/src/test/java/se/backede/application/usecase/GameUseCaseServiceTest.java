@@ -59,6 +59,7 @@ class GameUseCaseServiceTest {
         assertThat(response.name()).isEqualTo("Bowling");
         assertThat(response.matchType()).isEqualTo(MatchType.FREE_FOR_ALL);
         assertThat(response.resultType()).isEqualTo(ResultType.SCORE);
+        assertThat(response.referenceUrl()).isEqualTo("https://en.wikipedia.org/wiki/Bowling");
         assertThat(response.isActive()).isTrue();
         assertThat(response.createdAt()).isEqualTo(NOW);
     }
@@ -110,7 +111,7 @@ class GameUseCaseServiceTest {
         when(repository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var updateRequest = new UpdateGameRequest(
-                "Darts", "Updated", null, null, true,
+                "Darts", "Updated", null, null, null, true,
                 MatchType.PLAYER_VS_PLAYER, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null);
@@ -143,7 +144,7 @@ class GameUseCaseServiceTest {
 
     private static CreateGameRequest bowlingRequest() {
         return new CreateGameRequest(
-                "Bowling", "Standard bowling rules", "Wii", "Sports",
+                "Bowling", "Standard bowling rules", "Wii", "Sports", "https://en.wikipedia.org/wiki/Bowling",
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null);
@@ -155,7 +156,7 @@ class GameUseCaseServiceTest {
 
     private static Game bowlingGame(Instant createdAt) {
         return Game.create(
-                "Bowling", "", null, null,
+                "Bowling", "", null, null, null,
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null, createdAt);

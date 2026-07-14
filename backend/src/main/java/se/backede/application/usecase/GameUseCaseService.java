@@ -31,7 +31,7 @@ public class GameUseCaseService {
 
     public GameResponse create(CreateGameRequest request) {
         var game = Game.create(
-                request.name(), request.description(), request.platform(), request.genre(),
+                request.name(), request.description(), request.platform(), request.genre(), request.referenceUrl(),
                 request.matchType(), request.participantRule(), request.resultType(),
                 request.winnerRule(), request.scoringRule(), request.tieBreakerRule(),
                 request.validationRule(), request.rotationRule(), request.timeLimitRule(),
@@ -57,7 +57,7 @@ public class GameUseCaseService {
     public GameResponse update(UUID id, UpdateGameRequest request) {
         var game = repository.findById(id).orElseThrow(() -> gameNotFound(id));
         var updated = game.update(
-                request.name(), request.description(), request.platform(), request.genre(),
+                request.name(), request.description(), request.platform(), request.genre(), request.referenceUrl(),
                 request.isActive(), request.matchType(), request.participantRule(), request.resultType(),
                 request.winnerRule(), request.scoringRule(), request.tieBreakerRule(),
                 request.validationRule(), request.rotationRule(), request.timeLimitRule(),

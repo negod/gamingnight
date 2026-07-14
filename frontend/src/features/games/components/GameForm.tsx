@@ -26,6 +26,7 @@ const defaultValues: GameFormValues = {
   description: '',
   platform: null,
   genre: null,
+  referenceUrl: null,
   isActive: true,
   matchType: 'FREE_FOR_ALL',
   participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 4, numberOfTeams: null, allowSubstitutes: false },
@@ -341,7 +342,7 @@ export function GameForm({ initialValues, submitLabel, onSubmit }: GameFormProps
           </span>
           <textarea className={inputCls} rows={2} value={values.description ?? ''}
             onChange={(e) => set('description', e.target.value)} />
-          <Hint>Shown to admins when adding this game to a competition. Useful for noting special rules or setup instructions.</Hint>
+          <Hint>Shown to players and admins wherever this game appears in a competition. Useful for noting special rules or setup instructions.</Hint>
         </label>
 
         <div className="grid grid-cols-2 gap-3">
@@ -362,6 +363,16 @@ export function GameForm({ initialValues, submitLabel, onSubmit }: GameFormProps
               onChange={(e) => set('genre', e.target.value || null)} />
           </label>
         </div>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">
+            Reference link <span className="font-normal text-slate-500">(optional)</span>
+          </span>
+          <input className={inputCls} type="url" placeholder="https://... (a rules site, a YouTube video, etc.)"
+            value={values.referenceUrl ?? ''}
+            onChange={(e) => set('referenceUrl', e.target.value || null)} />
+          <Hint>Shown to players as a clickable link, e.g. a rules explainer or a how-to-play video. Must start with http:// or https://.</Hint>
+        </label>
 
         <div>
           <label className="flex cursor-pointer items-center gap-2">

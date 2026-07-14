@@ -76,7 +76,7 @@ class GameControllerTest {
     @Test
     void returnsBadRequestWhenNameIsMissing() throws Exception {
         var request = new CreateGameRequest(
-                "", null, null, null,
+                "", null, null, null, null,
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null);
@@ -142,7 +142,7 @@ class GameControllerTest {
     void updatesGame() throws Exception {
         var id = UUID.randomUUID();
         var request = new UpdateGameRequest(
-                "Darts", null, null, null, true,
+                "Darts", null, null, null, null, true,
                 MatchType.PLAYER_VS_PLAYER, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null);
@@ -172,7 +172,7 @@ class GameControllerTest {
 
     private static CreateGameRequest bowlingRequest() {
         return new CreateGameRequest(
-                "Bowling", null, null, null,
+                "Bowling", null, null, null, null,
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, null);
@@ -180,7 +180,7 @@ class GameControllerTest {
 
     private static GameResponse response(UUID id, String name) {
         var now = Instant.parse("2026-01-01T10:00:00Z");
-        return new GameResponse(id, name, "", null, null, true,
+        return new GameResponse(id, name, "", null, null, null, true,
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, List.of(), now, now);

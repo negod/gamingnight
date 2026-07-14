@@ -88,7 +88,7 @@ class GameRulesValidatorTest {
     private static Game game(ResultType resultType, WinnerRule winnerRule, ScoringRule scoringRule,
                               ValidationRule validationRule) {
         return Game.rehydrate(
-                UUID.randomUUID(), "Test Game", "", null, null, true,
+                UUID.randomUUID(), "Test Game", "", null, null, null, true,
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, resultType, winnerRule, scoringRule,
                 TieBreakerRule.ALLOW_DRAW, validationRule, null, null, List.of(), NOW, NOW);
     }
