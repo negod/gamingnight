@@ -23,6 +23,8 @@ The stack is React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, Post
 - Log in with role-based access control.
 - Administer system users with `ADMIN` or `USER` roles.
 - Tie each system user to exactly one player.
+- Let users edit their own email and Player callsign without exposing their role.
+- Keep usernames, emails, and Player callsigns unique across the application.
 - Manage games with score-based or time-based ranking and sum or average calculations.
 - Manage teams with globally unique team names.
 - Create competitions with ordered games and assigned teams.
@@ -178,7 +180,7 @@ After starting the backend and frontend, open `http://localhost:5173` and log in
 To add a database change:
 
 1. Add a new YAML changeset under `backend/src/main/resources/db/changelog/changes/`.
-2. Use the next zero-padded prefix and a descriptive filename, for example `0020-add-avatar-to-players.yaml`.
+2. Use the next zero-padded prefix and a descriptive filename, for example `0021-add-avatar-to-players.yaml`.
 3. Set the changeset `id` to the filename without `.yaml`.
 4. Append the file to `db.changelog-master.yaml`.
 5. Start the backend against local PostgreSQL and confirm Liquibase applies the change.

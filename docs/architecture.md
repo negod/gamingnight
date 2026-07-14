@@ -41,8 +41,8 @@ The infrastructure layer contains adapters that implement the ports defined in t
 
 | Model | Description |
 |---|---|
-| `Player` | A registered participant |
-| `User` | A system user with a username, role, and required player link |
+| `Player` | A registered participant, shown to users as a Player callsign |
+| `User` | A system user with a unique username, optional unique email, role, and required player link |
 | `UserRole` | Role enum with `ADMIN` and `USER` |
 | `Game` | A game with `GameType` (SCORE_BASED / TIME_BASED) and `CalculationMethod` (SUM / AVERAGE) |
 | `Team` | A named group of players. Team names are unique across the application |
@@ -55,11 +55,11 @@ The infrastructure layer contains adapters that implement the ports defined in t
 
 ### Player Management
 
-Administrators manage participants through `/api/players` and the `/players` frontend section. Players can be created, listed, edited, and deleted before they are assigned to teams.
+Administrators manage participants through `/api/players` and the `/players` frontend section. Players can be created, listed, edited, and deleted before they are assigned to teams. Player names are unique case-insensitively across the application and are labeled as Player callsigns in user-facing account screens.
 
 ### User Administration
 
-Administrators manage system users through `/api/users` and the `/users` frontend section. A user has a unique username, password, one role (`ADMIN` or `USER`), and must be tied to an existing player. A player can only be tied to one user.
+Administrators manage system users through `/api/users` and the `/users` frontend section. A user has a unique username, optional unique email, password, one role (`ADMIN` or `USER`), and must be tied to an existing player. A player can only be tied to one user. Authenticated users can manage their own email and linked player's Player callsign through `/api/users/me`; this self-service flow never changes username, role, password, or player link.
 
 ### Game Management
 
@@ -118,7 +118,7 @@ Two roles exist: `ADMIN` and `USER` (`UserRole`). Authorization is enforced at t
 | Capability | ADMIN | USER |
 |---|---|---|
 | `POST /api/auth/login`, `POST /api/auth/signup` | Public | Public |
-| `GET /api/users/me` | ✅ | ✅ |
+| `GET /api/users/me` and `PUT /api/users/me` | ✅ | ✅ |
 | `GET` on competitions, matches, and leaderboards (`/api/competitions/**`) | ✅ (all) | ✅, open setup competitions are visible; started competitions are filtered to competitions where the user's linked player is registered or belongs to a competition team |
 | `GET` a single game, team, or player (`/api/games/*`, `/api/teams/*`, `/api/players/*`) | ✅ | ✅ |
 | Register/unregister own player for an open setup competition | ✅ | ✅ |
@@ -179,6 +179,7 @@ Known gaps, not yet resolved: no token revocation/blacklist (a leaked token stay
 | GET | `/api/users` | List users |
 | GET | `/api/users/me` | Get the authenticated user's profile |
 | GET | `/api/users/{id}` | Get user |
+| PUT | `/api/users/me` | Update authenticated user's email and Player callsign |
 | PUT | `/api/users/{id}` | Update username, password, role, or player link |
 | DELETE | `/api/users/{id}` | Delete user |
 
@@ -259,9 +260,9 @@ UI components do not call `fetch` directly.
 
 | File | Role |
 |---|---|
-| `api/usersApi.ts` | listUsers, getUser, getCurrentUser, createUser, updateUser, deleteUser |
-| `components/UserList` | Table of users with role, player link, edit, and delete actions |
-| `components/UserForm` | Form for username, password, role, and player assignment |
+| `api/usersApi.ts` | listUsers, getUser, getCurrentUser, updateCurrentUser, createUser, updateUser, deleteUser |
+| `components/UserList` | Table of users with role, Player callsign link, edit, and delete actions |
+| `components/UserForm` | Form for username, password, role, and Player callsign assignment |
 | `pages/UsersPage` | List page with delete confirmation |
 | `pages/CreateUserPage` | Create form wired to POST /api/users |
 | `pages/EditUserPage` | Edit form wired to PUT /api/users/{id} |

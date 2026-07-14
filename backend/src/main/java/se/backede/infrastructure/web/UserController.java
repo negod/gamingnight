@@ -1,6 +1,7 @@
 package se.backede.infrastructure.web;
 
 import se.backede.application.dto.CreateUserRequest;
+import se.backede.application.dto.UpdateCurrentUserRequest;
 import se.backede.application.dto.UpdateUserRequest;
 import se.backede.application.dto.UserResponse;
 import se.backede.application.usecase.UserUseCaseService;
@@ -43,6 +44,11 @@ public class UserController {
     @GetMapping("/me")
     UserResponse me() {
         return userUseCaseService.getMe(AuthContext.requireUser().id());
+    }
+
+    @PutMapping("/me")
+    UserResponse updateMe(@Valid @RequestBody UpdateCurrentUserRequest request) {
+        return userUseCaseService.updateMe(AuthContext.requireUser().id(), request);
     }
 
     @GetMapping("/{id}")

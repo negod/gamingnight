@@ -20,7 +20,7 @@ export function UserList({ users, onDelete }: UserListProps) {
             <th className="px-4 py-3 font-medium">Username</th>
             <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Role</th>
-            <th className="px-4 py-3 font-medium">Player</th>
+            <th className="px-4 py-3 font-medium">Player callsign</th>
             <th className="px-4 py-3 font-medium">Created</th>
             <th className="px-4 py-3 font-medium sr-only">Actions</th>
           </tr>

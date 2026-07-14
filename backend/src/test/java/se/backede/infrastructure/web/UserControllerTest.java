@@ -1,12 +1,16 @@
 package se.backede.infrastructure.web;
 
 import se.backede.application.dto.CreateUserRequest;
+import se.backede.application.dto.AuthenticatedUser;
+import se.backede.application.dto.UpdateCurrentUserRequest;
 import se.backede.application.dto.UpdateUserRequest;
 import se.backede.application.dto.UserResponse;
 import se.backede.application.usecase.UserUseCaseService;
 import se.backede.domain.model.UserRole;
+import se.backede.infrastructure.security.AuthContext;
 import se.backede.shared.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -43,6 +47,11 @@ class UserControllerTest {
 
     @MockBean
     private UserUseCaseService userUseCaseService;
+
+    @AfterEach
+    void clearAuthContext() {
+        AuthContext.clear();
+    }
 
     @Test
     void createsUser() throws Exception {
@@ -122,6 +131,37 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user"))
                 .andExpect(jsonPath("$.role").value("USER"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void updatesCurrentUser() throws Exception {
+        var id = UUID.randomUUID();
+        var playerId = UUID.randomUUID();
+        var request = new UpdateCurrentUserRequest("user@example.com", "Ace");
+        AuthContext.set(new AuthenticatedUser(id, "user", UserRole.USER, playerId));
+        when(userUseCaseService.updateMe(id, request))
+                .thenReturn(response(id, "user", "user@example.com", UserRole.USER, playerId, "Ace"));
+
+        mockMvc.perform(put("/api/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user"))
+                .andExpect(jsonPath("$.email").value("user@example.com"))
+                .andExpect(jsonPath("$.playerName").value("Ace"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void updateCurrentUserRejectsBlankPlayerCallsign() throws Exception {
+        AuthContext.set(new AuthenticatedUser(UUID.randomUUID(), "user", UserRole.USER, UUID.randomUUID()));
+
+        mockMvc.perform(put("/api/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdateCurrentUserRequest("user@example.com", ""))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"));
     }
 
     @Test

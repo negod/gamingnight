@@ -5,6 +5,7 @@ import type { AppUser } from '../types/user';
 type AuthContextValue = {
   user: AppUser | null;
   login: (token: string, user: AppUser) => void;
+  updateUser: (user: AppUser) => void;
   logout: () => void;
 };
 
@@ -33,6 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       login: (token, nextUser) => {
         setAuthToken(token);
+        localStorage.setItem(storageKey, JSON.stringify(nextUser));
+        setUser(nextUser);
+      },
+      updateUser: (nextUser) => {
         localStorage.setItem(storageKey, JSON.stringify(nextUser));
         setUser(nextUser);
       },

@@ -1,6 +1,7 @@
 package se.backede.application.usecase;
 
 import se.backede.application.dto.CreateUserRequest;
+import se.backede.application.dto.UpdateCurrentUserRequest;
 import se.backede.application.dto.UpdateUserRequest;
 import se.backede.application.dto.UserResponse;
 import se.backede.application.mapper.UserDtoMapper;
@@ -80,6 +81,21 @@ public class UserUseCaseService {
         return getById(id);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public UserResponse updateMe(UUID id, UpdateCurrentUserRequest request) {
+        var user = userRepository.findById(id).orElseThrow(() -> userNotFound(id));
+        var player = playerRepository.findById(user.playerId()).orElseThrow(() -> playerNotFound(user.playerId()));
+        validateEmailAvailableForUpdate(request.email(), id);
+        validatePlayerNameAvailableForUpdate(request.playerCallsign(), player.id());
+
+        var updatedPlayer = player.update(request.playerCallsign(), now());
+        var updatedUser = user.update(user.username(), request.email(), user.passwordHash(), user.role(), user.playerId(), now());
+
+        var savedPlayer = playerRepository.save(updatedPlayer);
+        var savedUser = userRepository.save(updatedUser);
+        return UserDtoMapper.toResponse(savedUser, savedPlayer);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(UUID id) {
         if (!userRepository.existsById(id)) {
@@ -132,6 +148,12 @@ public class UserUseCaseService {
         }
         if (userRepository.existsByPlayerIdAndIdNot(playerId, id)) {
             throw new DomainValidationException("Player is already tied to a user");
+        }
+    }
+
+    private void validatePlayerNameAvailableForUpdate(String name, UUID playerId) {
+        if (playerRepository.existsByNameIgnoreCaseAndIdNot(name, playerId)) {
+            throw new DomainValidationException("Player callsign already exists");
         }
     }
 

@@ -36,7 +36,7 @@ export function UserForm({ players, initialValues, submitLabel, onSubmit }: User
       return;
     }
     if (!values.playerId) {
-      setError('Player is required');
+      setError('Player callsign is required');
       return;
     }
 
@@ -110,14 +110,14 @@ export function UserForm({ players, initialValues, submitLabel, onSubmit }: User
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">Player</span>
+        <span className="text-sm font-medium text-slate-700">Player callsign</span>
         <select
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
           value={values.playerId}
           onChange={(e) => setValues((current) => ({ ...current, playerId: e.target.value }))}
           required
         >
-          <option value="">Select player</option>
+          <option value="">Select player callsign</option>
           {players.map((player) => (
             <option key={player.id} value={player.id}>
               {player.name}

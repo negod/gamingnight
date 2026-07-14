@@ -1,5 +1,5 @@
 import { apiRequest } from '../../../shared/api/apiClient';
-import type { AppUser, UserFormValues } from '../../../shared/types/user';
+import type { AppUser, CurrentUserFormValues, UserFormValues } from '../../../shared/types/user';
 export { listPlayers } from '../../players/api/playersApi';
 
 export function listUsers(): Promise<AppUser[]> {
@@ -12,6 +12,13 @@ export function getUser(id: string): Promise<AppUser> {
 
 export function getCurrentUser(): Promise<AppUser> {
   return apiRequest<AppUser>('/users/me');
+}
+
+export function updateCurrentUser(values: CurrentUserFormValues): Promise<AppUser> {
+  return apiRequest<AppUser>('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(values),
+  });
 }
 
 export function createUser(values: UserFormValues): Promise<AppUser> {

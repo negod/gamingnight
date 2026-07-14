@@ -52,6 +52,18 @@ public class JpaPlayerRepositoryAdapter implements PlayerRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean existsByNameIgnoreCase(String name) {
+        return repository.existsByNameIgnoreCase(name);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id) {
+        return repository.existsByNameIgnoreCaseAndIdNot(name, id);
+    }
+
+    @Override
     @Transactional
     public void deleteById(UUID id) {
         repository.deleteById(id);

@@ -4,6 +4,7 @@ import se.backede.application.dto.CreatePlayerRequest;
 import se.backede.application.dto.UpdatePlayerRequest;
 import se.backede.domain.model.Player;
 import se.backede.domain.repository.PlayerRepositoryPort;
+import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,15 @@ class PlayerUseCaseServiceTest {
     }
 
     @Test
+    void createThrowsWhenPlayerCallsignAlreadyExists() {
+        when(repository.existsByNameIgnoreCase("Alice")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.create(new CreatePlayerRequest("Alice")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Player callsign already exists");
+    }
+
+    @Test
     void listsPlayersNewestFirst() {
         var oldPlayer = Player.create("Alice", NOW.minusSeconds(60));
         var newPlayer = Player.create("Bob", NOW);
@@ -88,6 +98,17 @@ class PlayerUseCaseServiceTest {
 
         assertThat(response.name()).isEqualTo("Bob");
         assertThat(response.updatedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void updateThrowsWhenAnotherPlayerHasCallsign() {
+        var player = Player.create("Alice", NOW.minusSeconds(60));
+        when(repository.findById(player.id())).thenReturn(Optional.of(player));
+        when(repository.existsByNameIgnoreCaseAndIdNot("Bob", player.id())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.update(player.id(), new UpdatePlayerRequest("Bob")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Player callsign already exists");
     }
 
     @Test

@@ -14,7 +14,7 @@ describe('UserForm', () => {
     await user.type(screen.getByLabelText(/username/i), ' admin ');
     await user.type(screen.getByLabelText(/^password$/i), 'secret');
     await user.selectOptions(screen.getByLabelText(/role/i), 'ADMIN');
-    await user.selectOptions(screen.getByLabelText(/player/i), 'player-1');
+    await user.selectOptions(screen.getByLabelText(/player callsign/i), 'player-1');
     await user.click(screen.getByRole('button', { name: /create user/i }));
 
     expect(onSubmit).toHaveBeenCalledWith({ username: 'admin', email: '', password: 'secret', role: 'ADMIN', playerId: 'player-1' });
@@ -41,7 +41,7 @@ describe('UserForm', () => {
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/^password$/i), 'secret');
-    await user.selectOptions(screen.getByLabelText(/player/i), 'player-1');
+    await user.selectOptions(screen.getByLabelText(/player callsign/i), 'player-1');
     await user.click(screen.getByRole('button', { name: /create user/i }));
 
     expect(onSubmit).toHaveBeenCalledWith({ username: 'testuser', email: 'test@example.com', password: 'secret', role: 'USER', playerId: 'player-1' });

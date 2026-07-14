@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0020-add-unique-player-callsigns
+      author: backede
+      changes:
+        - sql:
+            sql: CREATE UNIQUE INDEX ux_players_name_lower ON players (lower(name));

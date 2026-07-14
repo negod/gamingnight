@@ -57,6 +57,9 @@ public class AuthUseCaseService {
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
             throw new DomainValidationException("Email is already registered");
         }
+        if (playerRepository.existsByNameIgnoreCase(request.username())) {
+            throw new DomainValidationException("Player callsign already exists");
+        }
         var now = Instant.now(clock);
         var player = playerRepository.save(Player.create(request.username(), now));
         var user = userRepository.save(

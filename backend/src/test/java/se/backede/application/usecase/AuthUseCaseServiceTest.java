@@ -110,6 +110,15 @@ class AuthUseCaseServiceTest {
                 .hasMessage("Email is already registered");
     }
 
+    @Test
+    void signupRejectsExistingPlayerCallsign() {
+        when(playerRepository.existsByNameIgnoreCase("alice")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.signup(new SignupRequest("alice", "alice@example.com", "password123")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Player callsign already exists");
+    }
+
     private static Player player(String name) {
         return Player.rehydrate(UUID.randomUUID(), name, NOW, NOW);
     }

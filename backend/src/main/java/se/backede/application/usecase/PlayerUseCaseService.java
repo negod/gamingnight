@@ -6,6 +6,7 @@ import se.backede.application.dto.UpdatePlayerRequest;
 import se.backede.application.mapper.PlayerDtoMapper;
 import se.backede.domain.model.Player;
 import se.backede.domain.repository.PlayerRepositoryPort;
+import se.backede.shared.exception.DomainValidationException;
 import se.backede.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class PlayerUseCaseService {
     }
 
     public PlayerResponse create(CreatePlayerRequest request) {
+        validateNameAvailable(request.name());
         var player = Player.create(request.name(), now());
         return PlayerDtoMapper.toResponse(repository.save(player));
     }
@@ -46,6 +48,7 @@ public class PlayerUseCaseService {
 
     public PlayerResponse update(UUID id, UpdatePlayerRequest request) {
         var player = repository.findById(id).orElseThrow(() -> playerNotFound(id));
+        validateNameAvailableForUpdate(request.name(), id);
         var updated = player.update(request.name(), now());
         return PlayerDtoMapper.toResponse(repository.save(updated));
     }
@@ -59,6 +62,18 @@ public class PlayerUseCaseService {
 
     private Instant now() {
         return Instant.now(clock);
+    }
+
+    private void validateNameAvailable(String name) {
+        if (repository.existsByNameIgnoreCase(name)) {
+            throw new DomainValidationException("Player callsign already exists");
+        }
+    }
+
+    private void validateNameAvailableForUpdate(String name, UUID id) {
+        if (repository.existsByNameIgnoreCaseAndIdNot(name, id)) {
+            throw new DomainValidationException("Player callsign already exists");
+        }
     }
 
     private static ResourceNotFoundException playerNotFound(UUID id) {

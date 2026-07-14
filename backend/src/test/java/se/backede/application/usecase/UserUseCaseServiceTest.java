@@ -1,6 +1,7 @@
 package se.backede.application.usecase;
 
 import se.backede.application.dto.CreateUserRequest;
+import se.backede.application.dto.UpdateCurrentUserRequest;
 import se.backede.application.dto.UpdateUserRequest;
 import se.backede.domain.model.Player;
 import se.backede.domain.model.User;
@@ -177,6 +178,50 @@ class UserUseCaseServiceTest {
         assertThatThrownBy(() -> service.update(user.id(), new UpdateUserRequest("admin", null, null, UserRole.ADMIN, player.id())))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessage("Player is already tied to a user");
+    }
+
+    @Test
+    void updatesCurrentUserEmailAndPlayerCallsignWithoutChangingRoleOrPlayerLink() {
+        var player = player("Alice");
+        var user = User.create("alice", null, "hash", UserRole.USER, player.id(), NOW.minusSeconds(60));
+        when(userRepository.findById(user.id())).thenReturn(Optional.of(user));
+        when(playerRepository.findById(player.id())).thenReturn(Optional.of(player));
+        when(playerRepository.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.updateMe(user.id(), new UpdateCurrentUserRequest("Alice@Example.com", "Ace"));
+
+        assertThat(response.username()).isEqualTo("alice");
+        assertThat(response.email()).isEqualTo("alice@example.com");
+        assertThat(response.role()).isEqualTo(UserRole.USER);
+        assertThat(response.playerId()).isEqualTo(player.id());
+        assertThat(response.playerName()).isEqualTo("Ace");
+    }
+
+    @Test
+    void updateMeThrowsWhenAnotherUserHasEmail() {
+        var player = player("Alice");
+        var user = User.create("alice", null, "hash", UserRole.USER, player.id(), NOW);
+        when(userRepository.findById(user.id())).thenReturn(Optional.of(user));
+        when(playerRepository.findById(player.id())).thenReturn(Optional.of(player));
+        when(userRepository.existsByEmailIgnoreCaseAndIdNot("taken@example.com", user.id())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.updateMe(user.id(), new UpdateCurrentUserRequest("taken@example.com", "Ace")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Email is already registered");
+    }
+
+    @Test
+    void updateMeThrowsWhenAnotherPlayerHasCallsign() {
+        var player = player("Alice");
+        var user = User.create("alice", null, "hash", UserRole.USER, player.id(), NOW);
+        when(userRepository.findById(user.id())).thenReturn(Optional.of(user));
+        when(playerRepository.findById(player.id())).thenReturn(Optional.of(player));
+        when(playerRepository.existsByNameIgnoreCaseAndIdNot("Ace", player.id())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.updateMe(user.id(), new UpdateCurrentUserRequest("alice@example.com", "Ace")))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Player callsign already exists");
     }
 
     @Test

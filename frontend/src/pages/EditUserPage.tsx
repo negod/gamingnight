@@ -25,7 +25,7 @@ export function EditUserPage() {
     <section className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-slate-950">Edit user</h1>
-        <p className="mt-1 text-sm text-slate-600">Update role or player assignment.</p>
+        <p className="mt-1 text-sm text-slate-600">Update role or Player callsign assignment.</p>
       </div>
 
       {loading ? <LoadingMessage /> : null}

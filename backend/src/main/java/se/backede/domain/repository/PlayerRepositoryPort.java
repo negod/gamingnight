@@ -16,5 +16,9 @@ public interface PlayerRepositoryPort {
 
     boolean existsById(UUID id);
 
+    boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
+
     void deleteById(UUID id);
 }

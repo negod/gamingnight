@@ -19,6 +19,11 @@ export type UserFormValues = {
   playerId: string;
 };
 
+export type CurrentUserFormValues = {
+  email?: string;
+  playerCallsign: string;
+};
+
 export type LoginValues = {
   username: string;
   password: string;
