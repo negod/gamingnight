@@ -271,23 +271,27 @@ mvn -f backend/pom.xml -Dtest=TeamControllerTest test
 
 ---
 
-#### TDD-3 · Write Testcontainers persistence tests `[Medium]`
+#### TDD-3 · Write Testcontainers persistence tests `[Resolved]`
 
-**Problem**: No persistence tests exist. JPA adapter correctness, FK constraints, and Liquibase schema validity are untested.
+**Status**: Resolved by adding Testcontainers-backed PostgreSQL persistence tests:
 
-**What to do**
-
-Create at minimum:
+- `backend/src/test/java/se/backede/infrastructure/persistence/PostgreSqlPersistenceTest.java`
 - `backend/src/test/java/se/backede/infrastructure/persistence/JpaPlayerRepositoryAdapterTest.java`
 - `backend/src/test/java/se/backede/infrastructure/persistence/JpaCompetitionRepositoryAdapterTest.java`
 
-Each test class must:
-1. Use `@SpringBootTest` + `@Testcontainers` with a `@Container PostgreSQLContainer`.
-2. Verify save, find-by-id, find-all, and delete round-trip through the real JPA adapter.
-3. Verify Liquibase applies all changelogs without error (this is implicit — if the container starts, schema applied).
-4. Verify FK constraints (e.g., deleting a player that is part of a competition result should either cascade or throw a meaningful exception).
+Coverage added:
 
-**Pattern to follow**: see `testing.md` section on Testcontainers for the annotation setup. Look at `CompetitionRunUseCaseServiceTest.java` for how ports are wired in tests, then adapt for the real adapter.
+- `JpaPlayerRepositoryAdapter`: save, find-by-id, find-all, delete, and `team_player_ids` FK enforcement.
+- `JpaCompetitionRepositoryAdapter`: save, find-by-id, find-all, delete, owned collection row cleanup, and competition collection-table FK enforcement.
+- Liquibase schema validity is verified implicitly when the Spring Boot context starts against the Testcontainers PostgreSQL database and Hibernate validates the schema.
+
+Verification:
+
+```bash
+mvn -f backend/pom.xml -Dtest=JpaPlayerRepositoryAdapterTest,JpaCompetitionRepositoryAdapterTest test
+```
+
+In environments without Docker, the tests are skipped by `@Testcontainers(disabledWithoutDocker = true)`.
 
 ---
 
@@ -503,12 +507,12 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | CA-1 / DDD-1 | High | Claude | ✅ |
 | SO-1 / CC-1 | High | Claude | ✅ |
 | SO-2 | Medium | Claude | ✅ |
-| CA-2 / FE-1 | Medium | Claude | ☐ |
+| CA-2 / FE-1 | Medium | Claude | ✅ |
 | DOC-2 | Medium | Claude | ☐ |
 | DDD-2 / SEC-7 | Medium | Codex | ✅ |
 | TDD-1 | Medium | Codex | ☑ |
 | TDD-2 | Medium | Codex | ✅ |
-| TDD-3 | Medium | Codex | ☐ |
+| TDD-3 | Medium | Codex | ✅ |
 | TDD-4 | Medium | Codex | ☑ |
 | TDD-5 | Medium | Codex | ☑ |
 | TDD-6 | Medium | Codex | ☐ (do after CA-2/FE-1) |

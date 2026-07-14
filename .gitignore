@@ -51,3 +51,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 /nbproject/private/
+
+# Claude Code worktrees
+.claude/worktrees/

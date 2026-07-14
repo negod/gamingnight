@@ -21,6 +21,7 @@ import {
 import { GameStepNav } from '../features/competition-run/components/GameStepNav';
 import { MatchCard } from '../features/competition-run/components/MatchCard';
 import { MatchResultForm } from '../features/competition-run/components/MatchResultForm';
+import { useMatchDetails } from '../features/competition-run/hooks/useMatchDetails';
 import { GameTeamLeaderboard as GameTeamLeaderboardView } from '../features/competition-run/components/GameTeamLeaderboard';
 import { GamePlayerLeaderboard as GamePlayerLeaderboardView } from '../features/competition-run/components/GamePlayerLeaderboard';
 import { TotalTeamLeaderboard } from '../features/competition-run/components/TotalTeamLeaderboard';
@@ -42,6 +43,7 @@ export function CompetitionRunPage() {
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [matches, setMatches] = useState<Match[]>([]);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const { rows: editingRows, loading: editingRowsLoading, error: editingRowsError } = useMatchDetails(editingMatch);
   const [gameTeamLb, setGameTeamLb] = useState<GameTeamLeaderboard | null>(null);
   const [gamePlayerLb, setGamePlayerLb] = useState<GamePlayerLeaderboard | null>(null);
   const [totalTeamLb, setTotalTeamLb] = useState<TotalTeamLeaderboardRow[]>([]);
@@ -188,19 +190,29 @@ export function CompetitionRunPage() {
               {matches.length === 0 && (
                 <p className="text-sm text-slate-500">No matches generated.</p>
               )}
-              {matches.map((match) =>
-                editingMatch?.id === match.id ? (
+              {matches.map((match) => {
+                if (editingMatch?.id !== match.id) {
+                  return (
+                    <MatchCard key={match.id} match={match} game={games[activeGameIndex]} onEdit={admin ? setEditingMatch : undefined} />
+                  );
+                }
+                if (editingRowsLoading) {
+                  return <p key={match.id} className="text-sm text-slate-500">Loading players…</p>;
+                }
+                if (editingRowsError) {
+                  return <ErrorMessage key={match.id} message={editingRowsError} />;
+                }
+                return (
                   <MatchResultForm
                     key={match.id}
                     match={match}
                     game={games[activeGameIndex]}
+                    rows={editingRows}
                     onSave={handleSaveResults}
                     onCancel={() => setEditingMatch(null)}
                   />
-                ) : (
-                  <MatchCard key={match.id} match={match} game={games[activeGameIndex]} onEdit={admin ? setEditingMatch : undefined} />
-                ),
-              )}
+                );
+              })}
             </div>
           )}
 

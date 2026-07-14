@@ -2,22 +2,13 @@ import { Save, X } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import type { Match, PlayerResult } from '../../../shared/types/match';
 import type { Game } from '../../../shared/types/game';
-import type { Team } from '../../../shared/types/team';
-import type { Player } from '../../../shared/types/player';
 import { ErrorMessage } from '../../../shared/components/ErrorMessage';
-import { getTeam, getPlayer } from '../api/competitionRunApi';
-
-type PlayerRow = {
-  playerId: string;
-  teamId: string;
-  playerName: string;
-  teamName: string;
-  value: string;
-};
+import type { PlayerRow } from '../hooks/useMatchDetails';
 
 type MatchResultFormProps = {
   match: Match;
   game?: Game;
+  rows: PlayerRow[];
   onSave: (results: PlayerResult[]) => Promise<void>;
   onCancel: () => void;
 };
@@ -237,55 +228,14 @@ function GroupedResultForm({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function MatchResultForm({ match, game, onSave, onCancel }: MatchResultFormProps) {
-  const [rows, setRows] = useState<PlayerRow[]>([]);
-  const [loading, setLoading] = useState(true);
+export function MatchResultForm({ match, game, rows: initialRows, onSave, onCancel }: MatchResultFormProps) {
+  const [rows, setRows] = useState<PlayerRow[]>(initialRows);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-
-    Promise.all([getTeam(match.homeTeamId), getTeam(match.awayTeamId)])
-      .then(async ([homeTeam, awayTeam]: [Team, Team]) => {
-        const allPlayerIds = [
-          ...homeTeam.playerIds.map((id: string) => ({ id, team: homeTeam })),
-          ...awayTeam.playerIds.map((id: string) => ({ id, team: awayTeam })),
-        ];
-
-        const players = await Promise.all(
-          allPlayerIds.map(({ id }) =>
-            getPlayer(id).catch((): Player => ({ id, name: id, createdAt: '', updatedAt: '' })),
-          ),
-        );
-
-        if (!active) return;
-
-        const existingByPlayer = new Map(match.results.map((r) => [r.playerId, r.value]));
-
-        const builtRows: PlayerRow[] = allPlayerIds.map(({ id, team }, index) => ({
-          playerId: id,
-          teamId: team.id,
-          playerName: players[index].name,
-          teamName: team.name,
-          value: String(existingByPlayer.get(id) ?? ''),
-        }));
-
-        setRows(builtRows);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (active) {
-          setError(err instanceof Error ? err.message : 'Failed to load teams');
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [match.awayTeamId, match.homeTeamId, match.id, match.results]);
+    setRows(initialRows);
+  }, [initialRows]);
 
   function handleChange(index: number, value: string) {
     setRows((prev) => {
@@ -314,8 +264,6 @@ export function MatchResultForm({ match, game, onSave, onCancel }: MatchResultFo
       setSubmitting(false);
     }
   }
-
-  if (loading) return <p className="text-sm text-slate-500">Loading players…</p>;
 
   const sharedProps = { match, rows, onChange: handleChange, onSubmit: handleSubmit, onCancel, submitting, error };
 
