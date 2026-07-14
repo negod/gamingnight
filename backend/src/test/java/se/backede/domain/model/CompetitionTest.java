@@ -36,10 +36,47 @@ class CompetitionTest {
     }
 
     @Test
+    void startRejectsCompetitionWithNoTeams() {
+        var competition = startable(List.of(UUID.randomUUID()), List.of());
+
+        assertThatThrownBy(() -> competition.start(NOW))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("at least 2 teams");
+    }
+
+    @Test
+    void startRejectsCompetitionWithOneTeam() {
+        var competition = startable(List.of(UUID.randomUUID()), List.of(UUID.randomUUID()));
+
+        assertThatThrownBy(() -> competition.start(NOW))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("at least 2 teams");
+    }
+
+    @Test
+    void startRejectsCompetitionWithNoGames() {
+        var competition = startable(List.of(), List.of(UUID.randomUUID(), UUID.randomUUID()));
+
+        assertThatThrownBy(() -> competition.start(NOW))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("at least 1 game");
+    }
+
+    @Test
+    void startSucceedsWithTwoTeamsAndOneGame() {
+        var competition = startable(List.of(UUID.randomUUID()), List.of(UUID.randomUUID(), UUID.randomUUID()));
+
+        var started = competition.start(NOW);
+
+        assertThat(started.started()).isTrue();
+    }
+
+    @Test
     void updatesSetupFieldsAndPreservesStartedState() {
         var gameId = UUID.randomUUID();
         var teamId = UUID.randomUUID();
-        var competition = Competition.create("Cup", DATE, true, NOW).start(NOW.plusSeconds(1));
+        var competition = startable(List.of(UUID.randomUUID()), List.of(UUID.randomUUID(), UUID.randomUUID()))
+                .start(NOW.plusSeconds(1));
 
         var updated = competition.update(
                 "Finals",
@@ -56,5 +93,9 @@ class CompetitionTest {
         assertThat(updated.started()).isTrue();
         assertThat(updated.gameIds()).containsExactly(gameId);
         assertThat(updated.teamIds()).containsExactly(teamId);
+    }
+
+    private static Competition startable(List<UUID> gameIds, List<UUID> teamIds) {
+        return Competition.rehydrate(UUID.randomUUID(), "Cup", DATE, true, false, gameIds, teamIds, NOW, NOW);
     }
 }

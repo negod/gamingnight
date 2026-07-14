@@ -53,14 +53,10 @@ public class CompetitionRunUseCaseService {
         if (competition.started()) {
             throw new DomainValidationException("Competition has already been started");
         }
-        if (competition.teamIds().size() < 2) {
-            throw new DomainValidationException("Competition must have at least 2 teams to start");
-        }
-        if (competition.gameIds().isEmpty()) {
-            throw new DomainValidationException("Competition must have at least 1 game to start");
-        }
 
         var now = now();
+        // Domain guards the team/game invariants; validate before generating any matches.
+        var started = competition.start(now);
         var teams = competition.teamIds();
 
         List<Match> matches = new ArrayList<>();
@@ -76,7 +72,6 @@ public class CompetitionRunUseCaseService {
         }
         matches.forEach(matchRepository::save);
 
-        var started = competition.start(now);
         return CompetitionDtoMapper.toResponse(competitionRepository.save(started));
     }
 

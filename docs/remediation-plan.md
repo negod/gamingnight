@@ -64,26 +64,24 @@ These must be addressed before any new feature work.
 
 ### Codex
 
-#### SEC-3 · Add rate limiting to sensitive endpoints `[Critical]`
+#### SEC-3 · Add rate limiting to sensitive endpoints `[Resolved]`
 
-**Problem**: No throttling on any endpoint. `POST /api/users`, `POST /api/competitions/{id}/start`, and `PUT` result-entry endpoints are completely unbounded. Violates OWASP ASVS V13.1.
+**Status**: Resolved. Bucket4j-backed per-IP rate limiting is applied before controller handling for the sensitive mutating endpoints:
 
-**What to do**
+- `POST /api/users` — 5 requests/minute per IP.
+- `POST /api/competitions/*/start` — 10 requests/minute per IP.
+- `PUT /api/competitions/*/matches/*/results` — 30 requests/minute per IP.
 
-1. Add `bucket4j-spring-boot-starter` to `backend/pom.xml`.
-2. Create a `RateLimitingFilter` (or use Bucket4j's built-in Spring Boot autoconfiguration) applied to at minimum:
-   - `POST /api/users` — 5 requests/minute per IP.
-   - `POST /api/competitions/*/start` — 10 requests/minute per IP.
-   - All `PUT /api/competitions/*/matches/*/results` — 30 requests/minute per IP.
-3. Return `429 Too Many Requests` with a `Retry-After` header.
-4. Add tests verifying 429 is returned after threshold is exceeded.
+Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, and the standard API error envelope.
 
-**Pattern to follow**: look at how `GlobalExceptionHandler` maps exceptions to HTTP responses and apply the same style for the filter's error response.
+`RateLimitingFilterTest` verifies each threshold returns `429` after the configured allowance is exceeded. Full backend test suite: 178 tests pass.
 
 **Files affected**
 - `backend/pom.xml`
 - `backend/src/main/java/se/backede/infrastructure/config/RateLimitingFilter.java` (new)
 - `backend/src/main/resources/application.yml` (Bucket4j config)
+- `backend/src/test/java/se/backede/infrastructure/web/RateLimitingFilterTest.java` (new)
+- `docs/architecture.md`
 
 ---
 
@@ -93,7 +91,9 @@ These must be addressed before any new feature work.
 
 ### Claude
 
-#### CA-1 / DDD-1 · Move `Competition.start()` pre-conditions into the domain model `[High]`
+#### CA-1 / DDD-1 · Move `Competition.start()` pre-conditions into the domain model `[Resolved]`
+
+**Status**: Resolved. `Competition.start()` now guards its own invariants — it throws `DomainValidationException` when there are fewer than 2 team IDs or no game IDs. The duplicate pre-condition guards were removed from `CompetitionRunUseCaseService`, which now calls `competition.start(now)` up front (before generating any matches) so the domain validates before the use case does any work; only the `started` check (not part of this item) remains in the service. `CompetitionTest` covers 0/1 team, 0 games, and the 2-teams-1-game success path; `CompetitionRunUseCaseServiceTest` verifies the use case propagates (not duplicates) the domain exception for both too-few-teams and no-games. All 178 backend tests pass.
 
 **Problem**: `CompetitionRunUseCaseService.java:51-58` checks `teamIds.size() >= 2` and `!gameIds.isEmpty()` before calling `competition.start()`. The domain method itself does not guard these invariants — it blindly flips the flag. This violates DDD (domain objects must protect their own invariants) and Clean Architecture (business rules belong in the domain, not the use case).
 
@@ -494,8 +494,8 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 |---|---|---|---|
 | SEC-1 | Critical | Claude | ✅ |
 | SEC-2 | Critical | Claude | ✅ |
-| SEC-3 | Critical | Codex | ☐ |
-| CA-1 / DDD-1 | High | Claude | ☐ |
+| SEC-3 | Critical | Codex | ✅ |
+| CA-1 / DDD-1 | High | Claude | ✅ |
 | SO-1 / CC-1 | High | Claude | ☐ |
 | SO-2 | Medium | Claude | ☐ |
 | CA-2 / FE-1 | Medium | Claude | ☐ |
@@ -512,6 +512,6 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | SEC-6 | Medium | Mistral | ✅ |
 | DOC-1 | Low | Mistral | ✅ |
 | LIQ-1 | Low | Mistral | ✅ |
-| LIQ-2 | Low | Mistral | ☐ |
+| LIQ-2 | Low | Mistral | ✅ |
 | CC-2 | Low | Mistral | ✅ |
 | CC-3 | Low | Mistral | ✅ |

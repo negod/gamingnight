@@ -126,13 +126,23 @@ class CompetitionRunUseCaseServiceTest {
     }
 
     @Test
-    void startThrowsWhenFewerThanTwoTeams() {
+    void startPropagatesDomainExceptionWhenFewerThanTwoTeams() {
         var competition = competition(List.of(UUID.randomUUID()), List.of(UUID.randomUUID()), true);
         when(competitionRepo.findById(competition.id())).thenReturn(Optional.of(competition));
 
         assertThatThrownBy(() -> service.start(competition.id()))
                 .isInstanceOf(DomainValidationException.class)
                 .hasMessageContaining("at least 2 teams");
+    }
+
+    @Test
+    void startPropagatesDomainExceptionWhenNoGames() {
+        var competition = competition(List.of(), List.of(UUID.randomUUID(), UUID.randomUUID()), true);
+        when(competitionRepo.findById(competition.id())).thenReturn(Optional.of(competition));
+
+        assertThatThrownBy(() -> service.start(competition.id()))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessageContaining("at least 1 game");
     }
 
     @Test

@@ -108,6 +108,14 @@ Role behavior:
 
 The frontend mirrors these rules in navigation: admins see all tabs, while regular users see only `Competitions` and `My user`.
 
+Sensitive mutating endpoints are also rate limited per client IP before controller handling:
+
+- `POST /api/users`: 5 requests per minute.
+- `POST /api/competitions/{id}/start`: 10 requests per minute.
+- `PUT /api/competitions/{cid}/matches/{mid}/results`: 30 requests per minute.
+
+Requests over the limit receive `429 Too Many Requests` with a `Retry-After` header and the standard API error envelope. These limits reduce automated account-management and competition-state abuse while preserving normal admin workflows.
+
 ## REST API
 
 ### Authentication

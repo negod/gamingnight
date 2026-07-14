@@ -52,6 +52,8 @@ public record Competition(
     }
 
     public Competition start(Instant now) {
+        if (teamIds.size() < 2) throw new DomainValidationException("Competition must have at least 2 teams to start");
+        if (gameIds.isEmpty()) throw new DomainValidationException("Competition must have at least 1 game to start");
         return new Competition(id, name, date, singleMatch, true, gameIds, teamIds, createdAt, now);
     }
 }
