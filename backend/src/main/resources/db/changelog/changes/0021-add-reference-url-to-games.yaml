@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 0020-add-reference-url-to-games
+      id: 0021-add-reference-url-to-games
       author: backede
       changes:
         - addColumn:
