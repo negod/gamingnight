@@ -14,7 +14,7 @@ permissions:
 
 env:
   JAVA_VERSION: '21'
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   backend-test:
@@ -222,6 +222,11 @@ jobs:
 
           npm run build --prefix frontend
 
+      - name: Install Wrangler
+        if: env.CLOUDFLARE_ACCOUNT_ID != ''
+        working-directory: frontend
+        run: npm install wrangler@4
+
       - name: Deploy to Cloudflare Pages
         working-directory: frontend
         run: |
@@ -234,7 +239,7 @@ jobs:
             exit 1
           fi
 
-          npx wrangler@latest pages deploy dist \
+          npx wrangler pages deploy dist \
             --project-name "$CLOUDFLARE_PAGES_PROJECT_NAME" \
             --branch "$GITHUB_REF_NAME" \
             --commit-dirty=true
