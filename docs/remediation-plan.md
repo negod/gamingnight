@@ -181,7 +181,9 @@ Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, 
 
 ---
 
-#### DOC-2 · Add security section to `docs/architecture.md` `[Medium]`
+#### DOC-2 · Add security section to `docs/architecture.md` `[Resolved]`
+
+**Status**: Resolved. The former brief "Authentication And Authorization" section was expanded into a `## Security Architecture` section covering authentication (custom HMAC-signed bearer tokens, PBKDF2 password hashing), an authorization role matrix, transport/request hardening (CORS, headers, CSRF rationale, rate limiting, actuator exposure), a five-threat threat model table, and an OWASP ASVS Level 1 (partial Level 2) compliance statement with explicit known gaps (no token revocation, no login rate limiting, no MFA, no security audit log).
 
 **Problem**: The AI instructions require documenting the threat model and security decisions for non-trivial features. Architecture.md has no security section.
 
@@ -342,15 +344,25 @@ cd frontend && npx vitest run src/features/teams/components/TeamForm.test.tsx sr
 
 ---
 
-#### TDD-6 · Write `MatchCard.test.tsx` and `MatchResultForm.test.tsx` `[Medium]`
+#### TDD-6 · Write `MatchCard.test.tsx` and `MatchResultForm.test.tsx` `[Resolved]`
 
-**Problem**: `MatchResultForm` is the most complex frontend component (async loading, controlled form, submission). No tests.
+**Status**: Resolved by adding:
 
-**Do this after CA-2/FE-1** (MatchResultForm refactor), so the component is stateless and can be tested with static props.
+- `frontend/src/features/competition-run/components/MatchCard.test.tsx`
+- `frontend/src/features/competition-run/components/MatchResultForm.test.tsx`
 
-Then create:
-- `MatchCard.test.tsx`: renders match status; renders correct team/player names.
-- `MatchResultForm.test.tsx`: renders all result inputs; submitting calls `onSubmit` with correct payload; cancelling calls `onCancel`.
+Coverage added:
+
+- `MatchCard` renders pending/completed status, team names, player result names, result values, and edit callbacks.
+- `MatchResultForm` renders all grouped result inputs.
+- `MatchResultForm` submits grouped and duel result payloads through `onSave`.
+- `MatchResultForm` calls `onCancel` when cancelling.
+
+Verification:
+
+```bash
+cd frontend && npx vitest run src/features/competition-run/components/MatchCard.test.tsx src/features/competition-run/components/MatchResultForm.test.tsx
+```
 
 ---
 
@@ -508,14 +520,14 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | SO-1 / CC-1 | High | Claude | ✅ |
 | SO-2 | Medium | Claude | ✅ |
 | CA-2 / FE-1 | Medium | Claude | ✅ |
-| DOC-2 | Medium | Claude | ☐ |
+| DOC-2 | Medium | Claude | ✅ |
 | DDD-2 / SEC-7 | Medium | Codex | ✅ |
 | TDD-1 | Medium | Codex | ☑ |
 | TDD-2 | Medium | Codex | ✅ |
 | TDD-3 | Medium | Codex | ✅ |
 | TDD-4 | Medium | Codex | ☑ |
 | TDD-5 | Medium | Codex | ☑ |
-| TDD-6 | Medium | Codex | ☐ (do after CA-2/FE-1) |
+| TDD-6 | Medium | Codex | ✅ |
 | SEC-4 | Medium | Mistral | ✅ |
 | SEC-5 | Medium | Mistral | ✅ |
 | SEC-6 | Medium | Mistral | ✅ |
