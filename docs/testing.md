@@ -58,7 +58,7 @@ cd frontend
 npm test
 ```
 
-Frontend tests use Vitest and React Testing Library. They focus on behavior visible to the user, such as navigation, form submission, validation errors, and empty states.
+Frontend tests use Vitest and React Testing Library. They focus on behavior visible to the user, such as navigation, form submission, validation errors, and empty states. Vitest excludes `frontend/e2e/**`; Playwright specs are run only through the E2E commands below.
 
 New tests added for Area A:
 - `PlayerForm.test.tsx`: verifies player form submission and required-name validation.
