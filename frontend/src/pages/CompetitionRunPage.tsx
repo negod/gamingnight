@@ -18,6 +18,7 @@ import {
   getTotalTeamLeaderboard,
   getTotalPlayerLeaderboard,
 } from '../features/competition-run/api/leaderboardApi';
+import { CompetitionGamesOverview } from '../features/competition-run/components/CompetitionGamesOverview';
 import { GameStepNav } from '../features/competition-run/components/GameStepNav';
 import { MatchCard } from '../features/competition-run/components/MatchCard';
 import { MatchResultForm } from '../features/competition-run/components/MatchResultForm';
@@ -135,6 +136,8 @@ export function CompetitionRunPage() {
         <h1 className="text-2xl font-semibold text-slate-950">{competition.name}</h1>
         <p className="mt-1 text-sm text-slate-600">{competition.date}</p>
       </div>
+
+      <CompetitionGamesOverview games={games} />
 
       {!competition.started && admin && (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
