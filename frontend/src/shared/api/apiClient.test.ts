@@ -26,4 +26,33 @@ describe('apiRequest', () => {
 
     expect(onAuthExpired).toHaveBeenCalledOnce();
   });
+
+  it('returns a controlled API error for an empty error response', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, {
+        status: 405,
+      }),
+    );
+
+    await expect(apiRequest('/auth/login', { method: 'POST' })).rejects.toMatchObject({
+      message: 'Request failed with status 405',
+      status: 405,
+      details: [],
+    });
+  });
+
+  it('returns a controlled API error for a non-JSON error response', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<html><body>Method Not Allowed</body></html>', {
+        status: 405,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+
+    await expect(apiRequest('/auth/login', { method: 'POST' })).rejects.toMatchObject({
+      message: 'Request failed with status 405',
+      status: 405,
+      details: [],
+    });
+  });
 });

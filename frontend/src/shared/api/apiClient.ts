@@ -40,11 +40,11 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   });
 
   if (!response.ok) {
-    const body = await parseBody<{ message?: string; details?: string[] }>(response);
+    const body = await parseErrorBody(response);
     if (response.status === 401) {
       onAuthExpired?.();
     }
-    throw new ApiError(body.message ?? 'Request failed', response.status, body.details ?? []);
+    throw new ApiError(body.message, response.status, body.details);
   }
 
   if (response.status === 204) {
@@ -57,4 +57,23 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 async function parseBody<T>(response: Response): Promise<T> {
   const text = await response.text();
   return text ? (JSON.parse(text) as T) : (undefined as T);
+}
+
+async function parseErrorBody(response: Response): Promise<{ message: string; details: string[] }> {
+  const fallback = { message: `Request failed with status ${response.status}`, details: [] };
+  const text = await response.text();
+
+  if (!text) {
+    return fallback;
+  }
+
+  try {
+    const body = JSON.parse(text) as { message?: unknown; details?: unknown };
+    return {
+      message: typeof body.message === 'string' && body.message.trim() ? body.message : fallback.message,
+      details: Array.isArray(body.details) ? body.details.filter((detail): detail is string => typeof detail === 'string') : [],
+    };
+  } catch {
+    return fallback;
+  }
 }

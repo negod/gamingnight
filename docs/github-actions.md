@@ -109,6 +109,7 @@ Keep Liquibase enabled. On first backend startup against an empty Supabase datab
 | Dependency scan fails | Scheduled/manual workflow runs become red and include the uploaded `dependency-check-report` artifact. Push deploys are not blocked by the scan. |
 | Backend cannot start on Render | Render env vars include Supabase JDBC URL, username, password, and `APP_AUTH_TOKEN_SECRET`. |
 | Browser gets CORS errors | Render `CORS_ALLOWED_ORIGINS` exactly matches the Cloudflare Pages production origin. |
+| Login returns 405 in the browser | Confirm the frontend was rebuilt with `VITE_API_BASE_URL` pointing to the backend origin ending in `/api`, for example `https://gaming-night-api.onrender.com/api`. A 405 on `/auth/login` usually means the static frontend host received the POST instead of the backend. |
 | Direct route refresh returns 404 | Confirm `frontend/public/_redirects` is included in the Cloudflare Pages build output. |
 | Liquibase fails | Check the Supabase database user has permission to create tables/indexes and insert seed data. |
 
