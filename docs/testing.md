@@ -61,11 +61,11 @@ Frontend tests use Vitest and React Testing Library. They focus on behavior visi
 
 New tests added for Area A:
 - `PlayerForm.test.tsx`: verifies player form submission and required-name validation.
-- `PlayerList.test.tsx`: verifies empty state, edit links, and delete action.
+- `PlayerList.test.tsx`: verifies empty state, edit action, and delete action.
 
 Tests for user administration:
 - `UserForm.test.tsx`: verifies username, password, role, player selection, and validation.
-- `UserList.test.tsx`: verifies empty state, role/player rendering, edit links, and delete action.
+- `UserList.test.tsx`: verifies empty state, role/player rendering, edit action, and delete action.
 
 Tests for Area D:
 - `CompetitionForm.test.tsx`: verifies setup form submission, game order, and team selection.
@@ -114,7 +114,7 @@ Keep tests readable. Test behavior, not implementation details.
 | Player names are trimmed and validated | `PlayerTest` |
 | Players can be created, listed newest-first, fetched, updated, and deleted | `PlayerUseCaseServiceTest` |
 | `/api/players` returns correct status codes for CRUD, validation, and not-found cases | `PlayerControllerTest` |
-| Player UI supports validation, edit links, delete action, and empty state | `PlayerForm.test.tsx`, `PlayerList.test.tsx` |
+| Player UI supports validation, edit action, delete action, and empty state | `PlayerForm.test.tsx`, `PlayerList.test.tsx` |
 
 ### User Administration
 
@@ -124,7 +124,7 @@ Keep tests readable. Test behavior, not implementation details.
 | Users can be created with hashed passwords, listed newest-first, updated, and deleted | `UserUseCaseServiceTest` |
 | User creation/update validates player existence, unique username, and one user per player | `UserUseCaseServiceTest` |
 | `/api/users` returns correct status codes for CRUD, validation, and not-found cases | `UserControllerTest` |
-| User UI supports username, password, role, player selection, edit links, delete action, and empty state | `UserForm.test.tsx`, `UserList.test.tsx` |
+| User UI supports username, password, role, player selection, edit action, delete action, and empty state | `UserForm.test.tsx`, `UserList.test.tsx` |
 
 ### Game Management (Area B)
 

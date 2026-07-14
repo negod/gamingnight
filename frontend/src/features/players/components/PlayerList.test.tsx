@@ -8,25 +8,29 @@ describe('PlayerList', () => {
   it('renders empty state', () => {
     render(
       <MemoryRouter>
-        <PlayerList players={[]} onDelete={vi.fn()} />
+        <PlayerList players={[]} onEdit={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText(/no players yet/i)).toBeInTheDocument();
   });
 
-  it('renders players and edit links', () => {
+  it('renders players and edit action', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
     render(
       <MemoryRouter>
         <PlayerList
           players={[player('player-1', 'Alice')]}
+          onEdit={onEdit}
           onDelete={vi.fn()}
         />
       </MemoryRouter>,
     );
 
     expect(screen.getByText('Alice')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/players/player-1/edit');
+    await user.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'player-1' }));
   });
 
   it('calls delete handler', async () => {
@@ -35,7 +39,7 @@ describe('PlayerList', () => {
 
     render(
       <MemoryRouter>
-        <PlayerList players={[player('player-1', 'Alice')]} onDelete={onDelete} />
+        <PlayerList players={[player('player-1', 'Alice')]} onEdit={vi.fn()} onDelete={onDelete} />
       </MemoryRouter>,
     );
 

@@ -25,6 +25,7 @@ The stack is React, Vite, TypeScript, Tailwind CSS, Spring Boot 3, Java 21, Post
 - Tie each system user to exactly one player.
 - Let users edit their own email and Player callsign without exposing their role.
 - Keep usernames, emails, and Player callsigns unique across the application.
+- Keep database IDs out of browser URLs; admin and user workflows stay on stable section routes.
 - Manage games with score-based or time-based ranking and sum or average calculations.
 - Manage teams with globally unique team names.
 - Create competitions with ordered games and assigned teams.

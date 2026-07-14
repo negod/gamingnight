@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Play } from 'lucide-react';
+import { ArrowLeft, Play } from 'lucide-react';
 import type { Competition } from '../shared/types/competition';
 import type { Game } from '../shared/types/game';
 import type { Match, PlayerResult } from '../shared/types/match';
@@ -33,9 +32,12 @@ import { useAuth } from '../shared/auth/AuthContext';
 
 type Tab = 'matches' | 'game-leaderboard' | 'total-leaderboard';
 
-export function CompetitionRunPage() {
-  const { id } = useParams<{ id: string }>();
-  const competitionId = id!;
+type CompetitionRunPageProps = {
+  competitionId: string;
+  onBack?: () => void;
+};
+
+export function CompetitionRunPage({ competitionId, onBack }: CompetitionRunPageProps) {
   const { user } = useAuth();
   const admin = user?.role === 'ADMIN';
 
@@ -132,6 +134,16 @@ export function CompetitionRunPage() {
 
   return (
     <section className="space-y-6">
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-950"
+        >
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+          Back to competitions
+        </button>
+      ) : null}
       <div>
         <h1 className="text-2xl font-semibold text-slate-950">{competition.name}</h1>
         <p className="mt-1 text-sm text-slate-600">{competition.date}</p>

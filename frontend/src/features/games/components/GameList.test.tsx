@@ -9,17 +9,19 @@ describe('GameList', () => {
   it('renders empty state', () => {
     render(
       <MemoryRouter>
-        <GameList games={[]} onDelete={vi.fn()} />
+        <GameList games={[]} onEdit={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText(/no games yet/i)).toBeInTheDocument();
   });
 
-  it('renders games with rule labels and edit links', () => {
+  it('renders games with rule labels and edit action', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
     render(
       <MemoryRouter>
-        <GameList games={[game('game-1', 'Bowling')]} onDelete={vi.fn()} />
+        <GameList games={[game('game-1', 'Bowling')]} onEdit={onEdit} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
@@ -28,13 +30,14 @@ describe('GameList', () => {
     expect(screen.getByText('Score')).toBeInTheDocument();
     expect(screen.getByText('Highest wins')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/games/game-1/edit');
+    await user.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'game-1' }));
   });
 
   it('shows Inactive badge for inactive games', () => {
     render(
       <MemoryRouter>
-        <GameList games={[game('game-1', 'Old Game', false)]} onDelete={vi.fn()} />
+        <GameList games={[game('game-1', 'Old Game', false)]} onEdit={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
@@ -47,7 +50,7 @@ describe('GameList', () => {
 
     render(
       <MemoryRouter>
-        <GameList games={[game('game-1', 'Bowling')]} onDelete={onDelete} />
+        <GameList games={[game('game-1', 'Bowling')]} onEdit={vi.fn()} onDelete={onDelete} />
       </MemoryRouter>,
     );
 

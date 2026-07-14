@@ -8,29 +8,32 @@ describe('CompetitionList', () => {
   it('renders empty state', () => {
     render(
       <MemoryRouter>
-        <CompetitionList competitions={[]} onDelete={vi.fn()} />
+        <CompetitionList competitions={[]} onRun={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText(/no competitions yet/i)).toBeInTheDocument();
   });
 
-  it('shows setup competitions with edit action and started status', () => {
+  it('shows setup competitions with edit action and setup status', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
     render(
       <MemoryRouter>
-        <CompetitionList competitions={[competition({ started: false })]} onDelete={vi.fn()} />
+        <CompetitionList competitions={[competition({ started: false })]} onEdit={onEdit} onRun={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText('Cup')).toBeInTheDocument();
     expect(screen.getByText('Setup')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/competitions/competition-1/edit');
+    await user.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'competition-1' }));
   });
 
   it('shows open setup competitions', () => {
     render(
       <MemoryRouter>
-        <CompetitionList competitions={[competition({ started: false, registrationOpen: true })]} onDelete={vi.fn()} />
+        <CompetitionList competitions={[competition({ started: false, registrationOpen: true })]} onRun={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
@@ -40,12 +43,12 @@ describe('CompetitionList', () => {
   it('hides edit action for started competitions', () => {
     render(
       <MemoryRouter>
-        <CompetitionList competitions={[competition({ started: true })]} onDelete={vi.fn()} />
+        <CompetitionList competitions={[competition({ started: true })]} onRun={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText('Started')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
   });
 
   it('calls delete handler', async () => {
@@ -54,7 +57,7 @@ describe('CompetitionList', () => {
 
     render(
       <MemoryRouter>
-        <CompetitionList competitions={[competition({ started: false })]} onDelete={onDelete} />
+        <CompetitionList competitions={[competition({ started: false })]} onRun={vi.fn()} onDelete={onDelete} />
       </MemoryRouter>,
     );
 
@@ -71,6 +74,7 @@ describe('CompetitionList', () => {
       <MemoryRouter>
         <CompetitionList
           competitions={[competition({ started: false, registrationOpen: true })]}
+          onRun={vi.fn()}
           onDelete={vi.fn()}
           onRegister={onRegister}
           canManage={false}
@@ -92,6 +96,7 @@ describe('CompetitionList', () => {
       <MemoryRouter>
         <CompetitionList
           competitions={[competition({ started: false, registrationOpen: true, registeredPlayerIds: ['player-1'] })]}
+          onRun={vi.fn()}
           onDelete={vi.fn()}
           onUnregister={onUnregister}
           canManage={false}
@@ -110,6 +115,7 @@ describe('CompetitionList', () => {
       <MemoryRouter>
         <CompetitionList
           competitions={[competition({ started: false, registrationOpen: false })]}
+          onRun={vi.fn()}
           onDelete={vi.fn()}
           onRegister={vi.fn()}
           canManage={false}

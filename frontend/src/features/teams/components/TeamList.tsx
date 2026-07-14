@@ -1,13 +1,13 @@
-import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Users } from 'lucide-react';
 import type { Team } from '../../../shared/types/team';
 
 type TeamListProps = {
   teams: Team[];
+  onEdit: (team: Team) => void;
   onDelete: (id: string) => void;
 };
 
-export function TeamList({ teams, onDelete }: TeamListProps) {
+export function TeamList({ teams, onEdit, onDelete }: TeamListProps) {
   if (teams.length === 0) {
     return <p className="text-sm text-slate-500">No teams yet.</p>;
   }
@@ -26,24 +26,26 @@ export function TeamList({ teams, onDelete }: TeamListProps) {
           {teams.map((team) => (
             <tr key={team.id} className="hover:bg-slate-50">
               <td className="px-4 py-3 font-medium text-slate-900">
-                <Link
-                  to={`/teams/${team.id}/edit`}
+                <button
+                  type="button"
+                  onClick={() => onEdit(team)}
                   className="inline-flex items-center gap-2 rounded-sm text-slate-900 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-100"
                 >
                   <Users aria-hidden="true" className="h-4 w-4 text-slate-400" />
                   {team.name}
-                </Link>
+                </button>
               </td>
               <td className="px-4 py-3 text-slate-600">{team.playerIds.length}</td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
-                  <Link
-                    to={`/teams/${team.id}/edit`}
+                  <button
+                    type="button"
+                    onClick={() => onEdit(team)}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
                   >
                     <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
                     Edit
-                  </Link>
+                  </button>
                   <button
                     onClick={() => onDelete(team.id)}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"

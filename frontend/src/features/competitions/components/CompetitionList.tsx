@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
 import { Pencil, Play, Trash2, Trophy, UserCheck, UserPlus } from 'lucide-react';
 import type { Competition } from '../../../shared/types/competition';
 
 type CompetitionListProps = {
   competitions: Competition[];
+  onEdit?: (competition: Competition) => void;
+  onRun: (competition: Competition) => void;
   onDelete: (id: string) => void;
   onRegister?: (id: string) => void;
   onUnregister?: (id: string) => void;
@@ -13,6 +14,8 @@ type CompetitionListProps = {
 
 export function CompetitionList({
   competitions,
+  onEdit,
+  onRun,
   onDelete,
   onRegister,
   onUnregister,
@@ -66,13 +69,14 @@ export function CompetitionList({
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
                   {canManage && !competition.started && (
-                    <Link
-                      to={`/competitions/${competition.id}/edit`}
+                    <button
+                      type="button"
+                      onClick={() => onEdit?.(competition)}
                       className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
                     >
                       <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
                       Edit
-                    </Link>
+                    </button>
                   )}
                   {!canManage && currentPlayerId && !competition.started && competition.registrationOpen ? (
                     competition.registeredPlayerIds.includes(currentPlayerId) ? (
@@ -95,13 +99,14 @@ export function CompetitionList({
                       </button>
                     )
                   ) : null}
-                  <Link
-                    to={`/competitions/${competition.id}/run`}
+                  <button
+                    type="button"
+                    onClick={() => onRun(competition)}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50"
                   >
                     <Play aria-hidden="true" className="h-3.5 w-3.5" />
                     {competition.started || !canManage ? 'View' : 'Run'}
-                  </Link>
+                  </button>
                   {canManage ? (
                     <button
                       onClick={() => onDelete(competition.id)}

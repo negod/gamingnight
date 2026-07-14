@@ -9,17 +9,19 @@ describe('UserList', () => {
   it('renders empty state', () => {
     render(
       <MemoryRouter>
-        <UserList users={[]} onDelete={vi.fn()} />
+        <UserList users={[]} onEdit={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText(/no users yet/i)).toBeInTheDocument();
   });
 
-  it('renders users with email, role and Player callsign', () => {
+  it('renders users with email, role and Player callsign', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
     render(
       <MemoryRouter>
-        <UserList users={[appUser('user-1', 'admin', 'ADMIN', 'Alice', 'admin@example.com')]} onDelete={vi.fn()} />
+        <UserList users={[appUser('user-1', 'admin', 'ADMIN', 'Alice', 'admin@example.com')]} onEdit={onEdit} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
@@ -28,7 +30,8 @@ describe('UserList', () => {
     expect(screen.getByText('Player callsign')).toBeInTheDocument();
     expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Alice')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/users/user-1/edit');
+    await user.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-1' }));
   });
 
   it('calls delete handler', async () => {
@@ -37,7 +40,7 @@ describe('UserList', () => {
 
     render(
       <MemoryRouter>
-        <UserList users={[appUser('user-1', 'admin', 'ADMIN', 'Alice')]} onDelete={onDelete} />
+        <UserList users={[appUser('user-1', 'admin', 'ADMIN', 'Alice')]} onEdit={vi.fn()} onDelete={onDelete} />
       </MemoryRouter>,
     );
 

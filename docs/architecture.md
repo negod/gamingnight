@@ -244,6 +244,7 @@ The frontend keeps route screens, feature components, API calls, and shared util
 - `shared/types` contains shared TypeScript types.
 
 UI components do not call `fetch` directly.
+Browser routes do not include database identifiers. Create, edit, setup, and run workflows are opened from the stable section routes (`/competitions`, `/games`, `/teams`, `/players`, `/users`) using component state; identifiers are kept inside API calls only.
 
 ### Players Feature (`features/players`)
 
@@ -252,9 +253,7 @@ UI components do not call `fetch` directly.
 | `api/playersApi.ts` | listPlayers, getPlayer, createPlayer, updatePlayer, deletePlayer |
 | `components/PlayerList` | Table of players with edit and delete actions |
 | `components/PlayerForm` | Form for player names |
-| `pages/PlayersPage` | List page with delete confirmation |
-| `pages/CreatePlayerPage` | Create form wired to POST /api/players |
-| `pages/EditPlayerPage` | Edit form wired to PUT /api/players/{id} |
+| `pages/PlayersPage` | Stable route page with list, create, edit, and delete flows |
 
 ### Users Feature (`features/users`)
 
@@ -263,9 +262,7 @@ UI components do not call `fetch` directly.
 | `api/usersApi.ts` | listUsers, getUser, getCurrentUser, updateCurrentUser, createUser, updateUser, deleteUser |
 | `components/UserList` | Table of users with role, Player callsign link, edit, and delete actions |
 | `components/UserForm` | Form for username, password, role, and Player callsign assignment |
-| `pages/UsersPage` | List page with delete confirmation |
-| `pages/CreateUserPage` | Create form wired to POST /api/users |
-| `pages/EditUserPage` | Edit form wired to PUT /api/users/{id} |
+| `pages/UsersPage` | Stable route page with list, create, edit, and delete flows |
 
 ### Games Feature (`features/games`)
 
@@ -275,9 +272,7 @@ UI components do not call `fetch` directly.
 | `components/GameList` | Table of games with rule summary, edit and delete actions |
 | `components/GameForm` | Form for basic details, optional game type presets, match setup, result rules, scoring, rotation, validation, time limits, and bonus rules |
 | `components/gameRuleDescription` | Pure function turning a game's rule fields into a flowing plain-language paragraph |
-| `pages/GamesPage` | List page with delete confirmation |
-| `pages/CreateGamePage` | Create form wired to POST /api/games |
-| `pages/EditGamePage` | Edit form wired to PUT /api/games/{id} |
+| `pages/GamesPage` | Stable route page with list, create, edit, and delete flows |
 
 ### Teams Feature (`features/teams`)
 
@@ -286,9 +281,7 @@ UI components do not call `fetch` directly.
 | `api/teamsApi.ts` | listTeams, getTeam, createTeam, updateTeam, deleteTeam |
 | `components/TeamList` | Table of teams with edit and delete actions |
 | `components/TeamForm` | Form for team name and assigned player IDs |
-| `pages/TeamsPage` | List page with delete confirmation |
-| `pages/CreateTeamPage` | Create form wired to POST /api/teams |
-| `pages/EditTeamPage` | Edit form wired to PUT /api/teams/{id} |
+| `pages/TeamsPage` | Stable route page with list, create, edit, and delete flows |
 
 ### Competitions Feature (`features/competitions`)
 
@@ -298,9 +291,7 @@ UI components do not call `fetch` directly.
 | `components/CompetitionList` | Table of competitions with setup, started status, and user registration actions |
 | `components/CompetitionForm` | Form for competition settings, ordered games, and teams |
 | `components/GenerateTeamsWizard` | Player selection and team-size workflow for generating teams, preselecting registered players |
-| `pages/CompetitionsPage` | List page with delete confirmation |
-| `pages/CreateCompetitionPage` | Create form wired to POST /api/competitions |
-| `pages/EditCompetitionPage` | Edit form wired to PUT /api/competitions/{id} |
+| `pages/CompetitionsPage` | Stable route page with list, create, edit, generate-teams, registration, delete, and run flows |
 
 ### Competition Run Feature (`features/competition-run`)
 
@@ -317,4 +308,4 @@ UI components do not call `fetch` directly.
 | `components/GamePlayerLeaderboard` | Per-game player ranking table |
 | `components/TotalTeamLeaderboard` | Overall team placement-point table |
 | `components/TotalPlayerLeaderboard` | Overall player placement-point table |
-| `pages/CompetitionRunPage` | Combines start button, game nav, matches tab, and leaderboard tabs |
+| `pages/CompetitionRunPage` | Embedded run view combining start button, game nav, matches tab, and leaderboard tabs |

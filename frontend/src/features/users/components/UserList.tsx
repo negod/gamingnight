@@ -1,13 +1,13 @@
-import { Link } from 'react-router-dom';
 import { Pencil, ShieldCheck, Trash2 } from 'lucide-react';
 import type { AppUser } from '../../../shared/types/user';
 
 type UserListProps = {
   users: AppUser[];
+  onEdit: (user: AppUser) => void;
   onDelete: (id: string) => void;
 };
 
-export function UserList({ users, onDelete }: UserListProps) {
+export function UserList({ users, onEdit, onDelete }: UserListProps) {
   if (users.length === 0) {
     return <p className="text-sm text-slate-500">No users yet.</p>;
   }
@@ -42,13 +42,14 @@ export function UserList({ users, onDelete }: UserListProps) {
               </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
-                  <Link
-                    to={`/users/${user.id}/edit`}
+                  <button
+                    type="button"
+                    onClick={() => onEdit(user)}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
                   >
                     <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
                     Edit
-                  </Link>
+                  </button>
                   <button
                     onClick={() => onDelete(user.id)}
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"

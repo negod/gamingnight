@@ -9,23 +9,26 @@ describe('TeamList', () => {
   it('renders empty state', () => {
     render(
       <MemoryRouter>
-        <TeamList teams={[]} onDelete={vi.fn()} />
+        <TeamList teams={[]} onEdit={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
     expect(screen.getByText(/no teams yet/i)).toBeInTheDocument();
   });
 
-  it('renders teams with player count and edit links', () => {
+  it('renders teams with player count and edit action', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
     render(
       <MemoryRouter>
-        <TeamList teams={[team('team-1', 'Team Alpha', ['player-1', 'player-2'])]} onDelete={vi.fn()} />
+        <TeamList teams={[team('team-1', 'Team Alpha', ['player-1', 'player-2'])]} onEdit={onEdit} onDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: /team alpha/i })).toHaveAttribute('href', '/teams/team-1/edit');
+    expect(screen.getByRole('button', { name: /team alpha/i })).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /edit/i })).toHaveAttribute('href', '/teams/team-1/edit');
+    await user.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 'team-1' }));
   });
 
   it('calls delete handler', async () => {
@@ -34,7 +37,7 @@ describe('TeamList', () => {
 
     render(
       <MemoryRouter>
-        <TeamList teams={[team('team-1', 'Team Alpha', ['player-1'])]} onDelete={onDelete} />
+        <TeamList teams={[team('team-1', 'Team Alpha', ['player-1'])]} onEdit={vi.fn()} onDelete={onDelete} />
       </MemoryRouter>,
     );
 
