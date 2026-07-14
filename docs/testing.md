@@ -37,6 +37,11 @@ The backend uses a layered testing approach:
 
 For persistence tests, make sure Docker is running before executing `mvn test`. The local `postgres` container from `docker-compose.yml` is not used by Testcontainers; Testcontainers starts its own isolated PostgreSQL container.
 
+Current persistence coverage:
+
+- `JpaPlayerRepositoryAdapterTest`: verifies player save/find-all/find-by-id/delete round-trip and the `team_player_ids` foreign key to `teams`.
+- `JpaCompetitionRepositoryAdapterTest`: verifies competition save/find-all/find-by-id/delete round-trip, owned collection cleanup, and collection-table foreign keys to `competitions`.
+
 ## Frontend Testing
 
 Run frontend tests from the repository root:
@@ -138,8 +143,8 @@ Keep tests readable. Test behavior, not implementation details.
 | Scenario | Test |
 |---|---|
 | Manual team create and update reject duplicate names | `TeamUseCaseServiceTest` |
-
-Current gap: team domain validation and `/api/teams` controller behavior should be covered by focused tests when team management receives more changes.
+| Team names and player lists are validated in the domain | `TeamTest` |
+| `/api/teams` returns correct status codes for CRUD, validation, and not-found cases | `TeamControllerTest` |
 
 ### Competition Setup (Area D)
 
