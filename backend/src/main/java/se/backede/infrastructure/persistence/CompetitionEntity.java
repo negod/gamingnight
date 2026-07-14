@@ -49,7 +49,8 @@ public class CompetitionEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "competition_team_ids", joinColumns = @JoinColumn(name = "competition_id"))
     @Column(name = "team_id", nullable = false)
-    private Set<UUID> teamIds = new LinkedHashSet<>();
+    @OrderColumn(name = "position")
+    private List<UUID> teamIds = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "competition_registered_player_ids", joinColumns = @JoinColumn(name = "competition_id"))
@@ -65,19 +66,8 @@ public class CompetitionEntity {
     protected CompetitionEntity() {
     }
 
-    public CompetitionEntity(UUID id, String name, LocalDate date, boolean singleMatch, boolean started,
-                             List<UUID> gameIds, Set<UUID> teamIds, Instant createdAt, Instant updatedAt) {
-        this(id, name, date, singleMatch, false, started, gameIds, teamIds, new LinkedHashSet<>(), createdAt, updatedAt);
-    }
-
-    public CompetitionEntity(UUID id, String name, LocalDate date, boolean singleMatch, boolean started,
-                             List<UUID> gameIds, Set<UUID> teamIds, Set<UUID> registeredPlayerIds,
-                             Instant createdAt, Instant updatedAt) {
-        this(id, name, date, singleMatch, false, started, gameIds, teamIds, registeredPlayerIds, createdAt, updatedAt);
-    }
-
     public CompetitionEntity(UUID id, String name, LocalDate date, boolean singleMatch, boolean registrationOpen,
-                             boolean started, List<UUID> gameIds, Set<UUID> teamIds,
+                             boolean started, List<UUID> gameIds, List<UUID> teamIds,
                              Set<UUID> registeredPlayerIds, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
@@ -99,7 +89,7 @@ public class CompetitionEntity {
     public boolean isRegistrationOpen() { return registrationOpen; }
     public boolean isStarted() { return started; }
     public List<UUID> getGameIds() { return gameIds; }
-    public Set<UUID> getTeamIds() { return teamIds; }
+    public List<UUID> getTeamIds() { return teamIds; }
     public Set<UUID> getRegisteredPlayerIds() { return registeredPlayerIds; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

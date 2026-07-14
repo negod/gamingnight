@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0022-add-position-to-competition-team-ids
+      author: backede
+      changes:
+        - addColumn:
+            tableName: competition_team_ids
+            columns:
+              - column:
+                  name: position
+                  type: integer
+        - sql:
+            sql: >
+              UPDATE competition_team_ids AS t
+              SET position = ranked.rn
+              FROM (
+                SELECT competition_id, team_id, row_number() OVER (PARTITION BY competition_id ORDER BY team_id) - 1 AS rn
+                FROM competition_team_ids
+              ) AS ranked
+              WHERE t.competition_id = ranked.competition_id AND t.team_id = ranked.team_id;
+        - addNotNullConstraint:
+            tableName: competition_team_ids
+            columnName: position
+            columnDataType: integer
+        - dropPrimaryKey:
+            tableName: competition_team_ids
+            constraintName: pk_competition_team_ids
+        - addPrimaryKey:
+            tableName: competition_team_ids
+            columnNames: competition_id, position
+            constraintName: pk_competition_team_ids
+        - addUniqueConstraint:
+            tableName: competition_team_ids
+            columnNames: competition_id, team_id
+            constraintName: uq_competition_team_ids_competition_team

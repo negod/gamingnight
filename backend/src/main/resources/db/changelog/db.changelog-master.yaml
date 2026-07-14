@@ -5,8 +5,8 @@ databaseChangeLog:
   # 0013-add-game-rule-columns, 0014-migrate-game-seed-data, 0017-backfill-game-rule-columns,
   # 0015-apply-game-rule-not-null, 0016-drop-old-game-columns, 0018-add-competition-registrations,
   # 0019-add-competition-registration-open, 0020-add-unique-player-callsigns,
-  # 0021-add-reference-url-to-games
-  # Note: Gaps exist at 0001, 0004, 0005 due to historical deletions. Next available: 0022
+  # 0021-add-reference-url-to-games, 0022-add-position-to-competition-team-ids
+  # Note: Gaps exist at 0001, 0004, 0005 due to historical deletions. Next available: 0023
   - include:
       file: db/changelog/changes/0002-create-players.yaml
   - include:
@@ -47,3 +47,5 @@ databaseChangeLog:
       file: db/changelog/changes/0020-add-unique-player-callsigns.yaml
   - include:
       file: db/changelog/changes/0021-add-reference-url-to-games.yaml
+  - include:
+      file: db/changelog/changes/0022-add-position-to-competition-team-ids.yaml

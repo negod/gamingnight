@@ -18,7 +18,7 @@ public class CompetitionJpaMapper {
                 competition.registrationOpen(),
                 competition.started(),
                 new ArrayList<>(competition.gameIds()),
-                new LinkedHashSet<>(competition.teamIds()),
+                new ArrayList<>(competition.teamIds()),
                 new LinkedHashSet<>(competition.registeredPlayerIds()),
                 competition.createdAt(),
                 competition.updatedAt()
