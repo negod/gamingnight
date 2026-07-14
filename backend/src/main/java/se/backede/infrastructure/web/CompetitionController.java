@@ -5,6 +5,7 @@ import se.backede.application.dto.CreateCompetitionRequest;
 import se.backede.application.dto.GenerateTeamsRequest;
 import se.backede.application.dto.UpdateCompetitionRequest;
 import se.backede.application.usecase.CompetitionUseCaseService;
+import se.backede.application.usecase.GenerateTeamsUseCaseService;
 import se.backede.infrastructure.security.AuthContext;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,12 @@ import java.util.UUID;
 public class CompetitionController {
 
     private final CompetitionUseCaseService competitionUseCaseService;
+    private final GenerateTeamsUseCaseService generateTeamsUseCaseService;
 
-    public CompetitionController(CompetitionUseCaseService competitionUseCaseService) {
+    public CompetitionController(CompetitionUseCaseService competitionUseCaseService,
+                                 GenerateTeamsUseCaseService generateTeamsUseCaseService) {
         this.competitionUseCaseService = competitionUseCaseService;
+        this.generateTeamsUseCaseService = generateTeamsUseCaseService;
     }
 
     @PostMapping
@@ -61,6 +65,6 @@ public class CompetitionController {
 
     @PostMapping("/{id}/generate-teams")
     CompetitionResponse generateTeams(@PathVariable UUID id, @Valid @RequestBody GenerateTeamsRequest request) {
-        return competitionUseCaseService.generateTeams(id, request);
+        return generateTeamsUseCaseService.generateTeams(id, request);
     }
 }

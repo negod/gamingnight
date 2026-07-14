@@ -3,6 +3,7 @@ package se.backede.infrastructure.web;
 import se.backede.application.dto.CompetitionResponse;
 import se.backede.application.dto.CreateCompetitionRequest;
 import se.backede.application.usecase.CompetitionUseCaseService;
+import se.backede.application.usecase.GenerateTeamsUseCaseService;
 import se.backede.application.usecase.TokenService;
 import se.backede.infrastructure.config.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +39,9 @@ class AuthorizationTest {
 
     @MockBean
     private CompetitionUseCaseService competitionUseCaseService;
+
+    @MockBean
+    private GenerateTeamsUseCaseService generateTeamsUseCaseService;
 
     @MockBean
     private TokenService tokenService;

@@ -6,6 +6,7 @@ import se.backede.application.dto.CreateCompetitionRequest;
 import se.backede.application.dto.GenerateTeamsRequest;
 import se.backede.application.dto.UpdateCompetitionRequest;
 import se.backede.application.usecase.CompetitionUseCaseService;
+import se.backede.application.usecase.GenerateTeamsUseCaseService;
 import se.backede.domain.model.UserRole;
 import se.backede.infrastructure.security.AuthContext;
 import se.backede.shared.exception.DomainValidationException;
@@ -50,6 +51,9 @@ class CompetitionControllerTest {
 
     @MockBean
     private CompetitionUseCaseService competitionUseCaseService;
+
+    @MockBean
+    private GenerateTeamsUseCaseService generateTeamsUseCaseService;
 
     @BeforeEach
     void authenticateAdmin() {
@@ -166,7 +170,7 @@ class CompetitionControllerTest {
         var playerId = UUID.randomUUID();
         var teamId = UUID.randomUUID();
         var request = new GenerateTeamsRequest(List.of(playerId), 1);
-        when(competitionUseCaseService.generateTeams(id, request)).thenReturn(response(id, "Cup", false, List.of(), List.of(teamId)));
+        when(generateTeamsUseCaseService.generateTeams(id, request)).thenReturn(response(id, "Cup", false, List.of(), List.of(teamId)));
 
         mockMvc.perform(post("/api/competitions/{id}/generate-teams", id)
                         .contentType(MediaType.APPLICATION_JSON)

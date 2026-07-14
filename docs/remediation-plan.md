@@ -140,7 +140,9 @@ Requests over the limit return `429 Too Many Requests`, a `Retry-After` header, 
 
 ---
 
-#### SO-2 · Extract `GenerateTeamsUseCaseService` from `CompetitionUseCaseService` `[Medium]`
+#### SO-2 · Extract `GenerateTeamsUseCaseService` from `CompetitionUseCaseService` `[Resolved]`
+
+**Status**: Resolved. `GenerateTeamsUseCaseService` (new) owns the shuffle, name-pool selection, and team-creation workflow previously in `CompetitionUseCaseService.generateTeams()`, and depends on `CompetitionRepositoryPort`, `TeamRepositoryPort`, `PlayerRepositoryPort`, `TeamNameRepositoryPort`. `CompetitionUseCaseService` dropped `TeamNameRepositoryPort` and `PlayerRepositoryPort` entirely; it keeps `TeamRepositoryPort` because `validateTeamsExist` (CRUD validation) and `playerHasTeamInCompetition` (player-scoped access checks used by `listForPlayer`/`getByIdForPlayer`/`playerCanAccessCompetition`) are unrelated to team generation and still need it — the plan's port list didn't account for these pre-existing uses. `CompetitionController` now injects both services and routes `POST /{id}/generate-teams` to `GenerateTeamsUseCaseService`. Generate-teams tests moved from `CompetitionUseCaseServiceTest` into a new `GenerateTeamsUseCaseServiceTest` (plus one added case for a missing competition); `CompetitionControllerTest` and `AuthorizationTest` (both `@WebMvcTest(CompetitionController.class)`) got a `GenerateTeamsUseCaseService` mock bean. All 190 backend tests pass.
 
 **Problem**: `CompetitionUseCaseService` injects five repository ports and owns both competition CRUD and team-generation workflow. Violates SRP.
 
@@ -246,13 +248,12 @@ Verification note: `mvn test -Dtest=TeamTest` could not complete because the cur
 
 ---
 
-#### TDD-2 · Write `TeamControllerTest.java` `[Medium]`
+#### TDD-2 · Write `TeamControllerTest.java` `[Resolved]`
 
-**Problem**: Every other controller has a `@WebMvcTest`. `TeamController` has none.
+**Status**: Resolved by adding `backend/src/test/java/se/backede/infrastructure/web/TeamControllerTest.java`.
 
-**What to do**
+Coverage added:
 
-Create `backend/src/test/java/se/backede/infrastructure/web/TeamControllerTest.java` following the pattern of `PlayerControllerTest.java`. Cover:
 - `GET /api/teams` returns list.
 - `GET /api/teams/{id}` returns team.
 - `GET /api/teams/{id}` with unknown ID returns 404.
@@ -260,6 +261,13 @@ Create `backend/src/test/java/se/backede/infrastructure/web/TeamControllerTest.j
 - `POST /api/teams` with blank name returns 400.
 - `PUT /api/teams/{id}` updates and returns updated team.
 - `DELETE /api/teams/{id}` returns 204.
+- `DELETE /api/teams/{id}` with unknown ID returns 404.
+
+Verification:
+
+```bash
+mvn -f backend/pom.xml -Dtest=TeamControllerTest test
+```
 
 ---
 
@@ -494,12 +502,12 @@ Affected files: all `Jpa*RepositoryAdapter.java` files in `backend/src/main/java
 | SEC-3 | Critical | Codex | ✅ |
 | CA-1 / DDD-1 | High | Claude | ✅ |
 | SO-1 / CC-1 | High | Claude | ✅ |
-| SO-2 | Medium | Claude | ☐ |
+| SO-2 | Medium | Claude | ✅ |
 | CA-2 / FE-1 | Medium | Claude | ☐ |
 | DOC-2 | Medium | Claude | ☐ |
 | DDD-2 / SEC-7 | Medium | Codex | ✅ |
 | TDD-1 | Medium | Codex | ☑ |
-| TDD-2 | Medium | Codex | ☐ |
+| TDD-2 | Medium | Codex | ✅ |
 | TDD-3 | Medium | Codex | ☐ |
 | TDD-4 | Medium | Codex | ☑ |
 | TDD-5 | Medium | Codex | ☑ |
