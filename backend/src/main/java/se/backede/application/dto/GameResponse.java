@@ -21,6 +21,7 @@ public record GameResponse(
         String description,
         String platform,
         String genre,
+        String referenceUrl,
         boolean isActive,
         MatchType matchType,
         ParticipantRule participantRule,

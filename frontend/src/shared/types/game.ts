@@ -91,6 +91,7 @@ export type Game = {
   description: string;
   platform: string | null;
   genre: string | null;
+  referenceUrl: string | null;
   isActive: boolean;
   matchType: MatchType;
   participantRule: ParticipantRule;

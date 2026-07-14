@@ -63,7 +63,7 @@ Administrators manage system users through `/api/users` and the `/users` fronten
 
 ### Game Management
 
-Administrators manage games through `/api/games` and the `/games` frontend section. Each game defines match setup, participant rules, result type, winner rule, scoring rule, tie-breakers, optional validation, optional time limits, and optional bonus rules. The frontend game form includes optional presets such as Racing, Sports, Action, Fighting, Strategy, Party, and Co-op to fill those rule fields as a starting point; admins can still adjust every rule before saving.
+Administrators manage games through `/api/games` and the `/games` frontend section. Each game defines match setup, participant rules, result type, winner rule, scoring rule, tie-breakers, optional validation, optional time limits, and optional bonus rules. A game also has an optional free-text description and an optional reference link (must start with `http://` or `https://`, e.g. a rules site or a YouTube video) — both are shown to players wherever the game appears in a competition, alongside an auto-generated plain-language summary of its rules. The frontend game form includes optional presets such as Racing, Sports, Action, Fighting, Strategy, Party, and Co-op to fill those rule fields as a starting point; admins can still adjust every rule before saving.
 
 ### Team Management
 
@@ -274,6 +274,7 @@ UI components do not call `fetch` directly.
 | `api/gamesApi.ts` | listGames, getGame, createGame, updateGame, deleteGame |
 | `components/GameList` | Table of games with rule summary, edit and delete actions |
 | `components/GameForm` | Form for basic details, optional game type presets, match setup, result rules, scoring, rotation, validation, time limits, and bonus rules |
+| `components/gameRuleDescription` | Pure function turning a game's rule fields into a flowing plain-language paragraph |
 | `pages/GamesPage` | List page with delete confirmation |
 | `pages/CreateGamePage` | Create form wired to POST /api/games |
 | `pages/EditGamePage` | Edit form wired to PUT /api/games/{id} |
@@ -307,9 +308,11 @@ UI components do not call `fetch` directly.
 |---|---|
 | `api/competitionRunApi.ts` | Start, getMatches, enterResults; thin wrappers for game/team/player reads |
 | `api/leaderboardApi.ts` | Four leaderboard API calls |
+| `hooks/useMatchDetails` | Loads team/player rows for a match being edited |
+| `components/CompetitionGamesOverview` | Lists the competition's games with an auto-generated plain-language rules summary, the game's description, and a link if set |
 | `components/GameStepNav` | Step-through control to navigate between games |
 | `components/MatchCard` | Shows one match with status and edit button |
-| `components/MatchResultForm` | Form to enter per-player scores, loads team/player names from API |
+| `components/MatchResultForm` | Pure controlled form to enter per-player scores from props |
 | `components/GameTeamLeaderboard` | Per-game team ranking table with dynamic column header |
 | `components/GamePlayerLeaderboard` | Per-game player ranking table |
 | `components/TotalTeamLeaderboard` | Overall team placement-point table |

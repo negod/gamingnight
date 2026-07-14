@@ -9,6 +9,7 @@ function buildGame(overrides: Partial<Game>): Game {
     description: '',
     platform: null,
     genre: null,
+    referenceUrl: null,
     isActive: true,
     matchType: 'FREE_FOR_ALL',
     participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 4, numberOfTeams: null, allowSubstitutes: false },

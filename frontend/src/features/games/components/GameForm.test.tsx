@@ -95,6 +95,7 @@ describe('GameForm', () => {
       description: 'Racing game',
       platform: 'Wii',
       genre: 'Racing',
+      referenceUrl: 'https://en.wikipedia.org/wiki/Mario_Kart',
       isActive: false,
       matchType: 'PLAYER_VS_PLAYER',
       participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 1, numberOfTeams: 2, allowSubstitutes: false },
@@ -112,5 +113,6 @@ describe('GameForm', () => {
 
     expect(screen.getByDisplayValue('Mario Kart')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Wii')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('https://en.wikipedia.org/wiki/Mario_Kart')).toBeInTheDocument();
   });
 });

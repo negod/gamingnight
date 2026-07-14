@@ -25,6 +25,9 @@ public record CreateGameRequest(
         String platform,
         String genre,
 
+        @Size(max = 2048, message = "Reference URL must be at most 2048 characters")
+        String referenceUrl,
+
         @NotNull(message = "matchType is required")
         MatchType matchType,
 

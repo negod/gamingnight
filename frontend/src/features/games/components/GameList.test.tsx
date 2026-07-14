@@ -64,6 +64,7 @@ function game(id: string, name: string, isActive = true): Game {
     description: '',
     platform: null,
     genre: null,
+    referenceUrl: null,
     isActive,
     matchType: 'FREE_FOR_ALL',
     participantRule: { minPlayersPerTeam: 1, maxPlayersPerTeam: 4, numberOfTeams: null, allowSubstitutes: false },

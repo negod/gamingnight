@@ -13,6 +13,7 @@ public record Game(
         String description,
         String platform,
         String genre,
+        String referenceUrl,
         boolean isActive,
         MatchType matchType,
         ParticipantRule participantRule,
@@ -28,6 +29,7 @@ public record Game(
         Instant updatedAt
 ) {
     public static final int NAME_MAX_LENGTH = 120;
+    public static final int REFERENCE_URL_MAX_LENGTH = 2048;
 
     public Game {
         Objects.requireNonNull(id, "id must not be null");
@@ -41,41 +43,48 @@ public record Game(
         Objects.requireNonNull(updatedAt, "updatedAt must not be null");
         name = name == null ? "" : name.trim();
         description = description == null ? "" : description.trim();
+        referenceUrl = referenceUrl == null ? "" : referenceUrl.trim();
         bonusRules = bonusRules == null ? List.of() : List.copyOf(bonusRules);
         if (name.isBlank()) throw new DomainValidationException("Game name is required");
         if (name.length() > NAME_MAX_LENGTH)
             throw new DomainValidationException("Game name must be at most 120 characters");
+        if (!referenceUrl.isBlank()) {
+            if (referenceUrl.length() > REFERENCE_URL_MAX_LENGTH)
+                throw new DomainValidationException("Reference URL must be at most 2048 characters");
+            if (!referenceUrl.startsWith("http://") && !referenceUrl.startsWith("https://"))
+                throw new DomainValidationException("Reference URL must start with http:// or https://");
+        }
     }
 
     public static Game create(
-            String name, String description, String platform, String genre,
+            String name, String description, String platform, String genre, String referenceUrl,
             MatchType matchType, ParticipantRule participantRule, ResultType resultType,
             WinnerRule winnerRule, ScoringRule scoringRule, TieBreakerRule tieBreakerRule,
             ValidationRule validationRule, RotationRule rotationRule, TimeLimitRule timeLimitRule,
             List<BonusRule> bonusRules, Instant now) {
-        return new Game(UUID.randomUUID(), name, description, platform, genre, true,
+        return new Game(UUID.randomUUID(), name, description, platform, genre, referenceUrl, true,
                 matchType, participantRule, resultType, winnerRule, scoringRule, tieBreakerRule,
                 validationRule, rotationRule, timeLimitRule, bonusRules, now, now);
     }
 
     public static Game rehydrate(
-            UUID id, String name, String description, String platform, String genre, boolean isActive,
-            MatchType matchType, ParticipantRule participantRule, ResultType resultType,
+            UUID id, String name, String description, String platform, String genre, String referenceUrl,
+            boolean isActive, MatchType matchType, ParticipantRule participantRule, ResultType resultType,
             WinnerRule winnerRule, ScoringRule scoringRule, TieBreakerRule tieBreakerRule,
             ValidationRule validationRule, RotationRule rotationRule, TimeLimitRule timeLimitRule,
             List<BonusRule> bonusRules, Instant createdAt, Instant updatedAt) {
-        return new Game(id, name, description, platform, genre, isActive,
+        return new Game(id, name, description, platform, genre, referenceUrl, isActive,
                 matchType, participantRule, resultType, winnerRule, scoringRule, tieBreakerRule,
                 validationRule, rotationRule, timeLimitRule, bonusRules, createdAt, updatedAt);
     }
 
     public Game update(
-            String name, String description, String platform, String genre, boolean isActive,
+            String name, String description, String platform, String genre, String referenceUrl, boolean isActive,
             MatchType matchType, ParticipantRule participantRule, ResultType resultType,
             WinnerRule winnerRule, ScoringRule scoringRule, TieBreakerRule tieBreakerRule,
             ValidationRule validationRule, RotationRule rotationRule, TimeLimitRule timeLimitRule,
             List<BonusRule> bonusRules, Instant now) {
-        return new Game(id, name, description, platform, genre, isActive,
+        return new Game(id, name, description, platform, genre, referenceUrl, isActive,
                 matchType, participantRule, resultType, winnerRule, scoringRule, tieBreakerRule,
                 validationRule, rotationRule, timeLimitRule, bonusRules, createdAt, now);
     }

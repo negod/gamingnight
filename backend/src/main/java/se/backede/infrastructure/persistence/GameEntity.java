@@ -46,6 +46,9 @@ public class GameEntity {
     @Column(length = 120)
     private String genre;
 
+    @Column(name = "reference_url", length = 2048)
+    private String referenceUrl;
+
     @Column(nullable = false)
     private boolean isActive;
 
@@ -98,7 +101,7 @@ public class GameEntity {
     protected GameEntity() {
     }
 
-    public GameEntity(UUID id, String name, String description, String platform, String genre,
+    public GameEntity(UUID id, String name, String description, String platform, String genre, String referenceUrl,
                       boolean isActive, MatchType matchType, ParticipantRule participantRule,
                       ResultType resultType, WinnerRule winnerRule, ScoringRule scoringRule,
                       TieBreakerRule tieBreakerRule, ValidationRule validationRule,
@@ -109,6 +112,7 @@ public class GameEntity {
         this.description = description;
         this.platform = platform;
         this.genre = genre;
+        this.referenceUrl = referenceUrl;
         this.isActive = isActive;
         this.matchType = matchType;
         this.participantRule = participantRule;
@@ -129,6 +133,7 @@ public class GameEntity {
     public String getDescription() { return description; }
     public String getPlatform() { return platform; }
     public String getGenre() { return genre; }
+    public String getReferenceUrl() { return referenceUrl; }
     public boolean isActive() { return isActive; }
     public MatchType getMatchType() { return matchType; }
     public ParticipantRule getParticipantRule() { return participantRule; }
@@ -147,6 +152,7 @@ public class GameEntity {
     public void setDescription(String description) { this.description = description; }
     public void setPlatform(String platform) { this.platform = platform; }
     public void setGenre(String genre) { this.genre = genre; }
+    public void setReferenceUrl(String referenceUrl) { this.referenceUrl = referenceUrl; }
     public void setActive(boolean active) { this.isActive = active; }
     public void setMatchType(MatchType matchType) { this.matchType = matchType; }
     public void setParticipantRule(ParticipantRule participantRule) { this.participantRule = participantRule; }

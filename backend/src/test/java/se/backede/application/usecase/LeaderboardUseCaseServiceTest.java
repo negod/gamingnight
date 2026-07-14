@@ -281,14 +281,14 @@ class LeaderboardUseCaseServiceTest {
     private static final ScoringRule SCORING = WinDrawLossScoringRule.of(3, 1, 0);
 
     private static Game scoredGame(UUID id) {
-        return Game.rehydrate(id, "Bowling", "", null, null, true,
+        return Game.rehydrate(id, "Bowling", "", null, null, null, true,
                 MatchType.FREE_FOR_ALL, PARTICIPANTS, ResultType.SCORE,
                 WinnerRule.HIGHEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, List.of(), NOW, NOW);
     }
 
     private static Game timedGame(UUID id) {
-        return Game.rehydrate(id, "Run", "", null, null, true,
+        return Game.rehydrate(id, "Run", "", null, null, null, true,
                 MatchType.SOLO_CHALLENGE, PARTICIPANTS, ResultType.TIME,
                 WinnerRule.LOWEST_VALUE_WINS, SCORING, TieBreakerRule.ALLOW_DRAW,
                 null, null, null, List.of(), NOW, NOW);
